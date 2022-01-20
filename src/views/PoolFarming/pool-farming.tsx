@@ -103,210 +103,204 @@ export default function PoolFarming({ theme }: any) {
     }
   }, [chainID, provider, address]);
   return (
-    <>
-      {address && provider && (
-        <div className="pool-farming">
-          <div className="farming-account">
-            <div className="MuiPaper-root hec-card farming">
-              <div className="farming-stats">
-                <div className="header">
-                  <SvgIcon component={wshecTokenImg} viewBox="0 0 100 100" style={{ height: "50px", width: "50px" }} />
-                  <div className="title">TOR Farming</div>
+    <div className="pool-farming">
+      <div className="farming-account">
+        <div className="MuiPaper-root hec-card farming">
+          <div className="farming-stats">
+            <div className="header">
+              <SvgIcon component={wshecTokenImg} viewBox="0 0 100 100" style={{ height: "50px", width: "50px" }} />
+              <div className="title">TOR Farming</div>
+            </div>
+            <div className="info">
+              <div>
+                <div className="title">Apr:</div>
+                <div className={theme.palette.text?.gold + " data"}>
+                  {stakingInfo ? getFormattedStakingInfo("_apr", "mwei").toFixed(2) : <Skeleton width="50%" />}%
                 </div>
-                <div className="info">
-                  <div>
-                    <div className="title">Apr:</div>
-                    <div className={theme.palette.text?.gold + " data"}>
-                      {stakingInfo ? getFormattedStakingInfo("_apr", "mwei").toFixed(2) : <Skeleton width="50%" />}%
-                    </div>
-                  </div>
-                  <div>
-                    <div className="title">TVL:</div>
-                    <div className="data">
-                      ${stakingInfo ? getFormattedStakingInfo("_tvl", "ether").toFixed(2) : <Skeleton width="50%" />}
-                    </div>
-                  </div>
-                  <div>
-                    <div className="title">Cycle Beginning:</div>
-                    <div className="data">
-                      {+stakingInfo?._begin ? (
-                        new Date(+stakingInfo?._begin * 1000).toString()
-                      ) : (
-                        <Skeleton width="50%" />
-                      )}
-                    </div>
-                  </div>
+              </div>
+              <div>
+                <div className="title">TVL:</div>
+                <div className="data">
+                  ${stakingInfo ? getFormattedStakingInfo("_tvl", "ether").toFixed(2) : <Skeleton width="50%" />}
                 </div>
-                <div className="cycle-end">
-                  <div className="title">Cycle Ends in:</div>
-                  <div className="data timer">
-                    <AccessAlarmIcon />
-                    {+stakingInfo?._finish ? (
-                      <Countdown date={new Date(+stakingInfo?._finish * 1000).toString()} renderer={renderer} />
-                    ) : (
-                      <Skeleton width="50%" />
-                    )}
-                  </div>
+              </div>
+              <div>
+                <div className="title">Cycle Beginning:</div>
+                <div className="data">
+                  {+stakingInfo?._begin ? new Date(+stakingInfo?._begin * 1000).toString() : <Skeleton width="50%" />}
                 </div>
               </div>
             </div>
-            <div className="MuiPaper-root hec-card account">
-              <div className="title">Earned Rewards</div>
-              {/* <Link className="lp-link" target="_blank" href="https://ftm.curve.fi/factory/50/deposit">
-                      Get LP Tokens
-                      <SvgIcon component={ArrowUp} htmlColor="#A3A3A3" />
-                    </Link> */}
-              <div className="balance">
-                <div>
-                  <div className="title">Your LP Tokens:</div>
-                  <div className="data">
-                    {hugsPoolInfo?.balance || hugsPoolInfo?.balance === 0 ? (
-                      hugsPoolInfo?.balance.toFixed(2)
-                    ) : (
-                      <Skeleton width="40%" />
-                    )}
-                  </div>
-                </div>
-                <div>
-                  <div className="title">Staked LP Tokens: </div>
-                  <div className="data">
-                    {stakingRewardsInfo?.balance || stakingRewardsInfo?.balance == 0 ? (
-                      stakingRewardsInfo?.balance.toFixed(2)
-                    ) : (
-                      <Skeleton width="40%" />
-                    )}
-                  </div>
-                </div>
-                {/* <div className="data">
-                      Investment Value: {(stakingRewardsInfo?.balance * hugsPoolInfo?.virtualPrice).toFixed(2)}
-                    </div> */}
-                <div>
-                  <div className="title">FTM Rewards</div>
-                  <div className="data">
-                    {stakingInfo ? (
-                      getFormattedStakingInfo("_earnedRewardAmount", "ether").toFixed(4)
-                    ) : (
-                      <Skeleton width="40%" />
-                    )}{" "}
-                    (${getEarnedUsd()})
-                  </div>
-                </div>
-              </div>
-              <div className="actions">
-                {+getFormattedStakingInfo("_earnedRewardAmount", "ether") > 0 && (
-                  <>
-                    <Button
-                      className="stake-button"
-                      variant="contained"
-                      color="primary"
-                      disabled={isLoading}
-                      onClick={() => dispatchClaimEarned()}
-                    >
-                      Claim Rewards
-                    </Button>
-                  </>
-                )}
-                {hasLpBalance() && (
-                  <Button
-                    className="stake-button"
-                    variant="contained"
-                    color="primary"
-                    disabled={isLoading}
-                    onClick={() => dispatchStake()}
-                  >
-                    Stake
-                  </Button>
-                )}
-                {hasAllowance() && (
-                  <Button
-                    className="stake-button"
-                    variant="contained"
-                    color="primary"
-                    disabled={isLoading}
-                    onClick={() => dispatchApprove()}
-                  >
-                    Approve
-                  </Button>
-                )}
-                {stakingRewardsInfo?.balance > 0 && (
-                  <>
-                    <Button
-                      className="stake-button"
-                      variant="contained"
-                      color="primary"
-                      disabled={isLoading}
-                      onClick={() => dispatchWithDraw()}
-                    >
-                      Withdraw
-                    </Button>
-                  </>
+            <div className="cycle-end">
+              <div className="title">Cycle Ends in:</div>
+              <div className="data timer">
+                <AccessAlarmIcon />
+                {+stakingInfo?._finish ? (
+                  <Countdown date={new Date(+stakingInfo?._finish * 1000).toString()} renderer={renderer} />
+                ) : (
+                  <Skeleton width="50%" />
                 )}
               </div>
             </div>
           </div>
-          <div className="MuiPaper-root hec-card projection">
-            <div className="investment-plan">
-              <div className="title">Investment Estimation Plan</div>
-              <div className="calculate">
-                <FormControl fullWidth variant="outlined">
-                  <InputLabel htmlFor="outlined-adornment-amount">Amount</InputLabel>
-                  <OutlinedInput
-                    id="outlined-adornment-amount"
-                    type="number"
-                    value={quantity}
-                    onKeyPress={event => {
-                      if (!/[0-9]/.test(event.key)) {
-                        event.preventDefault();
-                      }
-                    }}
-                    onChange={e => setQuantity(e.target.value)}
-                    startAdornment={<InputAdornment position="start">$</InputAdornment>}
-                    labelWidth={60}
-                  />
-                </FormControl>
-
+        </div>
+        <div className="MuiPaper-root hec-card account">
+          <div className="header">
+            <div className="title">Earned Rewards</div>
+            <Link className="lp-link" target="_blank" href="https://ftm.curve.fi/factory/50/deposit">
+              LP Tokens
+              <SvgIcon component={ArrowUp} htmlColor="#A3A3A3" />
+            </Link>
+          </div>
+          <div className="balance">
+            <div>
+              <div className="title">Your LP Tokens:</div>
+              <div className="data">
+                {hugsPoolInfo?.balance || hugsPoolInfo?.balance === 0 ? (
+                  hugsPoolInfo?.balance.toFixed(2)
+                ) : (
+                  <Skeleton width="40%" />
+                )}
+              </div>
+            </div>
+            <div>
+              <div className="title">Staked LP Tokens: </div>
+              <div className="data">
+                {stakingRewardsInfo?.balance || stakingRewardsInfo?.balance == 0 ? (
+                  stakingRewardsInfo?.balance.toFixed(2)
+                ) : (
+                  <Skeleton width="40%" />
+                )}
+              </div>
+            </div>
+            {/* <div className="data">
+                      Investment Value: {(stakingRewardsInfo?.balance * hugsPoolInfo?.virtualPrice).toFixed(2)}
+                    </div> */}
+            <div>
+              <div className="title">FTM Rewards</div>
+              <div className="data">
+                {stakingInfo ? (
+                  getFormattedStakingInfo("_earnedRewardAmount", "ether").toFixed(4)
+                ) : (
+                  <Skeleton width="40%" />
+                )}{" "}
+                (${getEarnedUsd()})
+              </div>
+            </div>
+          </div>
+          <div className="actions">
+            {+getFormattedStakingInfo("_earnedRewardAmount", "ether") > 0 && (
+              <>
                 <Button
                   className="stake-button"
                   variant="contained"
                   color="primary"
                   disabled={isLoading}
-                  onClick={() => dispatchStakingInfo()}
+                  onClick={() => dispatchClaimEarned()}
                 >
-                  Calculate
+                  Claim Rewards
                 </Button>
-              </div>
-              <div className="optimal-amount">
-                <div className="title">Optimal Amounts</div>
-                <div className="data">
-                  Hugs:{" "}
-                  {stakingInfo ? (
-                    getFormattedStakingInfo("_optimalHugsAmount", "ether").toFixed(2)
-                  ) : (
-                    <Skeleton width="40%" />
-                  )}
-                </div>
-                <div className="data">
-                  DAI:{" "}
-                  {stakingInfo ? (
-                    getFormattedStakingInfo("_optimalDaiAmount", "ether").toFixed(2)
-                  ) : (
-                    <Skeleton width="40%" />
-                  )}
-                </div>
-                <div className="data">
-                  USDC:{" "}
-                  {stakingInfo ? (
-                    getFormattedStakingInfo("_optimalUsdcAmount", "ether").toFixed(2)
-                  ) : (
-                    <Skeleton width="40%" />
-                  )}
-                </div>
-              </div>
-            </div>
-            <ProjectionLineChart quantity={calcQuantity} apr={+getFormattedStakingInfo("_apr", "mwei").toFixed(2)} />
+              </>
+            )}
+            {hasLpBalance() && (
+              <Button
+                className="stake-button"
+                variant="contained"
+                color="primary"
+                disabled={isLoading}
+                onClick={() => dispatchStake()}
+              >
+                Stake
+              </Button>
+            )}
+            {hasAllowance() && (
+              <Button
+                className="stake-button"
+                variant="contained"
+                color="primary"
+                disabled={isLoading}
+                onClick={() => dispatchApprove()}
+              >
+                Approve
+              </Button>
+            )}
+            {stakingRewardsInfo?.balance > 0 && (
+              <>
+                <Button
+                  className="stake-button"
+                  variant="contained"
+                  color="primary"
+                  disabled={isLoading}
+                  onClick={() => dispatchWithDraw()}
+                >
+                  Withdraw
+                </Button>
+              </>
+            )}
           </div>
         </div>
-      )}
-    </>
+      </div>
+      <div className="MuiPaper-root hec-card projection">
+        <div className="investment-plan">
+          <div className="title">Investment Estimation Plan</div>
+          <div className="calculate">
+            <FormControl fullWidth variant="outlined">
+              <InputLabel htmlFor="outlined-adornment-amount">Amount</InputLabel>
+              <OutlinedInput
+                id="outlined-adornment-amount"
+                type="number"
+                value={quantity}
+                onKeyPress={event => {
+                  if (!/[0-9]/.test(event.key)) {
+                    event.preventDefault();
+                  }
+                }}
+                onChange={e => setQuantity(e.target.value)}
+                startAdornment={<InputAdornment position="start">$</InputAdornment>}
+                labelWidth={60}
+              />
+            </FormControl>
+
+            <Button
+              className="stake-button"
+              variant="contained"
+              color="primary"
+              disabled={isLoading}
+              onClick={() => dispatchStakingInfo()}
+            >
+              Calculate
+            </Button>
+          </div>
+          <div className="optimal-amount">
+            <div className="title">Optimal Amounts</div>
+            <div className="data">
+              Hugs:{" "}
+              {stakingInfo ? (
+                getFormattedStakingInfo("_optimalHugsAmount", "ether").toFixed(2)
+              ) : (
+                <Skeleton width="40%" />
+              )}
+            </div>
+            <div className="data">
+              DAI:{" "}
+              {stakingInfo ? (
+                getFormattedStakingInfo("_optimalDaiAmount", "ether").toFixed(2)
+              ) : (
+                <Skeleton width="40%" />
+              )}
+            </div>
+            <div className="data">
+              USDC:{" "}
+              {stakingInfo ? (
+                getFormattedStakingInfo("_optimalUsdcAmount", "ether").toFixed(2)
+              ) : (
+                <Skeleton width="40%" />
+              )}
+            </div>
+          </div>
+        </div>
+        <ProjectionLineChart quantity={calcQuantity} apr={+getFormattedStakingInfo("_apr", "mwei").toFixed(2)} />
+      </div>
+    </div>
   );
 }

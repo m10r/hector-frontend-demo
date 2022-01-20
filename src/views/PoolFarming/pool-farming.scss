@@ -28,11 +28,7 @@
         display: grid;
         grid: max-content 1fr max-content / 1fr;
         row-gap: 20px;
-        .header {
-          display: grid;
-          grid: 1fr / max-content 1fr;
-          align-items: center;
-        }
+
         .info {
           align-items: center;
           display: grid;
@@ -74,6 +70,12 @@
       align-items: center;
       grid: 50px 1fr max-content / 1fr;
       row-gap: 20px;
+      .lp-link {
+        display: flex;
+        align-items: center;
+        justify-content: end;
+        column-gap: 5px;
+      }
       .balance {
         display: grid;
         align-items: center;
@@ -118,5 +120,11 @@
 
   svg {
     overflow: initial;
+  }
+
+  .header {
+    display: grid;
+    grid: 1fr / max-content 1fr;
+    align-items: center;
   }
 }
