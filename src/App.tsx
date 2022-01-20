@@ -77,7 +77,12 @@ function App() {
   const dispatch = useDispatch();
   const [theme, toggleTheme, mounted] = useTheme();
   const isAppLoading = useSelector(
-    (state: RootState) => state.bonding.loading || state.account.loading || state.app.loading || state.stake.loading,
+    (state: RootState) =>
+      state.bonding.loading ||
+      state.account.loading ||
+      state.app.loading ||
+      state.stake.loading ||
+      state.farm.isLoading,
   );
   const location = useLocation();
   const currentPath = location.pathname + location.search + location.hash;
@@ -252,9 +257,9 @@ function App() {
             <Route exact path="/dashboard">
               <TreasuryDashboard />
             </Route>
-            <Route exact path="/investments">
+            {/* <Route exact path="/investments">
               <Investments />
-            </Route>
+            </Route> */}
 
             <Route exact path="/">
               <Redirect to="/stake" />

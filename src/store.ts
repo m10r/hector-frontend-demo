@@ -3,6 +3,7 @@ import accountReducer from "./slices/AccountSlice";
 import bondingReducer from "./slices/BondSlice";
 import appReducer from "./slices/AppSlice";
 import stakeReducer from "./slices/StakeSlice";
+import farmReducer from "./slices/FarmSlice";
 import pendingTransactionsReducer from "./slices/PendingTxnsSlice";
 import messagesReducer from "./slices/MessagesSlice";
 // reducers are named automatically based on the name field in the slice
@@ -18,6 +19,7 @@ const store = configureStore({
     stake: stakeReducer,
     pendingTransactions: pendingTransactionsReducer,
     messages: messagesReducer,
+    farm: farmReducer
   },
   middleware: getDefaultMiddleware => getDefaultMiddleware({ serializableCheck: false }),
 });

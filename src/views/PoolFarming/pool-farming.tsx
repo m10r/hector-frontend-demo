@@ -1,88 +1,37 @@
 import "./pool-farming.scss";
 import { useCallback, useEffect, useState } from "react";
-import { abi as farmingAggregatorAbi } from "../../abi/farmingAggregatorContract.json";
-import { abi as hugsPoolAbi } from "../../abi/farmingHugsPoolContract.json";
-import { abi as stakingRewardsAbi } from "../../abi/farmingStakingRewardsContract.json";
-import { BigNumber, ethers, utils } from "ethers";
-import { addresses, messages } from "src/constants";
+
+import { ethers } from "ethers";
 import { Button, FormControl, InputAdornment, InputLabel, Link, OutlinedInput, SvgIcon } from "@material-ui/core";
 import { useWeb3Context } from "src/hooks/web3Context";
-import { useDispatch } from "react-redux";
-import { error, info, success } from "src/slices/MessagesSlice";
-import { sleep } from "src/helpers/Sleep";
-import useTheme from "src/hooks/useTheme";
+import { useDispatch, useSelector } from "react-redux";
+
 import ProjectionLineChart from "src/components/pool-farming/line-chart/line-chart";
 import { ReactComponent as wshecTokenImg } from "../../assets/tokens/wsHEC.svg";
-
-interface StakingRewardsInfo {
-  balance: number;
-  originalBalance: BigNumber;
-}
-
-interface HugsPoolInfo {
-  balance: number;
-  allowance: number;
-  virtualPrice: number;
-  originalBalance: BigNumber;
-}
-
-interface HugsPoolContract {
-  balanceOf: (address: string) => BigNumber;
-  allowance: (address1: string, address2: string) => BigNumber;
-  approve: (spender: string, value: string) => any;
-  get_virtual_price: () => BigNumber;
-}
-
-interface StakingRewardsContract {
-  balanceOf: (address: string) => BigNumber;
-  stake: (amount: BigNumber) => any;
-  withdraw: (amount: any) => any;
-  getReward: () => void;
-}
-
-interface StakingInfo {
-  _apr: BigNumber;
-  _tvl: BigNumber;
-  _begin: BigNumber;
-  _finish: BigNumber;
-  _hugsWithdrawAmount: BigNumber;
-  _daiWithdrawAmount: BigNumber;
-  _usdcWithdrawAmount: BigNumber;
-  _optimalHugsAmount: BigNumber;
-  _optimalDaiAmount: BigNumber;
-  _optimalUsdcAmount: BigNumber;
-  _earnedRewardAmount: BigNumber;
-}
+import { RootState } from "src/store";
+import {
+  approve,
+  claimRewards,
+  getAssetPrice,
+  getHugsPoolInfo,
+  getStakingInfo,
+  getStakingRewardsInfo,
+  stake,
+  withDrawStaked,
+} from "src/slices/FarmSlice";
+import { ReactComponent as ArrowUp } from "../../assets/icons/arrow-up.svg";
+import AccessAlarmIcon from "@material-ui/icons/AccessAlarm";
+import moment from "moment";
+import Countdown from "react-countdown";
 
 export default function PoolFarming({ theme }: any) {
-  const [assetPrice, setAssetPrice] = useState<BigNumber>();
-  const [stakingRewardsInfo, setStakingRewardsInfo] = useState<StakingRewardsInfo>();
-  const [hugsPoolInfo, sethugsPoolInfo] = useState<HugsPoolInfo>();
-  const [stakingInfo, setStakingInfo] = useState<StakingInfo>();
-  const [quantity, setQuantity] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const dispatch = useDispatch();
-  console.log(theme);
-
-  const { provider, chainID, address } = useWeb3Context();
-
-  const stakingGateway = new ethers.Contract(
-    addresses[chainID].FARMING_AGGREGATOR_ADDRESS as string,
-    farmingAggregatorAbi,
-    provider,
+  const { assetPrice, stakingRewardsInfo, hugsPoolInfo, stakingInfo, isLoading } = useSelector(
+    (state: RootState) => state.farm,
   );
-
-  const stakingRewardsContract = (new ethers.Contract(
-    addresses[chainID].FARMINNG_STAKING_REWARDS_ADDRESS as string,
-    stakingRewardsAbi,
-    provider.getSigner(address),
-  ) as unknown) as StakingRewardsContract;
-
-  const hugsPoolContract = (new ethers.Contract(
-    addresses[chainID].HUGS_POOL_ADDRESS as string,
-    hugsPoolAbi,
-    provider,
-  ) as unknown) as HugsPoolContract;
+  const [quantity, setQuantity] = useState("");
+  const [calcQuantity, setCalcQuantity] = useState(0);
+  const dispatch = useDispatch();
+  const { provider, chainID, address } = useWeb3Context();
 
   const hasAllowance = useCallback(() => {
     return hugsPoolInfo?.allowance < hugsPoolInfo?.balance;
@@ -103,123 +52,32 @@ export default function PoolFarming({ theme }: any) {
     return (earnedUSD * assetPriceUSD).toFixed(2);
   }
 
-  const withDrawStaked = async (): Promise<void> => {
-    try {
-      setIsLoading(true);
-
-      const withdrawTrans = await stakingRewardsContract.withdraw(stakingRewardsInfo?.originalBalance);
-      await withdrawTrans.wait();
-      dispatch(success(messages.tx_successfully_send));
-      await sleep(10);
-      dispatch(info(messages.account_update));
-      await sleep(10);
-      getAllData();
-    } catch (e) {
-      dispatch(error("Failed to withdraw"));
-      console.error(e);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const approve = async (): Promise<void> => {
-    setIsLoading(true);
-    try {
-      const approveTrans = await hugsPoolContract.approve(
-        addresses[chainID].FARMINNG_STAKING_REWARDS_ADDRESS as string,
-        "1000000000000000000000000",
-      );
-      await approveTrans.wait();
-      dispatch(success(messages.tx_successfully_send));
-      await sleep(10);
-      dispatch(info(messages.account_update));
-      await sleep(10);
-      getAllData();
-    } catch (e) {
-      dispatch(error("Failed to approve"));
-      console.error(e);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  const stake = async (): Promise<void> => {
-    setIsLoading(true);
-    try {
-      const stakeTrans = await stakingRewardsContract.stake(hugsPoolInfo.originalBalance);
-      await stakeTrans.wait();
-      dispatch(success(messages.tx_successfully_send));
-      await sleep(10);
-      dispatch(info(messages.account_update));
-      await sleep(10);
-      getAllData();
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  async function getAssetPrice(): Promise<void> {
-    try {
-      const assetPrice = (await stakingGateway.assetPrice()) as BigNumber;
-
-      setAssetPrice(assetPrice);
-    } catch (e) {
-      console.error(e);
-    }
+  async function dispatchStakingInfo(): Promise<void> {
+    await dispatch(getStakingInfo({ networkID: chainID, provider, address, value: quantity }));
+    setCalcQuantity(+quantity);
+  }
+  async function dispatchClaimEarned(): Promise<void> {
+    await dispatch(claimRewards({ networkID: chainID, provider, address }));
+    dispatchStakingInfo();
+  }
+  async function dispatchStake(): Promise<void> {
+    await dispatch(stake({ networkID: chainID, provider, address }));
+    getAllData();
+  }
+  async function dispatchWithDraw(): Promise<void> {
+    await dispatch(withDrawStaked({ networkID: chainID, provider, address }));
+    getAllData();
+  }
+  async function dispatchApprove(): Promise<void> {
+    await dispatch(approve({ networkID: chainID, provider }));
+    getAllData();
   }
 
-  async function getStakingRewardsInfo(): Promise<void> {
-    try {
-      const originalBalance = await stakingRewardsContract.balanceOf(address);
-      const balance = +ethers.utils.formatEther(originalBalance);
-      setStakingRewardsInfo({ balance, originalBalance });
-    } catch (e) {
-      console.error(e);
-    }
-  }
-
-  async function getHugsPoolInfo(): Promise<void> {
-    try {
-      const originalBalance = await hugsPoolContract.balanceOf(address);
-      let balance = +ethers.utils.formatEther(originalBalance);
-
-      let allowance = +(await hugsPoolContract.allowance(
-        address,
-        addresses[chainID].FARMINNG_STAKING_REWARDS_ADDRESS as string,
-      ));
-      let virtualPrice = +ethers.utils.formatEther(await hugsPoolContract.get_virtual_price());
-
-      sethugsPoolInfo({ balance, allowance, virtualPrice, originalBalance });
-    } catch (e) {
-      console.error(e);
-    }
-  }
-
-  async function getStakingInfo(): Promise<void> {
-    try {
-      const farmingContract = new ethers.Contract(
-        addresses[chainID].FARMING_AGGREGATOR_ADDRESS as string,
-        farmingAggregatorAbi,
-        provider,
-      );
-
-      const amt = BigInt(quantity === "" ? 0 : +quantity) * BigInt(1e18);
-      const stakingInfo = await farmingContract.getStakingInfo(address, amt);
-      setStakingInfo(stakingInfo);
-    } catch (e) {
-      console.error(e);
-    }
-  }
-
-  function getAllData() {
-    setIsLoading(true);
-
-    getAssetPrice();
-    getStakingInfo();
-    getStakingRewardsInfo();
-    getHugsPoolInfo();
-    setIsLoading(false);
+  async function getAllData() {
+    await dispatch(getAssetPrice({ networkID: chainID, provider }));
+    await dispatch(getStakingInfo({ networkID: chainID, provider, address, value: "0" }));
+    await dispatch(getStakingRewardsInfo({ networkID: chainID, provider, address }));
+    await dispatch(getHugsPoolInfo({ networkID: chainID, provider, address }));
   }
 
   useEffect(() => {
@@ -235,25 +93,35 @@ export default function PoolFarming({ theme }: any) {
             <div className="MuiPaper-root hec-card farming">
               <div className="farming-stats">
                 <div className="header">
-                  <div className="d-grid">
-                    <div className="title">TOR Farming</div>
-                    <Link target="_blank" href="https://ftm.curve.fi/factory/50/deposit">
-                      Get LP Tokens
-                    </Link>
-                  </div>
                   <SvgIcon component={wshecTokenImg} viewBox="0 0 100 100" style={{ height: "50px", width: "50px" }} />
+                  <div className="title">TOR Farming</div>
+                  {/* <Link className="lp-link" target="_blank" href="https://ftm.curve.fi/factory/50/deposit">
+                      Get LP Tokens
+                      <SvgIcon component={ArrowUp} htmlColor="#A3A3A3" />
+                    </Link> */}
                 </div>
                 <div className="info">
-                  <div className="title">Apr:</div>
-                  <div className={theme.palette.text?.gold + " data"}>
-                    {(+ethers.utils.formatUnits(stakingInfo._apr, "mwei")).toFixed(2)}%
+                  <div>
+                    <div className="title">Apr:</div>
+                    <div className={theme.palette.text?.gold + " data"}>
+                      {(+ethers.utils.formatUnits(stakingInfo._apr, "mwei")).toFixed(2)}%
+                    </div>
                   </div>
-                  <div className="title">TVL:</div>
-                  <div className="data">${(+ethers.utils.formatEther(stakingInfo._tvl)).toFixed(2)}</div>
-                  <div className="title">Cycle Beginning:</div>
-                  <div className="data">{new Date(+stakingInfo._begin * 1000).toString()}</div>
-                  <div className="title">Cycle End:</div>
-                  <div className="data">{new Date(+stakingInfo._finish * 1000).toString()}</div>
+                  <div>
+                    <div className="title">TVL:</div>
+                    <div className="data">${(+ethers.utils.formatEther(stakingInfo._tvl)).toFixed(2)}</div>
+                  </div>
+                  <div>
+                    <div className="title">Cycle Beginning:</div>
+                    <div className="data">{new Date(+stakingInfo._begin * 1000).toString()}</div>
+                  </div>
+                  <div className="cycle-end">
+                    <div className="title">Cycle Ends in:</div>
+                    <div className="data timer">
+                      <AccessAlarmIcon />
+                      <Countdown date={new Date(+stakingInfo._finish * 1000).toString()} />
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -271,6 +139,13 @@ export default function PoolFarming({ theme }: any) {
                     <div className="data">Staked LP Tokens: {stakingRewardsInfo?.balance.toFixed(2)}</div>
                   </>
                 )}
+                <div className="withdraw-amounts">
+                  <div>Withdraw to Hugs: {(+ethers.utils.formatEther(stakingInfo._hugsWithdrawAmount)).toFixed(2)}</div>
+                  <div>Withdraw to DAI: {(+ethers.utils.formatEther(stakingInfo._daiWithdrawAmount)).toFixed(2)}</div>
+                  <div>
+                    Withdraw to USDC: {(+ethers.utils.formatUnits(stakingInfo._usdcWithdrawAmount, "mwei")).toFixed(2)}
+                  </div>
+                </div>
               </div>
               <div className="actions">
                 {hasLpBalance() && (
@@ -279,10 +154,24 @@ export default function PoolFarming({ theme }: any) {
                     variant="contained"
                     color="primary"
                     disabled={isLoading}
-                    onClick={() => stake()}
+                    onClick={() => dispatchStake()}
                   >
                     Stake
                   </Button>
+                )}
+
+                {+getEarnedFTM() > 0 && (
+                  <>
+                    <Button
+                      className="stake-button"
+                      variant="contained"
+                      color="primary"
+                      disabled={isLoading}
+                      onClick={() => dispatchClaimEarned()}
+                    >
+                      Claim Rewards
+                    </Button>
+                  </>
                 )}
                 {hasAllowance() && (
                   <Button
@@ -290,7 +179,7 @@ export default function PoolFarming({ theme }: any) {
                     variant="contained"
                     color="primary"
                     disabled={isLoading}
-                    onClick={() => approve()}
+                    onClick={() => dispatchApprove()}
                   >
                     Approve
                   </Button>
@@ -302,20 +191,12 @@ export default function PoolFarming({ theme }: any) {
                       variant="contained"
                       color="primary"
                       disabled={isLoading}
-                      onClick={() => withDrawStaked()}
+                      onClick={() => dispatchWithDraw()}
                     >
                       Withdraw
                     </Button>
                   </>
                 )}
-
-                <div className="withdraw-amounts">
-                  <div>Withdraw to Hugs: {(+ethers.utils.formatEther(stakingInfo._hugsWithdrawAmount)).toFixed(2)}</div>
-                  <div>Withdraw to DAI: {(+ethers.utils.formatEther(stakingInfo._daiWithdrawAmount)).toFixed(2)}</div>
-                  <div>
-                    Withdraw to USDC: {(+ethers.utils.formatUnits(stakingInfo._usdcWithdrawAmount, "mwei")).toFixed(2)}
-                  </div>
-                </div>
               </div>
             </div>
           </div>
@@ -345,19 +226,26 @@ export default function PoolFarming({ theme }: any) {
                   variant="contained"
                   color="primary"
                   disabled={isLoading}
-                  onClick={() => getStakingInfo()}
+                  onClick={() => dispatchStakingInfo()}
                 >
                   Calculate
                 </Button>
               </div>
               <div className="optimal-amount">
                 <div className="title">Optimal Amounts</div>
-                <div>Hugs: {(+ethers.utils.formatEther(stakingInfo._optimalHugsAmount)).toFixed(2)}</div>
-                <div>DAI: {(+ethers.utils.formatEther(stakingInfo._optimalDaiAmount)).toFixed(2)}</div>
-                <div>USDC: {(+ethers.utils.formatEther(stakingInfo._optimalUsdcAmount)).toFixed(2)}</div>
+                <div className="data">
+                  Hugs: {(+ethers.utils.formatEther(stakingInfo._optimalHugsAmount)).toFixed(2)}
+                </div>
+                <div className="data">DAI: {(+ethers.utils.formatEther(stakingInfo._optimalDaiAmount)).toFixed(2)}</div>
+                <div className="data">
+                  USDC: {(+ethers.utils.formatEther(stakingInfo._optimalUsdcAmount)).toFixed(2)}
+                </div>
               </div>
             </div>
-            <ProjectionLineChart />
+            <ProjectionLineChart
+              quantity={calcQuantity}
+              apr={+(+ethers.utils.formatUnits(stakingInfo._apr, "mwei")).toFixed(2)}
+            />
           </div>
         </div>
       )}
