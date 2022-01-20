@@ -22,7 +22,8 @@ import {
 import { ReactComponent as ArrowUp } from "../../assets/icons/arrow-up.svg";
 import AccessAlarmIcon from "@material-ui/icons/AccessAlarm";
 import moment from "moment";
-import Countdown from "react-countdown";
+import Countdown, { zeroPad } from "react-countdown";
+import { StakingInfo } from "src/types/farming.model";
 
 export default function PoolFarming({ theme }: any) {
   const { assetPrice, stakingRewardsInfo, hugsPoolInfo, stakingInfo, isLoading } = useSelector(
@@ -39,18 +40,33 @@ export default function PoolFarming({ theme }: any) {
 
   const hasLpBalance = useCallback(() => hugsPoolInfo?.balance > 0, [hugsPoolInfo]);
 
-  const hasLoadedInfo = useCallback(() => stakingInfo && assetPrice?.toNumber(), [stakingInfo, assetPrice]);
+  const renderer = ({ days, hours, minutes, seconds, completed }: any) => {
+    if (completed) {
+      // Render a completed state
+      return <div>Cycle Ended!</div>;
+    } else {
+      // Render a countdown
+      return (
+        <span>
+          {zeroPad(days)}:{zeroPad(hours)}:{zeroPad(minutes)}:{zeroPad(seconds)}
+        </span>
+      );
+    }
+  };
 
-  function getEarnedFTM(): string {
-    const rewards = (+ethers.utils.formatEther(stakingInfo?._earnedRewardAmount)).toFixed(4);
-    return rewards;
-  }
+  const getEarnedUsd = useCallback(() => {
+    if (stakingInfo && assetPrice) {
+      const earnedUSD = +ethers.utils.formatEther(stakingInfo?._earnedRewardAmount);
+      const assetPriceUSD = assetPrice.toNumber() / 1e8;
+      return (earnedUSD * assetPriceUSD).toFixed(2);
+    }
+  }, [stakingInfo, assetPrice]);
 
-  function getEarnedUsd(): string {
-    const earnedUSD = +ethers.utils.formatEther(stakingInfo?._earnedRewardAmount);
-    const assetPriceUSD = assetPrice.toNumber() / 1e8;
-    return (earnedUSD * assetPriceUSD).toFixed(2);
-  }
+  const getFormattedStakingInfo = useCallback(
+    (prop: keyof StakingInfo, units?: ethers.BigNumberish) =>
+      stakingInfo ? +ethers.utils.formatUnits(stakingInfo[prop], units) : 0,
+    [stakingInfo],
+  );
 
   async function dispatchStakingInfo(): Promise<void> {
     await dispatch(getStakingInfo({ networkID: chainID, provider, address, value: quantity }));
@@ -87,7 +103,7 @@ export default function PoolFarming({ theme }: any) {
   }, [chainID, provider, address]);
   return (
     <>
-      {stakingInfo && address && provider && (
+      {address && provider && (
         <div className="pool-farming">
           <div className="farming-account">
             <div className="MuiPaper-root hec-card farming">
@@ -95,72 +111,63 @@ export default function PoolFarming({ theme }: any) {
                 <div className="header">
                   <SvgIcon component={wshecTokenImg} viewBox="0 0 100 100" style={{ height: "50px", width: "50px" }} />
                   <div className="title">TOR Farming</div>
-                  {/* <Link className="lp-link" target="_blank" href="https://ftm.curve.fi/factory/50/deposit">
-                      Get LP Tokens
-                      <SvgIcon component={ArrowUp} htmlColor="#A3A3A3" />
-                    </Link> */}
                 </div>
                 <div className="info">
                   <div>
                     <div className="title">Apr:</div>
                     <div className={theme.palette.text?.gold + " data"}>
-                      {(+ethers.utils.formatUnits(stakingInfo._apr, "mwei")).toFixed(2)}%
+                      {getFormattedStakingInfo("_apr", "mwei").toFixed(2)}%
                     </div>
                   </div>
                   <div>
                     <div className="title">TVL:</div>
-                    <div className="data">${(+ethers.utils.formatEther(stakingInfo._tvl)).toFixed(2)}</div>
+                    <div className="data">${getFormattedStakingInfo("_tvl", "ether").toFixed(2)}</div>
                   </div>
                   <div>
                     <div className="title">Cycle Beginning:</div>
-                    <div className="data">{new Date(+stakingInfo._begin * 1000).toString()}</div>
+                    <div className="data">{new Date(+stakingInfo?._begin * 1000).toString()}</div>
                   </div>
-                  <div className="cycle-end">
-                    <div className="title">Cycle Ends in:</div>
-                    <div className="data timer">
-                      <AccessAlarmIcon />
-                      <Countdown date={new Date(+stakingInfo._finish * 1000).toString()} />
-                    </div>
+                </div>
+                <div className="cycle-end">
+                  <div className="title">Cycle Ends in:</div>
+                  <div className="data timer">
+                    <AccessAlarmIcon />
+                    {+stakingInfo?._finish ? (
+                      <Countdown date={new Date(+stakingInfo?._finish * 1000).toString()} renderer={renderer} />
+                    ) : (
+                      <div>Loading</div>
+                    )}
                   </div>
                 </div>
               </div>
             </div>
             <div className="MuiPaper-root hec-card account">
               <div className="title">Earned Rewards</div>
+              {/* <Link className="lp-link" target="_blank" href="https://ftm.curve.fi/factory/50/deposit">
+                      Get LP Tokens
+                      <SvgIcon component={ArrowUp} htmlColor="#A3A3A3" />
+                    </Link> */}
               <div className="balance">
-                {hasLoadedInfo() && (
-                  <>
-                    {hugsPoolInfo && <div className="data">Your LP Tokens: {hugsPoolInfo.balance.toFixed(2)}</div>}
-                    <div className="data">
+                <div>
+                  <div className="title">Your LP Tokens:</div>
+                  <div className="data">{hugsPoolInfo?.balance.toFixed(2)}</div>
+                </div>
+                <div>
+                  <div className="title">Staked LP Tokens: </div>
+                  <div className="data">{stakingRewardsInfo?.balance.toFixed(2)}</div>
+                </div>
+                {/* <div className="data">
                       Investment Value: {(stakingRewardsInfo?.balance * hugsPoolInfo?.virtualPrice).toFixed(2)}
-                    </div>
-                    <div className="data">(FTM): {getEarnedFTM()}</div>
-                    <div className="data">(USD): ${getEarnedUsd()}</div>
-                    <div className="data">Staked LP Tokens: {stakingRewardsInfo?.balance.toFixed(2)}</div>
-                  </>
-                )}
-                <div className="withdraw-amounts">
-                  <div>Withdraw to Hugs: {(+ethers.utils.formatEther(stakingInfo._hugsWithdrawAmount)).toFixed(2)}</div>
-                  <div>Withdraw to DAI: {(+ethers.utils.formatEther(stakingInfo._daiWithdrawAmount)).toFixed(2)}</div>
-                  <div>
-                    Withdraw to USDC: {(+ethers.utils.formatUnits(stakingInfo._usdcWithdrawAmount, "mwei")).toFixed(2)}
+                    </div> */}
+                <div>
+                  <div className="title">FTM Rewards</div>
+                  <div className="data">
+                    {getFormattedStakingInfo("_earnedRewardAmount", "ether").toFixed(4)} (${getEarnedUsd()})
                   </div>
                 </div>
               </div>
               <div className="actions">
-                {hasLpBalance() && (
-                  <Button
-                    className="stake-button"
-                    variant="contained"
-                    color="primary"
-                    disabled={isLoading}
-                    onClick={() => dispatchStake()}
-                  >
-                    Stake
-                  </Button>
-                )}
-
-                {+getEarnedFTM() > 0 && (
+                {+getFormattedStakingInfo("_earnedRewardAmount", "ether") > 0 && (
                   <>
                     <Button
                       className="stake-button"
@@ -172,6 +179,17 @@ export default function PoolFarming({ theme }: any) {
                       Claim Rewards
                     </Button>
                   </>
+                )}
+                {hasLpBalance() && (
+                  <Button
+                    className="stake-button"
+                    variant="contained"
+                    color="primary"
+                    disabled={isLoading}
+                    onClick={() => dispatchStake()}
+                  >
+                    Stake
+                  </Button>
                 )}
                 {hasAllowance() && (
                   <Button
@@ -233,19 +251,12 @@ export default function PoolFarming({ theme }: any) {
               </div>
               <div className="optimal-amount">
                 <div className="title">Optimal Amounts</div>
-                <div className="data">
-                  Hugs: {(+ethers.utils.formatEther(stakingInfo._optimalHugsAmount)).toFixed(2)}
-                </div>
-                <div className="data">DAI: {(+ethers.utils.formatEther(stakingInfo._optimalDaiAmount)).toFixed(2)}</div>
-                <div className="data">
-                  USDC: {(+ethers.utils.formatEther(stakingInfo._optimalUsdcAmount)).toFixed(2)}
-                </div>
+                <div className="data">Hugs: {getFormattedStakingInfo("_optimalHugsAmount", "ether").toFixed(2)}</div>
+                <div className="data">DAI: {getFormattedStakingInfo("_optimalDaiAmount", "ether").toFixed(2)}</div>
+                <div className="data">USDC: {getFormattedStakingInfo("_optimalUsdcAmount", "ether").toFixed(2)}</div>
               </div>
             </div>
-            <ProjectionLineChart
-              quantity={calcQuantity}
-              apr={+(+ethers.utils.formatUnits(stakingInfo._apr, "mwei")).toFixed(2)}
-            />
+            <ProjectionLineChart quantity={calcQuantity} apr={+getFormattedStakingInfo("_apr", "mwei").toFixed(2)} />
           </div>
         </div>
       )}
