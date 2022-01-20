@@ -2,7 +2,16 @@ import "./pool-farming.scss";
 import { useCallback, useEffect, useState } from "react";
 
 import { ethers } from "ethers";
-import { Button, FormControl, InputAdornment, InputLabel, Link, OutlinedInput, SvgIcon } from "@material-ui/core";
+import {
+  Button,
+  FormControl,
+  InputAdornment,
+  InputLabel,
+  Link,
+  OutlinedInput,
+  SvgIcon,
+  Tooltip,
+} from "@material-ui/core";
 import { useWeb3Context } from "src/hooks/web3Context";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -21,7 +30,7 @@ import {
 } from "src/slices/FarmSlice";
 import { ReactComponent as ArrowUp } from "../../assets/icons/arrow-up.svg";
 import AccessAlarmIcon from "@material-ui/icons/AccessAlarm";
-import moment from "moment";
+import HelpOutlineIcon from "@material-ui/icons/HelpOutline";
 import Countdown, { zeroPad } from "react-countdown";
 import { StakingInfo } from "src/types/farming.model";
 import { Skeleton } from "@material-ui/lab";
@@ -110,6 +119,9 @@ export default function PoolFarming({ theme }: any) {
             <div className="header">
               <SvgIcon component={wshecTokenImg} viewBox="0 0 100 100" style={{ height: "50px", width: "50px" }} />
               <div className="title">TOR Farming</div>
+              <Tooltip arrow title="Farming is op">
+                <HelpOutlineIcon />
+              </Tooltip>
             </div>
             <div className="info">
               <div>
@@ -173,9 +185,6 @@ export default function PoolFarming({ theme }: any) {
                 )}
               </div>
             </div>
-            {/* <div className="data">
-                      Investment Value: {(stakingRewardsInfo?.balance * hugsPoolInfo?.virtualPrice).toFixed(2)}
-                    </div> */}
             <div>
               <div className="title">FTM Rewards</div>
               <div className="data">

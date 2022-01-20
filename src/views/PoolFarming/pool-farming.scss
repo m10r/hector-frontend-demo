@@ -16,6 +16,12 @@
   .data {
     font-size: 16px;
     align-self: center;
+
+    @media screen and (max-width: 1280px) {
+      .data {
+        text-align: end;
+      }
+    }
   }
 
   .farming-account {
@@ -30,7 +36,13 @@
         display: grid;
         grid: max-content 1fr max-content / 1fr;
         row-gap: 20px;
-
+        .header {
+          grid: 1fr / max-content 1fr max-content;
+          svg {
+            width: 17px;
+            height: 17px;
+          }
+        }
         .info {
           align-items: center;
           display: grid;
@@ -42,7 +54,6 @@
         .cycle-end {
           display: grid;
           grid-template-columns: 1fr 1fr;
-          background-color: #7fa8869c;
           padding: 6px;
           align-items: center;
 
@@ -52,8 +63,8 @@
             column-gap: 10px;
           }
           svg {
-            height: 25px;
-            width: 25px;
+            height: 20px;
+            width: 20px;
           }
         }
       }
@@ -75,7 +86,7 @@
       .lp-link {
         display: flex;
         align-items: center;
-        justify-content: end;
+        justify-content: flex-end;
         column-gap: 5px;
       }
       .balance {
@@ -101,17 +112,23 @@
     grid: 1fr / 1fr 2fr;
     .investment-plan {
       display: grid;
-      grid: max-content 1fr 2fr/ 1fr;
-
+      grid: max-content max-content 1fr / max-content;
+      row-gap: 30px;
       .optimal-amount {
         display: grid;
-        grid-row: max-content 1fr/ 1fr;
+        align-content: stretch;
       }
       .calculate {
         display: grid;
-        grid: 1fr/ 3fr 1fr;
+        row-gap: 10px;
         align-self: center;
         column-gap: 20px;
+      }
+    }
+    @media screen and (max-width: 1111px) {
+      .investment-plan {
+        grid-template-rows: max-content max-content 0.5fr;
+        row-gap: 10px;
       }
     }
   }
@@ -128,5 +145,15 @@
     display: grid;
     grid: 1fr / max-content 1fr;
     align-items: center;
+  }
+
+  button {
+    width: auto;
+  }
+}
+
+@media screen and (max-width: 1450px) {
+  .pool-farming {
+    grid-template-columns: 1fr;
   }
 }
