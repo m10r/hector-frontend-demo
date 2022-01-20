@@ -24,6 +24,7 @@ import AccessAlarmIcon from "@material-ui/icons/AccessAlarm";
 import moment from "moment";
 import Countdown, { zeroPad } from "react-countdown";
 import { StakingInfo } from "src/types/farming.model";
+import { Skeleton } from "@material-ui/lab";
 
 export default function PoolFarming({ theme }: any) {
   const { assetPrice, stakingRewardsInfo, hugsPoolInfo, stakingInfo, isLoading } = useSelector(
@@ -116,16 +117,24 @@ export default function PoolFarming({ theme }: any) {
                   <div>
                     <div className="title">Apr:</div>
                     <div className={theme.palette.text?.gold + " data"}>
-                      {getFormattedStakingInfo("_apr", "mwei").toFixed(2)}%
+                      {stakingInfo ? getFormattedStakingInfo("_apr", "mwei").toFixed(2) : <Skeleton width="50%" />}%
                     </div>
                   </div>
                   <div>
                     <div className="title">TVL:</div>
-                    <div className="data">${getFormattedStakingInfo("_tvl", "ether").toFixed(2)}</div>
+                    <div className="data">
+                      ${stakingInfo ? getFormattedStakingInfo("_tvl", "ether").toFixed(2) : <Skeleton width="50%" />}
+                    </div>
                   </div>
                   <div>
                     <div className="title">Cycle Beginning:</div>
-                    <div className="data">{new Date(+stakingInfo?._begin * 1000).toString()}</div>
+                    <div className="data">
+                      {+stakingInfo?._begin ? (
+                        new Date(+stakingInfo?._begin * 1000).toString()
+                      ) : (
+                        <Skeleton width="50%" />
+                      )}
+                    </div>
                   </div>
                 </div>
                 <div className="cycle-end">
@@ -135,7 +144,7 @@ export default function PoolFarming({ theme }: any) {
                     {+stakingInfo?._finish ? (
                       <Countdown date={new Date(+stakingInfo?._finish * 1000).toString()} renderer={renderer} />
                     ) : (
-                      <div>Loading</div>
+                      <Skeleton width="50%" />
                     )}
                   </div>
                 </div>
@@ -150,11 +159,23 @@ export default function PoolFarming({ theme }: any) {
               <div className="balance">
                 <div>
                   <div className="title">Your LP Tokens:</div>
-                  <div className="data">{hugsPoolInfo?.balance.toFixed(2)}</div>
+                  <div className="data">
+                    {hugsPoolInfo?.balance || hugsPoolInfo?.balance === 0 ? (
+                      hugsPoolInfo?.balance.toFixed(2)
+                    ) : (
+                      <Skeleton width="40%" />
+                    )}
+                  </div>
                 </div>
                 <div>
                   <div className="title">Staked LP Tokens: </div>
-                  <div className="data">{stakingRewardsInfo?.balance.toFixed(2)}</div>
+                  <div className="data">
+                    {stakingRewardsInfo?.balance || stakingRewardsInfo?.balance == 0 ? (
+                      stakingRewardsInfo?.balance.toFixed(2)
+                    ) : (
+                      <Skeleton width="40%" />
+                    )}
+                  </div>
                 </div>
                 {/* <div className="data">
                       Investment Value: {(stakingRewardsInfo?.balance * hugsPoolInfo?.virtualPrice).toFixed(2)}
@@ -162,7 +183,12 @@ export default function PoolFarming({ theme }: any) {
                 <div>
                   <div className="title">FTM Rewards</div>
                   <div className="data">
-                    {getFormattedStakingInfo("_earnedRewardAmount", "ether").toFixed(4)} (${getEarnedUsd()})
+                    {stakingInfo ? (
+                      getFormattedStakingInfo("_earnedRewardAmount", "ether").toFixed(4)
+                    ) : (
+                      <Skeleton width="40%" />
+                    )}{" "}
+                    (${getEarnedUsd()})
                   </div>
                 </div>
               </div>
@@ -251,9 +277,30 @@ export default function PoolFarming({ theme }: any) {
               </div>
               <div className="optimal-amount">
                 <div className="title">Optimal Amounts</div>
-                <div className="data">Hugs: {getFormattedStakingInfo("_optimalHugsAmount", "ether").toFixed(2)}</div>
-                <div className="data">DAI: {getFormattedStakingInfo("_optimalDaiAmount", "ether").toFixed(2)}</div>
-                <div className="data">USDC: {getFormattedStakingInfo("_optimalUsdcAmount", "ether").toFixed(2)}</div>
+                <div className="data">
+                  Hugs:{" "}
+                  {stakingInfo ? (
+                    getFormattedStakingInfo("_optimalHugsAmount", "ether").toFixed(2)
+                  ) : (
+                    <Skeleton width="40%" />
+                  )}
+                </div>
+                <div className="data">
+                  DAI:{" "}
+                  {stakingInfo ? (
+                    getFormattedStakingInfo("_optimalDaiAmount", "ether").toFixed(2)
+                  ) : (
+                    <Skeleton width="40%" />
+                  )}
+                </div>
+                <div className="data">
+                  USDC:{" "}
+                  {stakingInfo ? (
+                    getFormattedStakingInfo("_optimalUsdcAmount", "ether").toFixed(2)
+                  ) : (
+                    <Skeleton width="40%" />
+                  )}
+                </div>
               </div>
             </div>
             <ProjectionLineChart quantity={calcQuantity} apr={+getFormattedStakingInfo("_apr", "mwei").toFixed(2)} />
