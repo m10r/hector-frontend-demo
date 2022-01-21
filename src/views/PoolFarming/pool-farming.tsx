@@ -48,7 +48,9 @@ export default function PoolFarming({ theme }: any) {
     return hugsPoolInfo?.allowance < hugsPoolInfo?.balance;
   }, [hugsPoolInfo]);
 
-  const hasLpBalance = useCallback(() => hugsPoolInfo?.balance > 0, [hugsPoolInfo]);
+  const hasLpBalance = useCallback(() => hugsPoolInfo?.balance > 0 && hugsPoolInfo?.allowance > hugsPoolInfo?.balance, [
+    hugsPoolInfo,
+  ]);
 
   const renderer = ({ days, hours, minutes, seconds, completed }: any) => {
     if (completed) {
@@ -95,7 +97,7 @@ export default function PoolFarming({ theme }: any) {
     getAllData();
   }
   async function dispatchApprove(): Promise<void> {
-    await dispatch(approve({ networkID: chainID, provider }));
+    await dispatch(approve({ networkID: chainID, provider, address }));
     getAllData();
   }
 

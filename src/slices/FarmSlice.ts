@@ -25,10 +25,10 @@ const stakingRewardsContract = (chainID: number, provider: JsonRpcProvider, addr
     provider.getSigner(address),
 ) as unknown) as StakingRewardsContract;
 
-const hugsPoolContract = (chainID: number, provider: JsonRpcProvider) => (new ethers.Contract(
+const hugsPoolContract = (chainID: number, provider: JsonRpcProvider, address: string) => (new ethers.Contract(
     addresses[chainID].HUGS_POOL_ADDRESS as string,
     hugsPoolAbi,
-    provider,
+    provider.getSigner(address),
 ) as unknown) as HugsPoolContract;
 
 export const getAssetPrice = createAsyncThunk("farm/getAssetPrice", async ({ networkID, provider }: IBaseAsyncThunk) =>
@@ -43,14 +43,14 @@ export const getStakingRewardsInfo = createAsyncThunk("farm/getStakingRewardsInf
 });
 
 export const getHugsPoolInfo = createAsyncThunk("farm/getHugsPoolInfo", async ({ networkID, provider, address }: IBaseAddressAsyncThunk) => {
-    const originalBalance = await hugsPoolContract(networkID, provider).balanceOf(address);
+    const originalBalance = await hugsPoolContract(networkID, provider, address).balanceOf(address);
     let balance = +ethers.utils.formatEther(originalBalance);
 
-    let allowance = +(await hugsPoolContract(networkID, provider).allowance(
+    let allowance = +(await hugsPoolContract(networkID, provider, address).allowance(
         address,
         addresses[networkID].FARMINNG_STAKING_REWARDS_ADDRESS as string,
     ));
-    let virtualPrice = +ethers.utils.formatEther(await hugsPoolContract(networkID, provider).get_virtual_price());
+    let virtualPrice = +ethers.utils.formatEther(await hugsPoolContract(networkID, provider, address).get_virtual_price());
 
     return { balance, allowance, virtualPrice, originalBalance };
 });
@@ -75,9 +75,9 @@ export const withDrawStaked = createAsyncThunk("farm/withDrawStaked", async ({ n
     }
 });
 
-export const approve = createAsyncThunk("farm/approve", async ({ networkID, provider }: IBaseAsyncThunk, { dispatch }) => {
+export const approve = createAsyncThunk("farm/approve", async ({ networkID, provider, address }: IBaseAddressAsyncThunk, { dispatch }) => {
     try {
-        const approveTrans = await hugsPoolContract(networkID, provider).approve(
+        const approveTrans = await hugsPoolContract(networkID, provider, address).approve(
             addresses[networkID].FARMINNG_STAKING_REWARDS_ADDRESS as string,
             "1000000000000000000000000",
         );
@@ -87,7 +87,7 @@ export const approve = createAsyncThunk("farm/approve", async ({ networkID, prov
         dispatch(info(messages.your_balance_update_soon));
         await sleep(9);
         dispatch(info(messages.your_balance_updated));
-    } catch {
+    } catch (e) {
         dispatch(error("Failed to approve"));
     }
 });
