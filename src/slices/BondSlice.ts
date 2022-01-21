@@ -24,7 +24,12 @@ import { getAllBondDetails, GlobalBondData } from 'src/helpers/bond-details.help
 export const getGlobalBondData = createAsyncThunk(
   'bonding/getGlobalBondData',
   async ({ networkID, provider }: IBaseAsyncThunk) => {
-    return await getAllBondDetails(networkID, provider);
+    try {
+      return await getAllBondDetails(networkID, provider);
+
+    } catch (e) {
+      console.error(e)
+    }
   }
 );
 

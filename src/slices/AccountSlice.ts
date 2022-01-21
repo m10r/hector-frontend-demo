@@ -35,7 +35,12 @@ export const getBalances = createAsyncThunk(
 export const getUserBondData = createAsyncThunk(
   "account/getUserBondData",
   async ({ address, networkID, provider }: IBaseAddressAsyncThunk) => {
-    return await getUserBondDetails(networkID, provider, address);
+    try {
+      return await getUserBondDetails(networkID, provider, address);
+
+    } catch (e) {
+      console.error(e)
+    }
   },
 );
 
@@ -53,59 +58,65 @@ export const loadAccountDetails = createAsyncThunk(
     let warmUpAmount = 0;
     let expiry = 0;
 
-    const daiContract = new ethers.Contract(addresses[networkID].DAI_ADDRESS as string, ierc20Abi, provider);
-    const daiBalance = await daiContract.balanceOf(address);
+    try {
+      const daiContract = new ethers.Contract(addresses[networkID].DAI_ADDRESS as string, ierc20Abi, provider);
+      const daiBalance = await daiContract.balanceOf(address);
 
-    const hecContract = new ethers.Contract(addresses[networkID].HEC_ADDRESS as string, ierc20Abi, provider);
-    hecBalance = await hecContract.balanceOf(address);
-    stakeAllowance = await hecContract.allowance(address, addresses[networkID].STAKING_HELPER_ADDRESS);
+      const hecContract = new ethers.Contract(addresses[networkID].HEC_ADDRESS as string, ierc20Abi, provider);
+      hecBalance = await hecContract.balanceOf(address);
+      stakeAllowance = await hecContract.allowance(address, addresses[networkID].STAKING_HELPER_ADDRESS);
 
-    const shecContract = new ethers.Contract(addresses[networkID].SHEC_ADDRESS as string, sHECv2, provider);
-    shecBalance = await shecContract.balanceOf(address);
-    unstakeAllowance = await shecContract.allowance(address, addresses[networkID].STAKING_ADDRESS);
-    const wrapAllowance = await shecContract.allowance(address, addresses[networkID].WSHEC_ADDRESS);
+      const shecContract = new ethers.Contract(addresses[networkID].SHEC_ADDRESS as string, sHECv2, provider);
+      shecBalance = await shecContract.balanceOf(address);
+      unstakeAllowance = await shecContract.allowance(address, addresses[networkID].STAKING_ADDRESS);
+      const wrapAllowance = await shecContract.allowance(address, addresses[networkID].WSHEC_ADDRESS);
 
-    const oldshecContract = new ethers.Contract(addresses[networkID].OLD_SHEC_ADDRESS as string, sHECv2, provider);
-    oldshecBalance = await oldshecContract.balanceOf(address);
-    oldunstakeAllowance = await oldshecContract.allowance(address, addresses[networkID].OLD_STAKING_ADDRESS);
+      const oldshecContract = new ethers.Contract(addresses[networkID].OLD_SHEC_ADDRESS as string, sHECv2, provider);
+      oldshecBalance = await oldshecContract.balanceOf(address);
+      oldunstakeAllowance = await oldshecContract.allowance(address, addresses[networkID].OLD_STAKING_ADDRESS);
 
-    const wshecContract = new ethers.Contract(addresses[networkID].WSHEC_ADDRESS as string, wsHEC, provider);
-    const unwrapAllowance = await wshecContract.allowance(address, addresses[networkID].WSHEC_ADDRESS);
-    const wshecBalance = await wshecContract.balanceOf(address);
+      const wshecContract = new ethers.Contract(addresses[networkID].WSHEC_ADDRESS as string, wsHEC, provider);
+      const unwrapAllowance = await wshecContract.allowance(address, addresses[networkID].WSHEC_ADDRESS);
+      const wshecBalance = await wshecContract.balanceOf(address);
 
-    const stakingContract = new ethers.Contract(addresses[networkID].STAKING_ADDRESS as string, HectorStakingv2, provider,);
-    const warmupInfo = await stakingContract.warmupInfo(address);
-    const balance = await shecContract.balanceForGons(warmupInfo.gons);
-    depositAmount = warmupInfo.deposit;
-    warmUpAmount = +ethers.utils.formatUnits(balance, "gwei");
-    expiry = warmupInfo.expiry;
+      const stakingContract = new ethers.Contract(addresses[networkID].STAKING_ADDRESS as string, HectorStakingv2, provider,);
+      const warmupInfo = await stakingContract.warmupInfo(address);
+      const balance = await shecContract.balanceForGons(warmupInfo.gons);
+      depositAmount = warmupInfo.deposit;
+      warmUpAmount = +ethers.utils.formatUnits(balance, "gwei");
+      expiry = warmupInfo.expiry;
+      return {
+        balances: {
+          dai: ethers.utils.formatEther(daiBalance),
+          hec: ethers.utils.formatUnits(hecBalance, "gwei"),
+          shec: ethers.utils.formatUnits(shecBalance, "gwei"),
+          oldshec: ethers.utils.formatUnits(oldshecBalance, "gwei"),
+          wshec: ethers.utils.formatEther(wshecBalance),
+        },
+        staking: {
+          hecStake: +stakeAllowance,
+          hecUnstake: +unstakeAllowance,
+          oldhecUnstake: +oldunstakeAllowance,
+        },
+        wrapping: {
+          hecWrap: +wrapAllowance,
+          hecUnwrap: +unwrapAllowance,
+        },
+        warmup: {
+          depositAmount: +ethers.utils.formatUnits(depositAmount, "gwei"),
+          warmUpAmount,
+          expiryBlock: expiry,
+        },
+        bonding: {
+          daiAllowance: daiBondAllowance,
+        },
+      };
+    } catch (e) {
+      console.log(e)
+    }
 
-    return {
-      balances: {
-        dai: ethers.utils.formatEther(daiBalance),
-        hec: ethers.utils.formatUnits(hecBalance, "gwei"),
-        shec: ethers.utils.formatUnits(shecBalance, "gwei"),
-        oldshec: ethers.utils.formatUnits(oldshecBalance, "gwei"),
-        wshec: ethers.utils.formatEther(wshecBalance),
-      },
-      staking: {
-        hecStake: +stakeAllowance,
-        hecUnstake: +unstakeAllowance,
-        oldhecUnstake: +oldunstakeAllowance,
-      },
-      wrapping: {
-        hecWrap: +wrapAllowance,
-        hecUnwrap: +unwrapAllowance,
-      },
-      warmup: {
-        depositAmount: +ethers.utils.formatUnits(depositAmount, "gwei"),
-        warmUpAmount,
-        expiryBlock: expiry,
-      },
-      bonding: {
-        daiAllowance: daiBondAllowance,
-      },
-    };
+
+
   },
 );
 
@@ -137,44 +148,49 @@ export const calculateUserBondDetails = createAsyncThunk(
     // dispatch(fetchBondInProgress());
 
     // Calculate bond details.
-    const bondData = userBondData!.find(userBond => bond.networkAddrs[networkID].bondAddress.toLowerCase() === userBond.Contract.toLowerCase());
-    if (!bondData) {
-      return;
-    }
-    const reserveContract = bond.getContractForReserve(networkID, provider);
+    try {
+      const bondData = userBondData!.find(userBond => bond.networkAddrs[networkID].bondAddress.toLowerCase() === userBond.Contract.toLowerCase());
+      if (!bondData) {
+        return;
+      }
+      const reserveContract = bond.getContractForReserve(networkID, provider);
 
-    let interestDue, pendingPayout, bondMaturationBlock;
+      let interestDue, pendingPayout, bondMaturationBlock;
 
-    const bondDetails = bondData!.Info;
-    interestDue = +bondDetails.Payout / Math.pow(10, 9);
-    bondMaturationBlock = +bondDetails.Vesting + +bondDetails.LastBlock;
-    pendingPayout = bondData!.PendingPayout;
+      const bondDetails = bondData!.Info;
+      interestDue = +bondDetails.Payout / Math.pow(10, 9);
+      bondMaturationBlock = +bondDetails.Vesting + +bondDetails.LastBlock;
+      pendingPayout = bondData!.PendingPayout;
 
-    let allowance,
-      balance = 0;
-    allowance = await reserveContract.allowance(address, bond.getAddressForBond(networkID));
-    balance = await reserveContract.balanceOf(address);
-    let balanceVal;
-    balanceVal = ethers.utils.formatEther(balance);
-    if (bond.decimals) {
-      balanceVal = ethers.utils.formatUnits(balance, "mwei");
-    }
-    if (bond.isLP) {
+      let allowance,
+        balance = 0;
+      allowance = await reserveContract.allowance(address, bond.getAddressForBond(networkID));
+      balance = await reserveContract.balanceOf(address);
+      let balanceVal;
       balanceVal = ethers.utils.formatEther(balance);
+      if (bond.decimals) {
+        balanceVal = ethers.utils.formatUnits(balance, "mwei");
+      }
+      if (bond.isLP) {
+        balanceVal = ethers.utils.formatEther(balance);
+      }
+      return {
+        bond: bond.name,
+        displayName: bond.displayName,
+        bondIconSvg: bond.bondIconSvg,
+        isLP: bond.isLP,
+        isFour: bond.isFour,
+        isOld: bond.isOld,
+        allowance: Number(allowance),
+        balance: balanceVal.toString(),
+        interestDue,
+        bondMaturationBlock,
+        pendingPayout: ethers.utils.formatUnits(pendingPayout, "gwei"),
+      };
+    } catch (e) {
+      console.error(e);
     }
-    return {
-      bond: bond.name,
-      displayName: bond.displayName,
-      bondIconSvg: bond.bondIconSvg,
-      isLP: bond.isLP,
-      isFour: bond.isFour,
-      isOld: bond.isOld,
-      allowance: Number(allowance),
-      balance: balanceVal.toString(),
-      interestDue,
-      bondMaturationBlock,
-      pendingPayout: ethers.utils.formatUnits(pendingPayout, "gwei"),
-    };
+
   },
 );
 

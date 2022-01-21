@@ -26,8 +26,6 @@ query {
     treasuryMIMMarketValue
     treasuryFRAXRiskFreeValue
     treasuryFRAXMarketValue
-    treasuryGOHMRiskFreeValue
-    treasuryGOHMMarketValue
     treasuryBOOMarketValue
     treasuryBOORiskFreeValue
     treasuryCRVRiskFreeValue
@@ -176,7 +174,7 @@ export const bulletpoints = {
 
 export const tooltipItems = {
   tvl: ["Total Value Deposited"],
-  coin: ["DAI", "USDC", "MiM", "FRAX", "gOHM", "WFTM", "BOO", "CRV", "WETH"],
+  coin: ["DAI", "USDC", "MiM", "FRAX", "WFTM", "BOO", "CRV", "WETH"],
   apy: ["APY"],
   runway: ["Days"],
   pol: ["SLP Treasury", "Market SLP"],
