@@ -1,9 +1,9 @@
 .pool-farming {
   display: grid;
   grid-template-rows: 45% 50%; // Define height of row
-  grid-template-columns: 70%;
+  grid-template-columns: 35% 35%;
 
-  row-gap: 20px;
+  gap: 20px;
   height: 100%;
   align-content: center;
   justify-content: center;
@@ -16,121 +16,6 @@
   .data {
     font-size: 16px;
     align-self: center;
-
-    @media screen and (max-width: 1280px) {
-      .data {
-        text-align: end;
-      }
-    }
-  }
-
-  .farming-account {
-    display: grid;
-    grid: 1fr/ 1fr 1fr;
-    column-gap: 30px;
-    .farming {
-      display: grid;
-      grid: 1fr / 1fr;
-      row-gap: 20px;
-      .farming-stats {
-        display: grid;
-        grid: max-content 1fr max-content / 1fr;
-        row-gap: 20px;
-        .header {
-          grid: 1fr / max-content 1fr max-content;
-          svg {
-            width: 17px;
-            height: 17px;
-          }
-        }
-        .info {
-          align-items: center;
-          display: grid;
-          > div {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-          }
-        }
-        .cycle-end {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          padding: 6px;
-          align-items: center;
-
-          .timer {
-            display: flex;
-            align-items: center;
-            column-gap: 10px;
-          }
-          svg {
-            height: 20px;
-            width: 20px;
-          }
-        }
-      }
-
-      .seperate {
-        border-left: 2px solid white;
-        height: 95%;
-        margin: 10px;
-        display: grid;
-        align-self: center;
-      }
-    }
-
-    .account {
-      display: grid;
-      align-items: center;
-      grid: 50px 1fr max-content / 1fr;
-      row-gap: 20px;
-      .lp-link {
-        display: flex;
-        align-items: center;
-        justify-content: flex-end;
-        column-gap: 5px;
-      }
-      .balance {
-        display: grid;
-        align-items: center;
-        height: 100%;
-        > div {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-        }
-      }
-
-      .actions {
-        display: grid;
-        grid-auto-flow: column;
-        column-gap: 20px;
-      }
-    }
-  }
-
-  .projection {
-    display: grid;
-    grid: 1fr / 1fr 2fr;
-    .investment-plan {
-      display: grid;
-      grid: max-content max-content 1fr / max-content;
-      row-gap: 30px;
-      .optimal-amount {
-        display: grid;
-        align-content: stretch;
-      }
-      .calculate {
-        display: grid;
-        row-gap: 10px;
-        align-self: center;
-        column-gap: 20px;
-      }
-    }
-    @media screen and (max-width: 1111px) {
-      .investment-plan {
-        grid-template-rows: max-content max-content 0.5fr;
-        row-gap: 10px;
-      }
-    }
   }
 
   .hec-card {
@@ -150,10 +35,123 @@
   button {
     width: auto;
   }
+  .farming {
+    display: grid;
+    grid: 1fr / 1fr;
+    row-gap: 20px;
+    .farming-stats {
+      display: grid;
+      grid: max-content 1fr max-content / 1fr;
+      row-gap: 20px;
+      .header {
+        grid: 1fr / max-content 1fr max-content;
+        svg {
+          width: 17px;
+          height: 17px;
+        }
+      }
+      .info {
+        align-items: center;
+        display: grid;
+        > div {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      .cycle-end {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        padding: 6px;
+        align-items: center;
+
+        .timer {
+          display: flex;
+          align-items: center;
+          column-gap: 10px;
+        }
+        svg {
+          height: 20px;
+          width: 20px;
+        }
+      }
+    }
+
+    .seperate {
+      border-left: 2px solid white;
+      height: 95%;
+      margin: 10px;
+      display: grid;
+      align-self: center;
+    }
+  }
+
+  .account {
+    display: grid;
+    align-items: center;
+    grid: 50px 1fr max-content / 1fr;
+    row-gap: 20px;
+    .lp-link {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      column-gap: 5px;
+    }
+    .balance {
+      display: grid;
+      align-items: center;
+      height: 100%;
+      > div {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    .actions {
+      display: grid;
+      grid-auto-flow: column;
+      column-gap: 20px;
+    }
+  }
+
+  .projection {
+    display: grid;
+    grid-column-start: span 2;
+    grid: 1fr / 1fr 2fr;
+    .investment-plan {
+      display: grid;
+      grid: max-content max-content 1fr / max-content;
+      row-gap: 30px;
+      .optimal-amount {
+        display: grid;
+        align-content: stretch;
+        font-size: 16px;
+
+        text-align: left !important;
+      }
+      .calculate {
+        display: grid;
+        row-gap: 10px;
+        align-self: center;
+        column-gap: 20px;
+      }
+    }
+    @media screen and (max-width: 1111px) {
+      .investment-plan {
+        grid-template-rows: max-content max-content 0.5fr;
+        row-gap: 10px;
+      }
+    }
+  }
 }
 
 @media screen and (max-width: 1450px) {
   .pool-farming {
     grid-template-columns: 1fr;
+  }
+}
+
+@media screen and (max-width: 1280px) {
+  .data {
+    text-align: end;
   }
 }
