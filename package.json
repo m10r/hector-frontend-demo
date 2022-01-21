@@ -100,6 +100,7 @@
     "ipfs-http-client": "~50.1.2",
     "less-plugin-npm-import": "~2.1.0",
     "prettier": "~2.0.5",
+    "react-error-overlay": "^6.0.9",
     "surge": "~0.21.5"
   },
   "eslintConfig": {
