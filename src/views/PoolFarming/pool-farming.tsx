@@ -204,51 +204,71 @@ export default function PoolFarming({ theme }: any) {
           </div>
         </div>
         <div className="actions">
-          {+getFormattedStakingInfo("_earnedRewardAmount", "ether") > 0 && (
+          {+getFormattedStakingInfo("_earnedRewardAmount", "ether") > 0 ||
+          hasLpBalance() ||
+          hasAllowance() ||
+          stakingRewardsInfo?.balance > 0 ? (
             <>
-              <Button
-                className="stake-button"
-                variant="contained"
-                color="primary"
-                disabled={isLoading}
-                onClick={() => dispatchClaimEarned()}
-              >
-                Claim Rewards
-              </Button>
+              {+getFormattedStakingInfo("_earnedRewardAmount", "ether") > 0 && (
+                <>
+                  <Button
+                    className="stake-button"
+                    variant="contained"
+                    color="primary"
+                    disabled={isLoading}
+                    onClick={() => dispatchClaimEarned()}
+                  >
+                    Claim Rewards
+                  </Button>
+                </>
+              )}
+              {hasLpBalance() && (
+                <Button
+                  className="stake-button"
+                  variant="contained"
+                  color="primary"
+                  disabled={isLoading}
+                  onClick={() => dispatchStake()}
+                >
+                  Stake
+                </Button>
+              )}
+              {hasAllowance() && (
+                <Button
+                  className="stake-button"
+                  variant="contained"
+                  color="primary"
+                  disabled={isLoading}
+                  onClick={() => dispatchApprove()}
+                >
+                  Approve
+                </Button>
+              )}
+              {stakingRewardsInfo?.balance > 0 && (
+                <>
+                  <Button
+                    className="stake-button"
+                    variant="contained"
+                    color="primary"
+                    disabled={isLoading}
+                    onClick={() => dispatchWithDraw()}
+                  >
+                    Withdraw
+                  </Button>
+                </>
+              )}
             </>
-          )}
-          {hasLpBalance() && (
-            <Button
-              className="stake-button"
-              variant="contained"
-              color="primary"
-              disabled={isLoading}
-              onClick={() => dispatchStake()}
-            >
-              Stake
-            </Button>
-          )}
-          {hasAllowance() && (
-            <Button
-              className="stake-button"
-              variant="contained"
-              color="primary"
-              disabled={isLoading}
-              onClick={() => dispatchApprove()}
-            >
-              Approve
-            </Button>
-          )}
-          {stakingRewardsInfo?.balance > 0 && (
+          ) : (
             <>
               <Button
                 className="stake-button"
                 variant="contained"
                 color="primary"
                 disabled={isLoading}
-                onClick={() => dispatchWithDraw()}
+                target="_blank"
+                href="https://ftm.curve.fi/factory/50/deposit"
               >
-                Withdraw
+                Get LP
               </Button>
             </>
           )}
