@@ -39,7 +39,7 @@ export default function ProjectionLineChart({ apr, quantity }: ProjectionProps) 
   };
 
   return (
-    <div style={{ width: "100%", height: "100%" }}>
+    <div className="chart">
       <ResponsiveContainer>
         <AreaChart
           data={data}

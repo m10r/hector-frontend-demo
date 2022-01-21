@@ -9,11 +9,11 @@ import { ReactComponent as GlobeIcon } from "../../assets/icons/globe.svg";
 import { ReactComponent as DashboardIcon } from "../../assets/icons/dashboard.svg";
 import { ReactComponent as WrapIcon } from "../../assets/icons/wrap.svg";
 import { ReactComponent as HectorIcon } from "../../assets/icons/hector-nav-logo.svg";
+import { ReactComponent as FarmIcon } from "../../assets/icons/farm.svg";
 import { trim, shorten } from "../../helpers";
 import { useAddress, useWeb3Context } from "src/hooks/web3Context";
 import useBonds from "../../hooks/Bonds";
 import { Paper, Link, Box, Typography, SvgIcon } from "@material-ui/core";
-import { Skeleton } from "@material-ui/lab";
 import "./sidebar.scss";
 
 function NavContent() {
@@ -38,6 +38,9 @@ function NavContent() {
       return true;
     }
     if (currentPath.indexOf("calculator") >= 0 && page === "calculator") {
+      return true;
+    }
+    if (currentPath.indexOf("farming") >= 0 && page === "farming") {
       return true;
     }
     if ((currentPath.indexOf("bonds") >= 0 || currentPath.indexOf("choose_bond") >= 0) && page === "bonds") {
@@ -129,6 +132,20 @@ function NavContent() {
                 <Typography variant="h6">
                   <SvgIcon color="primary" component={BondIcon} />
                   Bond
+                </Typography>
+              </Link>
+              <Link
+                component={NavLink}
+                id="farm-nav"
+                to="/farming"
+                isActive={(match, location) => {
+                  return checkPage(match, location, "farming");
+                }}
+                className={`button-dapp-menu ${isActive ? "active" : ""}`}
+              >
+                <Typography variant="h6">
+                  <SvgIcon color="primary" component={FarmIcon} />
+                  Farm
                 </Typography>
               </Link>
 

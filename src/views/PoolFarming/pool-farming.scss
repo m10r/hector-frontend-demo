@@ -1,10 +1,16 @@
+@mixin info-row {
+  > div {
+    display: grid;
+    grid-template-columns: 1fr 0.5fr;
+  }
+}
+
 .pool-farming {
   display: grid;
-  grid-template-rows: 45% 50%; // Define height of row
+  grid-template-rows: 1fr 1fr; // Define height of row
   grid-template-columns: 35% 35%;
-
+  box-sizing: border-box;
   gap: 20px;
-  height: 100%;
   align-content: center;
   justify-content: center;
 
@@ -38,6 +44,8 @@
   .farming {
     display: grid;
     grid: 1fr / 1fr;
+    box-sizing: border-box;
+
     row-gap: 20px;
     .farming-stats {
       display: grid;
@@ -53,21 +61,26 @@
       .info {
         align-items: center;
         display: grid;
-        > div {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-        }
+        @include info-row;
       }
+
       .cycle-end {
         display: grid;
-        grid-template-columns: 1fr 1fr;
-        padding: 6px;
+        grid-template-columns: 1fr 0.5fr;
         align-items: center;
 
         .timer {
           display: flex;
           align-items: center;
-          column-gap: 10px;
+          svg {
+            margin-right: 10px;
+          }
+        }
+
+        @media screen and (max-width: 750px) {
+          .timer {
+            justify-content: end;
+          }
         }
         svg {
           height: 20px;
@@ -89,6 +102,8 @@
     display: grid;
     align-items: center;
     grid: 50px 1fr max-content / 1fr;
+    box-sizing: border-box;
+
     row-gap: 20px;
     .lp-link {
       display: flex;
@@ -100,10 +115,7 @@
       display: grid;
       align-items: center;
       height: 100%;
-      > div {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-      }
+      @include info-row;
     }
 
     .actions {
@@ -111,22 +123,42 @@
       grid-auto-flow: column;
       column-gap: 20px;
     }
+
+    @media screen and (max-width: 410px) {
+      .actions {
+        row-gap: 10px;
+        column-gap: 0;
+        grid-auto-flow: inherit;
+      }
+    }
   }
 
   .projection {
     display: grid;
     grid-column-start: span 2;
     grid: 1fr / 1fr 2fr;
+    box-sizing: border-box;
+
     .investment-plan {
       display: grid;
       grid: max-content max-content 1fr / max-content;
-      row-gap: 30px;
+      row-gap: 20px;
       .optimal-amount {
         display: grid;
         align-content: stretch;
         font-size: 16px;
-
+        row-gap: 10px;
         text-align: left !important;
+      }
+      @media screen and (max-width: 400px) {
+        .optimal-amount {
+          grid: max-content 1fr / repeat(3, max-content);
+          row-gap: 10px;
+          justify-content: space-between;
+          .title {
+            grid-column: 1 / span 3;
+          }
+        }
       }
       .calculate {
         display: grid;
@@ -135,11 +167,31 @@
         column-gap: 20px;
       }
     }
+
     @media screen and (max-width: 1111px) {
       .investment-plan {
         grid-template-rows: max-content max-content 0.5fr;
         row-gap: 10px;
       }
+    }
+
+    @media screen and (max-width: 400px) {
+      .chart {
+        min-height: 200px;
+        max-width: 300px;
+      }
+    }
+  }
+  @media screen and (max-width: 750px) {
+    .projection {
+      grid-column-start: initial;
+    }
+  }
+  @media screen and (max-width: 400px) {
+    .projection {
+      grid-column-start: initial;
+      grid: initial;
+      row-gap: 20px;
     }
   }
 }
@@ -147,6 +199,12 @@
 @media screen and (max-width: 1450px) {
   .pool-farming {
     grid-template-columns: 1fr;
+  }
+}
+@media screen and (max-width: 750px) {
+  .pool-farming {
+    grid-template-columns: 1fr;
+    grid-template-rows: repeat(3, max-content);
   }
 }
 

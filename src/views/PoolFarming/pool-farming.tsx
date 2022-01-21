@@ -16,7 +16,7 @@ import { useWeb3Context } from "src/hooks/web3Context";
 import { useDispatch, useSelector } from "react-redux";
 
 import ProjectionLineChart from "src/components/pool-farming/line-chart/line-chart";
-import { ReactComponent as wshecTokenImg } from "../../assets/tokens/wsHEC.svg";
+import farmingImg from "../../assets/Farming-info.jpg";
 import { RootState } from "src/store";
 import {
   approve,
@@ -34,6 +34,7 @@ import HelpOutlineIcon from "@material-ui/icons/HelpOutline";
 import Countdown, { zeroPad } from "react-countdown";
 import { StakingInfo } from "src/types/farming.model";
 import { Skeleton } from "@material-ui/lab";
+import { ReactComponent as TorSVG } from "../../assets/tokens/TOR.svg";
 
 export default function PoolFarming({ theme }: any) {
   const { assetPrice, stakingRewardsInfo, hugsPoolInfo, stakingInfo, isLoading } = useSelector(
@@ -118,9 +119,9 @@ export default function PoolFarming({ theme }: any) {
       <div className="MuiPaper-root hec-card farming">
         <div className="farming-stats">
           <div className="header">
-            <SvgIcon component={wshecTokenImg} viewBox="0 0 100 100" style={{ height: "50px", width: "50px" }} />
+            <TorSVG style={{ height: "45px", width: "45px", marginRight: "10px" }} />
             <div className="title">TOR Farming</div>
-            <Tooltip arrow title="Farming is op">
+            <Tooltip arrow title="Farming is amazing!">
               <HelpOutlineIcon />
             </Tooltip>
           </div>
@@ -140,7 +141,11 @@ export default function PoolFarming({ theme }: any) {
             <div>
               <div className="title">Cycle Beginning:</div>
               <div className="data">
-                {+stakingInfo?._begin ? new Date(+stakingInfo?._begin * 1000).toString() : <Skeleton width="50%" />}
+                {+stakingInfo?._begin ? (
+                  new Date(+stakingInfo?._begin * 1000).toLocaleDateString()
+                ) : (
+                  <Skeleton width="50%" />
+                )}
               </div>
             </div>
           </div>
