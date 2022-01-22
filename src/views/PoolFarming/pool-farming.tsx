@@ -164,7 +164,7 @@ export default function PoolFarming({ theme }: any) {
         <div className="header">
           <div className="title">Earned Rewards</div>
           <Link className="lp-link" target="_blank" href="https://ftm.curve.fi/factory/50/deposit">
-            LP Tokens
+            LP
             <SvgIcon component={ArrowUp} htmlColor="#A3A3A3" />
           </Link>
         </div>
