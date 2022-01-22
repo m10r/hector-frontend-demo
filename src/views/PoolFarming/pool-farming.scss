@@ -9,6 +9,7 @@
   display: grid;
   grid-template-rows: 1fr 1fr; // Define height of row
   grid-template-columns: 35% 35%;
+  grid-auto-columns: minmax(0, 1fr);
   box-sizing: border-box;
   gap: 20px;
   align-content: center;
@@ -41,87 +42,64 @@
   button {
     width: auto;
   }
+
   .farming {
     display: grid;
-    grid: 1fr / 1fr;
+    grid: max-content 1fr / 1fr;
     box-sizing: border-box;
-
     row-gap: 20px;
-    .farming-stats {
-      display: grid;
-      grid: max-content 1fr max-content / 1fr;
-      row-gap: 20px;
-      .header {
-        grid: 1fr / max-content 1fr max-content;
-        svg {
-          width: 17px;
-          height: 17px;
-        }
+    .header {
+      grid: 50px / max-content 1fr max-content;
+      :last-child {
+        justify-self: flex-end;
       }
-      .info {
+      svg {
+        width: 17px;
+        height: 17px;
+      }
+      .lp-link {
+        display: flex;
         align-items: center;
-        display: grid;
-        @include info-row;
-      }
-
-      .cycle-end {
-        display: grid;
-        grid-template-columns: 1fr 0.5fr;
-        align-items: center;
-
-        .timer {
-          display: flex;
-          align-items: center;
-          svg {
-            margin-right: 10px;
-          }
-        }
-
-        @media screen and (max-width: 750px) {
-          .timer {
-            justify-content: end;
-          }
-        }
-        svg {
-          height: 20px;
-          width: 20px;
-        }
+        justify-content: flex-end;
+        column-gap: 5px;
       }
     }
-
-    .seperate {
-      border-left: 2px solid white;
-      height: 95%;
-      margin: 10px;
+    .info {
       display: grid;
-      align-self: center;
-    }
-  }
+      grid-auto-rows: minmax(40px, 1fr);
 
-  .account {
-    display: grid;
-    align-items: center;
-    grid: 50px 1fr max-content / 1fr;
-    box-sizing: border-box;
-
-    row-gap: 20px;
-    .lp-link {
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
-      column-gap: 5px;
-    }
-    .balance {
-      display: grid;
-      align-items: center;
-      height: 100%;
       @include info-row;
+    }
+
+    .cycle-end {
+      display: grid;
+      grid-template-columns: 1fr 0.5fr;
+      align-items: center;
+
+      .timer {
+        display: flex;
+        align-items: center;
+        svg {
+          margin-right: 10px;
+        }
+      }
+
+      @media screen and (max-width: 750px) {
+        .timer {
+          justify-content: end;
+        }
+      }
+      svg {
+        height: 20px;
+        width: 20px;
+      }
     }
 
     .actions {
       display: grid;
       grid-auto-flow: column;
       column-gap: 20px;
+      grid-template-columns: none !important;
     }
 
     @media screen and (max-width: 410px) {

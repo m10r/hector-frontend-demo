@@ -117,36 +117,34 @@ export default function PoolFarming({ theme }: any) {
   return (
     <div className="pool-farming">
       <div className="MuiPaper-root hec-card farming">
-        <div className="farming-stats">
-          <div className="header">
-            <TorSVG style={{ height: "45px", width: "45px", marginRight: "10px" }} />
-            <div className="title">TOR Farming</div>
-            <Tooltip arrow title="Farming is amazing!">
-              <HelpOutlineIcon />
-            </Tooltip>
+        <div className="header">
+          <TorSVG style={{ height: "45px", width: "45px", marginRight: "10px" }} />
+          <div className="title">TOR Farming</div>
+          <Tooltip arrow title="Farming is amazing!">
+            <HelpOutlineIcon />
+          </Tooltip>
+        </div>
+        <div className="info">
+          <div>
+            <div className="title">Apr:</div>
+            <div className={theme.palette.text?.gold + " data"}>
+              {stakingInfo ? getFormattedStakingInfo("_apr", "mwei").toFixed(2) : <Skeleton width="50%" />}%
+            </div>
           </div>
-          <div className="info">
-            <div>
-              <div className="title">Apr:</div>
-              <div className={theme.palette.text?.gold + " data"}>
-                {stakingInfo ? getFormattedStakingInfo("_apr", "mwei").toFixed(2) : <Skeleton width="50%" />}%
-              </div>
+          <div>
+            <div className="title">TVL:</div>
+            <div className="data">
+              ${stakingInfo ? getFormattedStakingInfo("_tvl", "ether").toFixed(2) : <Skeleton width="50%" />}
             </div>
-            <div>
-              <div className="title">TVL:</div>
-              <div className="data">
-                ${stakingInfo ? getFormattedStakingInfo("_tvl", "ether").toFixed(2) : <Skeleton width="50%" />}
-              </div>
-            </div>
-            <div>
-              <div className="title">Cycle Beginning:</div>
-              <div className="data">
-                {+stakingInfo?._begin ? (
-                  new Date(+stakingInfo?._begin * 1000).toLocaleDateString()
-                ) : (
-                  <Skeleton width="50%" />
-                )}
-              </div>
+          </div>
+          <div>
+            <div className="title">Cycle Beginning:</div>
+            <div className="data">
+              {+stakingInfo?._begin ? (
+                new Date(+stakingInfo?._begin * 1000).toLocaleDateString()
+              ) : (
+                <Skeleton width="50%" />
+              )}
             </div>
           </div>
           <div className="cycle-end">
@@ -162,7 +160,7 @@ export default function PoolFarming({ theme }: any) {
           </div>
         </div>
       </div>
-      <div className="MuiPaper-root hec-card account">
+      <div className="MuiPaper-root hec-card farming">
         <div className="header">
           <div className="title">Earned Rewards</div>
           <Link className="lp-link" target="_blank" href="https://ftm.curve.fi/factory/50/deposit">
@@ -170,7 +168,7 @@ export default function PoolFarming({ theme }: any) {
             <SvgIcon component={ArrowUp} htmlColor="#A3A3A3" />
           </Link>
         </div>
-        <div className="balance">
+        <div className="info">
           <div>
             <div className="title">Your LP Tokens:</div>
             <div className="data">
@@ -202,76 +200,76 @@ export default function PoolFarming({ theme }: any) {
               (${getEarnedUsd()})
             </div>
           </div>
-        </div>
-        <div className="actions">
-          {+getFormattedStakingInfo("_earnedRewardAmount", "ether") > 0 ||
-          hasLpBalance() ||
-          hasAllowance() ||
-          stakingRewardsInfo?.balance > 0 ? (
-            <>
-              {+getFormattedStakingInfo("_earnedRewardAmount", "ether") > 0 && (
-                <>
+          <div className="actions">
+            {+getFormattedStakingInfo("_earnedRewardAmount", "ether") > 0 ||
+            hasLpBalance() ||
+            hasAllowance() ||
+            stakingRewardsInfo?.balance > 0 ? (
+              <>
+                {+getFormattedStakingInfo("_earnedRewardAmount", "ether") > 0 && (
+                  <>
+                    <Button
+                      className="stake-button"
+                      variant="contained"
+                      color="primary"
+                      disabled={isLoading}
+                      onClick={() => dispatchClaimEarned()}
+                    >
+                      Claim Rewards
+                    </Button>
+                  </>
+                )}
+                {hasLpBalance() && (
                   <Button
                     className="stake-button"
                     variant="contained"
                     color="primary"
                     disabled={isLoading}
-                    onClick={() => dispatchClaimEarned()}
+                    onClick={() => dispatchStake()}
                   >
-                    Claim Rewards
+                    Stake
                   </Button>
-                </>
-              )}
-              {hasLpBalance() && (
-                <Button
-                  className="stake-button"
-                  variant="contained"
-                  color="primary"
-                  disabled={isLoading}
-                  onClick={() => dispatchStake()}
-                >
-                  Stake
-                </Button>
-              )}
-              {hasAllowance() && (
-                <Button
-                  className="stake-button"
-                  variant="contained"
-                  color="primary"
-                  disabled={isLoading}
-                  onClick={() => dispatchApprove()}
-                >
-                  Approve
-                </Button>
-              )}
-              {stakingRewardsInfo?.balance > 0 && (
-                <>
+                )}
+                {hasAllowance() && (
                   <Button
                     className="stake-button"
                     variant="contained"
                     color="primary"
                     disabled={isLoading}
-                    onClick={() => dispatchWithDraw()}
+                    onClick={() => dispatchApprove()}
                   >
-                    Withdraw
+                    Approve
                   </Button>
-                </>
-              )}
-            </>
-          ) : (
-            <>
-              <Button
-                className="stake-button"
-                variant="contained"
-                color="primary"
-                disabled={isLoading}
-                target="_blank"
-                href="https://ftm.curve.fi/factory/50/deposit"
-              >
-                Get LP
-              </Button>
-            </>
-          )}
+                )}
+                {stakingRewardsInfo?.balance > 0 && (
+                  <>
+                    <Button
+                      className="stake-button"
+                      variant="contained"
+                      color="primary"
+                      disabled={isLoading}
+                      onClick={() => dispatchWithDraw()}
+                    >
+                      Withdraw
+                    </Button>
+                  </>
+                )}
+              </>
+            ) : (
+              <>
+                <Button
+                  className="stake-button"
+                  variant="contained"
+                  color="primary"
+                  disabled={isLoading}
+                  target="_blank"
+                  href="https://ftm.curve.fi/factory/50/deposit"
+                >
+                  Get LP
+                </Button>
+              </>
+            )}
+          </div>
         </div>
       </div>
       <div className="MuiPaper-root hec-card projection">

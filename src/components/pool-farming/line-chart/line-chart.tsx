@@ -28,10 +28,12 @@ export default function ProjectionLineChart({ apr, quantity }: ProjectionProps) 
   const monthlyInterestRate = apr / 100 / 12;
   let balance = quantity;
   for (let i = 0; i < 12; i++) {
-    const date = new Date();
-    date.setMonth(date.getMonth() + i);
     balance += balance * monthlyInterestRate;
-    data.push({ name: date.toLocaleDateString(), amount: balance });
+    if (!(i % 2 === 0)) {
+      const date = new Date();
+      date.setMonth(date.getMonth() + i);
+      data.push({ name: date.toLocaleDateString(), amount: balance });
+    }
   }
 
   const renderLegend = () => {
