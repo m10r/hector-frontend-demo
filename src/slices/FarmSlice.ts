@@ -1,237 +1,266 @@
-import { JsonRpcProvider } from '@ethersproject/providers';
-import { AnyAction, createAsyncThunk, createSelector, createSlice, ThunkDispatch } from '@reduxjs/toolkit';
-import { BigNumber, ethers } from 'ethers';
-import { addresses, messages } from 'src/constants';
-import { setAll } from 'src/helpers';
-import { sleep } from 'src/helpers/Sleep';
-import { useWeb3Context } from 'src/hooks/web3Context';
-import { RootState } from 'src/store';
-import { HugsPoolContract, HugsPoolInfo, StakingInfo, StakingRewardsContract, StakingRewardsInfo } from 'src/types/farming.model';
+import { JsonRpcProvider } from "@ethersproject/providers";
+import { createAsyncThunk, createSelector, createSlice } from "@reduxjs/toolkit";
+import { BigNumber, ethers } from "ethers";
+import { NETWORKS, messages } from "src/constants";
+import { setAll } from "src/helpers";
+import { sleep } from "src/helpers/Sleep";
+import { RootState } from "src/store";
+import {
+  HugsPoolContract,
+  HugsPoolInfo,
+  StakingInfo,
+  StakingRewardsContract,
+  StakingRewardsInfo,
+} from "src/types/farming.model";
 import { abi as farmingAggregatorAbi } from "../abi/farmingAggregatorContract.json";
 import { abi as hugsPoolAbi } from "../abi/farmingHugsPoolContract.json";
 import { abi as stakingRewardsAbi } from "../abi/farmingStakingRewardsContract.json";
-import { IBaseAddressAsyncThunk, IBaseAsyncThunk, IValueAsyncThunk } from './interfaces';
-import { error, info, success } from './MessagesSlice';
+import { IBaseAddressAsyncThunk, IBaseAsyncThunk, IValueAsyncThunk } from "./interfaces";
+import { error, info, success } from "./MessagesSlice";
 
-const stakingGateway = (chainID: number, provider: JsonRpcProvider) => new ethers.Contract(
-    addresses[chainID].FARMING_AGGREGATOR_ADDRESS as string,
-    farmingAggregatorAbi,
-    provider,
-);
+const stakingGateway = (chainID: number, provider: JsonRpcProvider) =>
+  new ethers.Contract(NETWORKS.get(chainID).FARMING_AGGREGATOR_ADDRESS, farmingAggregatorAbi, provider);
 
-const stakingRewardsContract = (chainID: number, provider: JsonRpcProvider, address: string) => (new ethers.Contract(
-    addresses[chainID].FARMINNG_STAKING_REWARDS_ADDRESS as string,
+const stakingRewardsContract = (chainID: number, provider: JsonRpcProvider, address: string) =>
+  (new ethers.Contract(
+    NETWORKS.get(chainID).FARMINNG_STAKING_REWARDS_ADDRESS,
     stakingRewardsAbi,
     provider.getSigner(address),
-) as unknown) as StakingRewardsContract;
+  ) as unknown) as StakingRewardsContract;
 
-const hugsPoolContract = (chainID: number, provider: JsonRpcProvider, address: string) => (new ethers.Contract(
-    addresses[chainID].HUGS_POOL_ADDRESS as string,
+const hugsPoolContract = (chainID: number, provider: JsonRpcProvider, address: string) =>
+  (new ethers.Contract(
+    NETWORKS.get(chainID).HUGS_POOL_ADDRESS,
     hugsPoolAbi,
     provider.getSigner(address),
-) as unknown) as HugsPoolContract;
+  ) as unknown) as HugsPoolContract;
 
-export const getAssetPrice = createAsyncThunk("farm/getAssetPrice", async ({ networkID, provider }: IBaseAsyncThunk) =>
-    (await stakingGateway(networkID, provider).assetPrice()) as BigNumber
+export const getAssetPrice = createAsyncThunk(
+  "farm/getAssetPrice",
+  async ({ networkID, provider }: IBaseAsyncThunk) =>
+    (await stakingGateway(networkID, provider).assetPrice()) as BigNumber,
 );
 
-
-export const getStakingRewardsInfo = createAsyncThunk("farm/getStakingRewardsInfo", async ({ networkID, provider, address }: IBaseAddressAsyncThunk) => {
+export const getStakingRewardsInfo = createAsyncThunk(
+  "farm/getStakingRewardsInfo",
+  async ({ networkID, provider, address }: IBaseAddressAsyncThunk) => {
     const originalBalance = await stakingRewardsContract(networkID, provider, address).balanceOf(address);
     const balance = +ethers.utils.formatEther(originalBalance);
     return { balance, originalBalance };
-});
+  },
+);
 
-export const getHugsPoolInfo = createAsyncThunk("farm/getHugsPoolInfo", async ({ networkID, provider, address }: IBaseAddressAsyncThunk) => {
+export const getHugsPoolInfo = createAsyncThunk(
+  "farm/getHugsPoolInfo",
+  async ({ networkID, provider, address }: IBaseAddressAsyncThunk) => {
     const originalBalance = await hugsPoolContract(networkID, provider, address).balanceOf(address);
     let balance = +ethers.utils.formatEther(originalBalance);
 
     let allowance = +(await hugsPoolContract(networkID, provider, address).allowance(
-        address,
-        addresses[networkID].FARMINNG_STAKING_REWARDS_ADDRESS as string,
+      address,
+      NETWORKS.get(networkID).FARMINNG_STAKING_REWARDS_ADDRESS,
     ));
-    let virtualPrice = +ethers.utils.formatEther(await hugsPoolContract(networkID, provider, address).get_virtual_price());
+    let virtualPrice = +ethers.utils.formatEther(
+      await hugsPoolContract(networkID, provider, address).get_virtual_price(),
+    );
 
     return { balance, allowance, virtualPrice, originalBalance };
-});
+  },
+);
 
-export const getStakingInfo = createAsyncThunk("farm/getStakingInfo", async ({ networkID, provider, address, value }: IValueAsyncThunk) => {
+export const getStakingInfo = createAsyncThunk(
+  "farm/getStakingInfo",
+  async ({ networkID, provider, address, value }: IValueAsyncThunk) => {
     const amt = BigInt(value === "" ? 0 : +value) * BigInt(1e18);
     return await stakingGateway(networkID, provider).getStakingInfo(address, amt);
-});
+  },
+);
 
-export const withDrawStaked = createAsyncThunk("farm/withDrawStaked", async ({ networkID, provider, address }: IBaseAddressAsyncThunk, { dispatch, getState }) => {
+export const withDrawStaked = createAsyncThunk(
+  "farm/withDrawStaked",
+  async ({ networkID, provider, address }: IBaseAddressAsyncThunk, { dispatch, getState }) => {
     try {
-        const { stakingRewardsInfo } = (getState() as RootState).farm;
-        const withdrawTrans = await stakingRewardsContract(networkID, provider, address).withdraw(stakingRewardsInfo?.originalBalance);
-        await withdrawTrans.wait();
-        dispatch(success(messages.tx_successfully_send));
-        await sleep(7);
-        dispatch(info(messages.your_balance_update_soon));
-        await sleep(9);
-        dispatch(info(messages.your_balance_updated));
+      const { stakingRewardsInfo } = (getState() as RootState).farm;
+      const withdrawTrans = await stakingRewardsContract(networkID, provider, address).withdraw(
+        stakingRewardsInfo?.originalBalance,
+      );
+      await withdrawTrans.wait();
+      dispatch(success(messages.tx_successfully_send));
+      await sleep(7);
+      dispatch(info(messages.your_balance_update_soon));
+      await sleep(9);
+      dispatch(info(messages.your_balance_updated));
     } catch {
-        dispatch(error("Failed to withdraw"));
+      dispatch(error("Failed to withdraw"));
     }
-});
+  },
+);
 
-export const approve = createAsyncThunk("farm/approve", async ({ networkID, provider, address }: IBaseAddressAsyncThunk, { dispatch }) => {
+export const approve = createAsyncThunk(
+  "farm/approve",
+  async ({ networkID, provider, address }: IBaseAddressAsyncThunk, { dispatch }) => {
     try {
-        const approveTrans = await hugsPoolContract(networkID, provider, address).approve(
-            addresses[networkID].FARMINNG_STAKING_REWARDS_ADDRESS as string,
-            "1000000000000000000000000",
-        );
-        await approveTrans.wait();
-        dispatch(success(messages.tx_successfully_send));
-        await sleep(7);
-        dispatch(info(messages.your_balance_update_soon));
-        await sleep(9);
-        dispatch(info(messages.your_balance_updated));
+      const approveTrans = await hugsPoolContract(networkID, provider, address).approve(
+        NETWORKS.get(networkID).FARMINNG_STAKING_REWARDS_ADDRESS,
+        "1000000000000000000000000",
+      );
+      await approveTrans.wait();
+      dispatch(success(messages.tx_successfully_send));
+      await sleep(7);
+      dispatch(info(messages.your_balance_update_soon));
+      await sleep(9);
+      dispatch(info(messages.your_balance_updated));
     } catch (e) {
-        dispatch(error("Failed to approve"));
+      dispatch(error("Failed to approve"));
     }
-});
-export const stake = createAsyncThunk("farm/stake", async ({ networkID, provider, address }: IBaseAddressAsyncThunk, { dispatch, getState }) => {
+  },
+);
+export const stake = createAsyncThunk(
+  "farm/stake",
+  async ({ networkID, provider, address }: IBaseAddressAsyncThunk, { dispatch, getState }) => {
     try {
-        const { hugsPoolInfo } = (getState() as RootState).farm;
-        const stakeTrans = await stakingRewardsContract(networkID, provider, address).stake(hugsPoolInfo.originalBalance);
-        await stakeTrans.wait();
-        dispatch(success(messages.tx_successfully_send));
-        await sleep(7);
-        dispatch(info(messages.your_balance_update_soon));
-        await sleep(9);
-        dispatch(info(messages.your_balance_updated));
+      const { hugsPoolInfo } = (getState() as RootState).farm;
+      const stakeTrans = await stakingRewardsContract(networkID, provider, address).stake(hugsPoolInfo.originalBalance);
+      await stakeTrans.wait();
+      dispatch(success(messages.tx_successfully_send));
+      await sleep(7);
+      dispatch(info(messages.your_balance_update_soon));
+      await sleep(9);
+      dispatch(info(messages.your_balance_updated));
     } catch (e) {
-        dispatch(error("Failed to stake"));
+      dispatch(error("Failed to stake"));
     }
-});
+  },
+);
 
-export const claimRewards = createAsyncThunk("farm/claimRewards", async ({ networkID, provider, address }: IBaseAddressAsyncThunk, { dispatch }) => {
+export const claimRewards = createAsyncThunk(
+  "farm/claimRewards",
+  async ({ networkID, provider, address }: IBaseAddressAsyncThunk, { dispatch }) => {
     try {
-        const stakeTrans = await stakingRewardsContract(networkID, provider, address).getReward();
-        await stakeTrans.wait();
-        dispatch(success(messages.tx_successfully_send));
-        await sleep(7);
-        dispatch(info(messages.your_balance_update_soon));
-        await sleep(9);
-        dispatch(info(messages.your_balance_updated));
+      const stakeTrans = await stakingRewardsContract(networkID, provider, address).getReward();
+      await stakeTrans.wait();
+      dispatch(success(messages.tx_successfully_send));
+      await sleep(7);
+      dispatch(info(messages.your_balance_update_soon));
+      await sleep(9);
+      dispatch(info(messages.your_balance_updated));
     } catch (e) {
-        dispatch(error("Failed to claim rewards"));
+      dispatch(error("Failed to claim rewards"));
     }
-});
-
+  },
+);
 
 const initialState: IFarmSlice = {
-    isLoading: false,
-    assetPrice: undefined,
-    stakingRewardsInfo: undefined,
-    hugsPoolInfo: undefined,
-    stakingInfo: undefined
+  isLoading: false,
+  assetPrice: undefined,
+  stakingRewardsInfo: undefined,
+  hugsPoolInfo: undefined,
+  stakingInfo: undefined,
 };
 
 interface IFarmSlice {
-    isLoading: boolean;
-    assetPrice: BigNumber;
-    stakingRewardsInfo: StakingRewardsInfo;
-    hugsPoolInfo: HugsPoolInfo;
-    stakingInfo: StakingInfo;
+  isLoading: boolean;
+  assetPrice: BigNumber;
+  stakingRewardsInfo: StakingRewardsInfo;
+  hugsPoolInfo: HugsPoolInfo;
+  stakingInfo: StakingInfo;
 }
 
 const farmSlice = createSlice({
-    name: "farm",
-    initialState,
-    reducers: {
-        fetchAppSuccess(state, action) {
-            setAll(state, action.payload);
-        },
+  name: "farm",
+  initialState,
+  reducers: {
+    fetchAppSuccess(state, action) {
+      setAll(state, action.payload);
     },
-    extraReducers: builder => {
-        builder
-            .addCase(getAssetPrice.pending, state => {
-                state.isLoading = true;
-            })
-            .addCase(getAssetPrice.fulfilled, (state, action) => {
-                state.assetPrice = action.payload;
-                state.isLoading = false;
-            })
-            .addCase(getAssetPrice.rejected, (state, { error }) => {
-                state.isLoading = false;
-                console.error(error.name, error.message, error.stack);
-            })
-            .addCase(getStakingRewardsInfo.pending, state => {
-                state.isLoading = true;
-            })
-            .addCase(getStakingRewardsInfo.fulfilled, (state, action) => {
-                state.stakingRewardsInfo = action.payload;
-                state.isLoading = false;
-            })
-            .addCase(getStakingRewardsInfo.rejected, (state, { error }) => {
-                state.isLoading = false;
-                console.error(error.name, error.message, error.stack);
-            })
-            .addCase(getHugsPoolInfo.pending, state => {
-                state.isLoading = true;
-            })
-            .addCase(getHugsPoolInfo.fulfilled, (state, action) => {
-                state.hugsPoolInfo = action.payload;
-                state.isLoading = false;
-            })
-            .addCase(getHugsPoolInfo.rejected, (state, { error }) => {
-                state.isLoading = false;
-                console.error(error.name, error.message, error.stack);
-            })
-            .addCase(getStakingInfo.pending, state => {
-                state.isLoading = true;
-            })
-            .addCase(getStakingInfo.fulfilled, (state, action) => {
-                state.stakingInfo = action.payload;
-                state.isLoading = false;
-            })
-            .addCase(getStakingInfo.rejected, (state, { error }) => {
-                state.isLoading = false;
-                console.error(error.name, error.message, error.stack);
-            })
-            .addCase(withDrawStaked.pending, state => {
-                state.isLoading = true;
-            })
-            .addCase(withDrawStaked.fulfilled, (state, action) => {
-                state.isLoading = false;
-            })
-            .addCase(withDrawStaked.rejected, (state, { error }) => {
-                state.isLoading = false;
-                console.error(error.name, error.message, error.stack);
-            })
-            .addCase(stake.pending, state => {
-                state.isLoading = true;
-            })
-            .addCase(stake.fulfilled, (state, action) => {
-                state.isLoading = false;
-            })
-            .addCase(stake.rejected, (state, { error }) => {
-                state.isLoading = false;
-                console.error(error.name, error.message, error.stack);
-            })
-            .addCase(claimRewards.pending, state => {
-                state.isLoading = true;
-            })
-            .addCase(claimRewards.fulfilled, (state, action) => {
-                state.isLoading = false;
-            })
-            .addCase(claimRewards.rejected, (state, { error }) => {
-                state.isLoading = false;
-                console.error(error.name, error.message, error.stack);
-            })
-            .addCase(approve.pending, state => {
-                state.isLoading = true;
-            })
-            .addCase(approve.fulfilled, (state, action) => {
-                state.isLoading = false;
-            })
-            .addCase(approve.rejected, (state, { error }) => {
-                state.isLoading = false;
-                console.error(error.name, error.message, error.stack);
-            });
-    },
+  },
+  extraReducers: builder => {
+    builder
+      .addCase(getAssetPrice.pending, state => {
+        state.isLoading = true;
+      })
+      .addCase(getAssetPrice.fulfilled, (state, action) => {
+        state.assetPrice = action.payload;
+        state.isLoading = false;
+      })
+      .addCase(getAssetPrice.rejected, (state, { error }) => {
+        state.isLoading = false;
+        console.error(error.name, error.message, error.stack);
+      })
+      .addCase(getStakingRewardsInfo.pending, state => {
+        state.isLoading = true;
+      })
+      .addCase(getStakingRewardsInfo.fulfilled, (state, action) => {
+        state.stakingRewardsInfo = action.payload;
+        state.isLoading = false;
+      })
+      .addCase(getStakingRewardsInfo.rejected, (state, { error }) => {
+        state.isLoading = false;
+        console.error(error.name, error.message, error.stack);
+      })
+      .addCase(getHugsPoolInfo.pending, state => {
+        state.isLoading = true;
+      })
+      .addCase(getHugsPoolInfo.fulfilled, (state, action) => {
+        state.hugsPoolInfo = action.payload;
+        state.isLoading = false;
+      })
+      .addCase(getHugsPoolInfo.rejected, (state, { error }) => {
+        state.isLoading = false;
+        console.error(error.name, error.message, error.stack);
+      })
+      .addCase(getStakingInfo.pending, state => {
+        state.isLoading = true;
+      })
+      .addCase(getStakingInfo.fulfilled, (state, action) => {
+        state.stakingInfo = action.payload;
+        state.isLoading = false;
+      })
+      .addCase(getStakingInfo.rejected, (state, { error }) => {
+        state.isLoading = false;
+        console.error(error.name, error.message, error.stack);
+      })
+      .addCase(withDrawStaked.pending, state => {
+        state.isLoading = true;
+      })
+      .addCase(withDrawStaked.fulfilled, (state, action) => {
+        state.isLoading = false;
+      })
+      .addCase(withDrawStaked.rejected, (state, { error }) => {
+        state.isLoading = false;
+        console.error(error.name, error.message, error.stack);
+      })
+      .addCase(stake.pending, state => {
+        state.isLoading = true;
+      })
+      .addCase(stake.fulfilled, (state, action) => {
+        state.isLoading = false;
+      })
+      .addCase(stake.rejected, (state, { error }) => {
+        state.isLoading = false;
+        console.error(error.name, error.message, error.stack);
+      })
+      .addCase(claimRewards.pending, state => {
+        state.isLoading = true;
+      })
+      .addCase(claimRewards.fulfilled, (state, action) => {
+        state.isLoading = false;
+      })
+      .addCase(claimRewards.rejected, (state, { error }) => {
+        state.isLoading = false;
+        console.error(error.name, error.message, error.stack);
+      })
+      .addCase(approve.pending, state => {
+        state.isLoading = true;
+      })
+      .addCase(approve.fulfilled, (state, action) => {
+        state.isLoading = false;
+      })
+      .addCase(approve.rejected, (state, { error }) => {
+        state.isLoading = false;
+        console.error(error.name, error.message, error.stack);
+      });
+  },
 });
 
 const baseInfo = (state: RootState) => state.farm;

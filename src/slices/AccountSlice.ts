@@ -1,5 +1,5 @@
 import { ethers } from "ethers";
-import { addresses } from "../constants";
+import { NETWORKS } from "../constants";
 import { abi as ierc20Abi } from "../abi/IERC20.json";
 import { abi as sHECv2 } from "../abi/sHecv2.json";
 import { abi as wsHEC } from "../abi/wsHec.json";
@@ -9,16 +9,16 @@ import { setAll } from "../helpers";
 import { createAsyncThunk, createSelector, createSlice } from "@reduxjs/toolkit";
 import { RootState } from "src/store";
 import { IBaseAddressAsyncThunk, ICalcUserBondDetailsAsyncThunk } from "./interfaces";
-import { getUserBondDetails, GetUserBondDetails } from 'src/helpers/bond-details.helper';
+import { getUserBondDetails, GetUserBondDetails } from "src/helpers/bond-details.helper";
 
 export const getBalances = createAsyncThunk(
   "account/getBalances",
   async ({ address, networkID, provider }: IBaseAddressAsyncThunk) => {
-    const hecContract = new ethers.Contract(addresses[networkID].HEC_ADDRESS as string, ierc20Abi, provider);
+    const hecContract = new ethers.Contract(NETWORKS.get(networkID).HEC_ADDRESS, ierc20Abi, provider);
     const hecBalance = await hecContract.balanceOf(address);
-    const shecContract = new ethers.Contract(addresses[networkID].SHEC_ADDRESS as string, ierc20Abi, provider);
+    const shecContract = new ethers.Contract(NETWORKS.get(networkID).SHEC_ADDRESS, ierc20Abi, provider);
     const shecBalance = await shecContract.balanceOf(address);
-    const wshecContract = new ethers.Contract(addresses[networkID].WSOHM_ADDRESS as string, wsHEC, provider);
+    const wshecContract = new ethers.Contract(NETWORKS.get(networkID).WSHEC_ADDRESS, wsHEC, provider);
     const wshecBalance = await wshecContract.balanceOf(address);
     const wshecAsShec = await wshecContract.wsHECTosHEC(wshecBalance);
     return {
@@ -59,27 +59,27 @@ export const loadAccountDetails = createAsyncThunk(
     let expiry = 0;
 
     try {
-      const daiContract = new ethers.Contract(addresses[networkID].DAI_ADDRESS as string, ierc20Abi, provider);
+      const daiContract = new ethers.Contract(NETWORKS.get(networkID).DAI_ADDRESS, ierc20Abi, provider);
       const daiBalance = await daiContract.balanceOf(address);
 
-      const hecContract = new ethers.Contract(addresses[networkID].HEC_ADDRESS as string, ierc20Abi, provider);
+      const hecContract = new ethers.Contract(NETWORKS.get(networkID).HEC_ADDRESS, ierc20Abi, provider);
       hecBalance = await hecContract.balanceOf(address);
-      stakeAllowance = await hecContract.allowance(address, addresses[networkID].STAKING_HELPER_ADDRESS);
+      stakeAllowance = await hecContract.allowance(address, NETWORKS.get(networkID).STAKING_HELPER_ADDRESS);
 
-      const shecContract = new ethers.Contract(addresses[networkID].SHEC_ADDRESS as string, sHECv2, provider);
+      const shecContract = new ethers.Contract(NETWORKS.get(networkID).SHEC_ADDRESS, sHECv2, provider);
       shecBalance = await shecContract.balanceOf(address);
-      unstakeAllowance = await shecContract.allowance(address, addresses[networkID].STAKING_ADDRESS);
-      const wrapAllowance = await shecContract.allowance(address, addresses[networkID].WSHEC_ADDRESS);
+      unstakeAllowance = await shecContract.allowance(address, NETWORKS.get(networkID).STAKING_ADDRESS);
+      const wrapAllowance = await shecContract.allowance(address, NETWORKS.get(networkID).WSHEC_ADDRESS);
 
-      const oldshecContract = new ethers.Contract(addresses[networkID].OLD_SHEC_ADDRESS as string, sHECv2, provider);
+      const oldshecContract = new ethers.Contract(NETWORKS.get(networkID).OLD_SHEC_ADDRESS, sHECv2, provider);
       oldshecBalance = await oldshecContract.balanceOf(address);
-      oldunstakeAllowance = await oldshecContract.allowance(address, addresses[networkID].OLD_STAKING_ADDRESS);
+      oldunstakeAllowance = await oldshecContract.allowance(address, NETWORKS.get(networkID).OLD_STAKING_ADDRESS);
 
-      const wshecContract = new ethers.Contract(addresses[networkID].WSHEC_ADDRESS as string, wsHEC, provider);
-      const unwrapAllowance = await wshecContract.allowance(address, addresses[networkID].WSHEC_ADDRESS);
+      const wshecContract = new ethers.Contract(NETWORKS.get(networkID).WSHEC_ADDRESS, wsHEC, provider);
+      const unwrapAllowance = await wshecContract.allowance(address, NETWORKS.get(networkID).WSHEC_ADDRESS);
       const wshecBalance = await wshecContract.balanceOf(address);
 
-      const stakingContract = new ethers.Contract(addresses[networkID].STAKING_ADDRESS as string, HectorStakingv2, provider,);
+      const stakingContract = new ethers.Contract(NETWORKS.get(networkID).STAKING_ADDRESS, HectorStakingv2, provider);
       const warmupInfo = await stakingContract.warmupInfo(address);
       const balance = await shecContract.balanceForGons(warmupInfo.gons);
       depositAmount = warmupInfo.deposit;

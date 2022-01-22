@@ -1,5 +1,5 @@
 import { ethers } from "ethers";
-import { addresses } from "../constants";
+import { NETWORKS } from "../constants";
 import { abi as HectorStakingv2 } from "../abi/HectorStakingv2.json";
 import { abi as ierc20Abi } from "../abi/IERC20.json";
 import { abi as sHECv2 } from "../abi/sHecv2.json";
@@ -8,8 +8,8 @@ import apollo from "../lib/apolloClient.js";
 import { createSlice, createSelector, createAsyncThunk } from "@reduxjs/toolkit";
 import { RootState } from "src/store";
 import { IBaseAsyncThunk } from "./interfaces";
-import axios from 'axios';
-import { AllInvestments } from 'src/types/investments.model';
+import axios from "axios";
+import { AllInvestments } from "src/types/investments.model";
 
 const circulatingSupply = {
   name: "circulatingSupply",
@@ -49,13 +49,9 @@ export const loadAppDetails = createAsyncThunk(
       return;
     }
 
-    const stakingContract = new ethers.Contract(
-      addresses[networkID].STAKING_ADDRESS as string,
-      HectorStakingv2,
-      provider,
-    );
+    const stakingContract = new ethers.Contract(NETWORKS.get(networkID).STAKING_ADDRESS, HectorStakingv2, provider);
     const old_stakingContract = new ethers.Contract(
-      addresses[networkID].OLD_STAKING_ADDRESS as string,
+      NETWORKS.get(networkID).OLD_STAKING_ADDRESS,
       HectorStakingv2,
       provider,
     );
@@ -71,10 +67,10 @@ export const loadAppDetails = createAsyncThunk(
       console.error("Returned a null response from dispatch(loadMarketPrice)");
       return;
     }
-    const sHecMainContract = new ethers.Contract(addresses[networkID].SHEC_ADDRESS as string, sHECv2, provider);
-    const hecContract = new ethers.Contract(addresses[networkID].HEC_ADDRESS as string, ierc20Abi, provider);
+    const sHecMainContract = new ethers.Contract(NETWORKS.get(networkID).SHEC_ADDRESS, sHECv2, provider);
+    const hecContract = new ethers.Contract(NETWORKS.get(networkID).HEC_ADDRESS, ierc20Abi, provider);
     const oldsHecContract = new ethers.Contract(
-      addresses[networkID].OLD_SHEC_ADDRESS as string,
+      NETWORKS.get(networkID).OLD_SHEC_ADDRESS as string,
       [circulatingSupply],
       provider,
     );
@@ -133,7 +129,7 @@ export const loadAppDetails = createAsyncThunk(
       totalSupply,
       endBlock,
       investments,
-      epochNumber
+      epochNumber,
     } as IAppData;
   },
 );
@@ -193,7 +189,10 @@ const loadMarketPrice = createAsyncThunk("app/loadMarketPrice", async ({ network
   return { marketPrice };
 });
 
-export const loadTreasuryInvestments = createAsyncThunk("app/loadTreasuryInvestments", async () => await (await axios.get('https://api.jsonbin.io/b/61e18d66ba87c130e3e84624/6')).data);
+export const loadTreasuryInvestments = createAsyncThunk(
+  "app/loadTreasuryInvestments",
+  async () => await (await axios.get("https://api.jsonbin.io/b/61e18d66ba87c130e3e84624/6")).data,
+);
 
 interface IAppData {
   readonly circSupply: number;
@@ -221,7 +220,7 @@ const initialState: IAppSlice = {
   loadingMarketPrice: false,
   treasuryMarketValue: 0,
   allInvestments: { transactions: [], assetsUM: undefined },
-  isLoadingInvestments: false
+  isLoadingInvestments: false,
 };
 
 interface IAppSlice {
@@ -229,7 +228,7 @@ interface IAppSlice {
   loadingMarketPrice: boolean;
   isLoadingInvestments: boolean;
   treasuryMarketValue: number;
-  allInvestments: AllInvestments
+  allInvestments: AllInvestments;
 }
 
 const appSlice = createSlice({
