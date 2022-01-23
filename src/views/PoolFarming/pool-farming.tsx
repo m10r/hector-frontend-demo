@@ -163,7 +163,7 @@ export default function PoolFarming({ theme }: any) {
       <div className="MuiPaper-root hec-card farming">
         <div className="header">
           <div className="title">Earned Rewards</div>
-          <Link className="lp-link" target="_blank" href="https://ftm.curve.fi/factory/50/deposit">
+          <Link className="lp-link" target="_blank" href="https://ftm.curve.fi/factory/62/deposit">
             LP
             <SvgIcon component={ArrowUp} htmlColor="#A3A3A3" />
           </Link>
@@ -263,7 +263,7 @@ export default function PoolFarming({ theme }: any) {
                   color="primary"
                   disabled={isLoading}
                   target="_blank"
-                  href="https://ftm.curve.fi/factory/50/deposit"
+                  href="https://ftm.curve.fi/factory/62/deposit"
                 >
                   Get LP
                 </Button>
