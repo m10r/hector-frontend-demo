@@ -26,13 +26,14 @@ interface ProjectionProps {
 export default function ProjectionLineChart({ apr, quantity }: ProjectionProps) {
   const data: ProjectionData[] = [];
   const monthlyInterestRate = apr / 100 / 12;
-  let balance = quantity;
+  const monthlyIncrease = quantity * monthlyInterestRate;
+  let balance = 0;
   for (let i = 0; i < 12; i++) {
-    balance += balance * monthlyInterestRate;
+    balance += monthlyIncrease;
     if (!(i % 2 === 0)) {
       const date = new Date();
       date.setMonth(date.getMonth() + i);
-      data.push({ name: date.toLocaleDateString(), amount: balance });
+      data.push({ name: date.toLocaleDateString(), amount: Math.round(balance + quantity) });
     }
   }
 
