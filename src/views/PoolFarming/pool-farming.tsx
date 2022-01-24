@@ -35,6 +35,9 @@ import Countdown, { zeroPad } from "react-countdown";
 import { StakingInfo } from "src/types/farming.model";
 import { Skeleton } from "@material-ui/lab";
 import { ReactComponent as TorSVG } from "../../assets/tokens/TOR.svg";
+import InfoTooltip from "src/components/InfoTooltip/InfoTooltip";
+
+const TOOLTIP_TEXT = `Farming is a rewards system where you earn FTM rewards in exchange for loaning your liquidity to Hector DAO. To participate you stake your tokens into our farm and while they are staked you earn rewards against what you've loaned.  You can unstake or 'withdraw' your tokens at any time, however if your staked balance reaches 0 you will no longer be earning passive FTM rewards. While your tokens are staked in the Hector DAO farm they are backed by the Hector DAO treasury.`;
 
 export default function PoolFarming({ theme }: any) {
   const { assetPrice, stakingRewardsInfo, hugsPoolInfo, stakingInfo, isLoading } = useSelector(
@@ -120,9 +123,7 @@ export default function PoolFarming({ theme }: any) {
         <div className="header">
           <TorSVG style={{ height: "45px", width: "45px", marginRight: "10px" }} />
           <div className="title">TOR Farming</div>
-          <Tooltip arrow title="Farming is amazing!">
-            <HelpOutlineIcon />
-          </Tooltip>
+          <InfoTooltip message={TOOLTIP_TEXT} />
         </div>
         <div className="info">
           <div>
