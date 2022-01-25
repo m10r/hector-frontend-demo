@@ -109,21 +109,6 @@ function NavContent() {
                 </Typography>
               </Link>
 
-              {/* <Link
-                component={NavLink}
-                id="swap-nav"
-                to="/swap"
-                isActive={(match, location) => {
-                  return checkPage(match, location, "swap");
-                }}
-                className={`button-dapp-menu ${isActive ? "active" : ""}`}
-              >
-                <Typography variant="h6">
-                  <SvgIcon color="primary" component={SwapIcon} viewBox="0 0 24 18" />
-                  Swap
-                </Typography>
-              </Link> */}
-
               <Link
                 component={NavLink}
                 id="wrap-nav"
@@ -153,10 +138,30 @@ function NavContent() {
                   Bond
                 </Typography>
               </Link>
-              {/* <Link
+              <Link
+                component={NavLink}
+                id="swap-nav"
+                to="/swap"
+                onClick={event => event.preventDefault()}
+                isActive={(match, location) => {
+                  return checkPage(match, location, "swap");
+                }}
+                className={`button-dapp-menu ${isActive ? "active" : ""}`}
+              >
+                <Typography variant="h6">
+                  <SvgIcon color="primary" component={SwapIcon} viewBox="0 0 24 18" />
+                  Swap
+                  <Typography variant="caption" style={{ marginLeft: "8px" }}>
+                    (Coming Soon)
+                  </Typography>
+                </Typography>
+              </Link>
+              <Link
                 component={NavLink}
                 id="farm-nav"
                 to="/farming"
+                disabled={true}
+                onClick={event => event.preventDefault()}
                 isActive={(match, location) => {
                   return checkPage(match, location, "farming");
                 }}
@@ -165,8 +170,11 @@ function NavContent() {
                 <Typography variant="h6">
                   <SvgIcon color="primary" component={FarmIcon} />
                   Farm
+                  <Typography variant="caption" style={{ marginLeft: "8px" }}>
+                    (Coming Soon)
+                  </Typography>
                 </Typography>
-              </Link> */}
+              </Link>
 
               {/* <div className="dapp-menu-data discounts">
                 <div className="bond-discounts">

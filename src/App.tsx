@@ -275,9 +275,6 @@ function App() {
             {/* <Route path="/calculator">
               <Calculator />
             </Route> */}
-            {/* <Route path="/swap">
-              <Swap />
-            </Route> */}
 
             <Route path="/bonds">
               {bonds.map(bond => {
@@ -291,6 +288,9 @@ function App() {
             </Route>
             {/* <Route path="/farming">
               <PoolFarming theme={themeMode} />
+            </Route> */}
+            {/* <Route path="/swap">
+              <Swap />
             </Route> */}
 
             <Route component={NotFound} />
