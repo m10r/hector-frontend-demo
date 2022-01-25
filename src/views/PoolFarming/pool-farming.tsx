@@ -45,7 +45,7 @@ const TOOLTIP_TEXT = `Farming is a rewards system where you earn FTM rewards in 
 type UserAction = "stake" | "withdraw" | "approve";
 function a11yProps(index: any) {
   return {
-    id: `simple-tab-${index}`,
+    "id": `simple-tab-${index}`,
     "aria-controls": `simple-tabpanel-${index}`,
   };
 }
@@ -288,16 +288,6 @@ export default function PoolFarming({ theme }: any) {
         </div>
 
         <div className="info">
-          {/* <div>
-            <div className="title">Your LP Tokens:</div>
-            <div className="data">
-              {hugsPoolInfo?.balance || hugsPoolInfo?.balance === 0 ? (
-                hugsPoolInfo?.balance.toFixed(2)
-              ) : (
-                <Skeleton width="40%" />
-              )}
-            </div>
-          </div> */}
           <div>
             <div className="title">Staked LP Tokens: </div>
             <div className="data">

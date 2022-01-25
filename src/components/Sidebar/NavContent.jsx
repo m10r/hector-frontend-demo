@@ -109,7 +109,7 @@ function NavContent() {
                 </Typography>
               </Link>
 
-              <Link
+              {/* <Link
                 component={NavLink}
                 id="swap-nav"
                 to="/swap"
@@ -122,7 +122,7 @@ function NavContent() {
                   <SvgIcon color="primary" component={SwapIcon} viewBox="0 0 24 18" />
                   Swap
                 </Typography>
-              </Link>
+              </Link> */}
 
               <Link
                 component={NavLink}
@@ -153,7 +153,7 @@ function NavContent() {
                   Bond
                 </Typography>
               </Link>
-              <Link
+              {/* <Link
                 component={NavLink}
                 id="farm-nav"
                 to="/farming"
@@ -166,7 +166,7 @@ function NavContent() {
                   <SvgIcon color="primary" component={FarmIcon} />
                   Farm
                 </Typography>
-              </Link>
+              </Link> */}
 
               {/* <div className="dapp-menu-data discounts">
                 <div className="bond-discounts">
@@ -216,7 +216,7 @@ function NavContent() {
                     ))}
                 </div>
               </div> */}
-              <Link
+              {/* <Link
                 component={NavLink}
                 id="calc-nav"
                 to="/calculator"
@@ -229,8 +229,7 @@ function NavContent() {
                   <SvgIcon color="primary" component={GlobeIcon} viewBox="0 0 24 24" />
                   Calculator
                 </Typography>
-              </Link>
-
+              </Link> */}
             </div>
           </div>
         </div>

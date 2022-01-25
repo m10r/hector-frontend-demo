@@ -272,12 +272,12 @@ function App() {
             <Route path="/wrap">
               <Wrap />
             </Route>
-            <Route path="/calculator">
+            {/* <Route path="/calculator">
               <Calculator />
-            </Route>
-            <Route path="/swap">
+            </Route> */}
+            {/* <Route path="/swap">
               <Swap />
-            </Route>
+            </Route> */}
 
             <Route path="/bonds">
               {bonds.map(bond => {
@@ -289,9 +289,9 @@ function App() {
               })}
               <ChooseBond />
             </Route>
-            <Route path="/farming">
+            {/* <Route path="/farming">
               <PoolFarming theme={themeMode} />
-            </Route>
+            </Route> */}
 
             <Route component={NotFound} />
           </Switch>
