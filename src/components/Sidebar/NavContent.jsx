@@ -11,6 +11,7 @@ import { ReactComponent as DashboardIcon } from "../../assets/icons/dashboard.sv
 import { ReactComponent as WrapIcon } from "../../assets/icons/wrap.svg";
 import { ReactComponent as HectorIcon } from "../../assets/icons/hector-nav-logo.svg";
 import { ReactComponent as FarmIcon } from "../../assets/icons/farm.svg";
+import { ReactComponent as InvestmentsIcon } from "../../assets/icons/investments.svg";
 import { trim, shorten } from "../../helpers";
 import { useAddress, useWeb3Context } from "src/hooks/web3Context";
 import useBonds from "../../hooks/Bonds";
@@ -142,6 +143,7 @@ function NavContent() {
                 component={NavLink}
                 id="swap-nav"
                 to="/swap"
+                // onClick={event => event.preventDefault()}
                 isActive={(match, location) => {
                   return checkPage(match, location, "swap");
                 }}
@@ -159,7 +161,7 @@ function NavContent() {
                 component={NavLink}
                 id="farm-nav"
                 to="/farming"
-                disabled={true}
+                // onClick={event => event.preventDefault()}
                 isActive={(match, location) => {
                   return checkPage(match, location, "farming");
                 }}
@@ -168,6 +170,24 @@ function NavContent() {
                 <Typography variant="h6">
                   <SvgIcon color="primary" component={FarmIcon} />
                   Farm
+                  <Typography variant="caption" style={{ marginLeft: "8px" }}>
+                    (Coming Soon)
+                  </Typography>
+                </Typography>
+              </Link>
+              <Link
+                component={NavLink}
+                id="investments-nav"
+                to="/investments"
+                // onClick={event => event.preventDefault()}
+                isActive={(match, location) => {
+                  return checkPage(match, location, "investments");
+                }}
+                className={`button-dapp-menu ${isActive ? "active" : ""}`}
+              >
+                <Typography variant="h6">
+                  <SvgIcon color="primary" component={InvestmentsIcon} />
+                  Investments
                   <Typography variant="caption" style={{ marginLeft: "8px" }}>
                     (Coming Soon)
                   </Typography>

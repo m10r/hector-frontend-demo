@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+    <g clip-path="url(#investments)">
+        <path d="M17.67.05H2.25c-1.22 0-2.2 1-2.2 2.21v15.52c0 1.22.98 2.21 2.2 2.21h15.42c1.21 0 2.2-1 2.2-2.21V2.26c0-1.21-.99-2.21-2.2-2.21Zm0 17.73H2.25V2.26h15.42v15.52ZM4.45 7.8h2.2v7.76h-2.2V7.8Zm4.4-3.32h2.2v11.08h-2.2V4.48Zm4.41 6.65h2.2v4.43h-2.2v-4.43Z" />
+    </g>
+    <defs>
+        <clipPath id="investments">
+            <path fill="#fff" d="M0 0h19.88v20H0z" />
+        </clipPath>
+    </defs>
+</svg>
