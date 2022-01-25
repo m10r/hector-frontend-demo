@@ -31,7 +31,7 @@ import { girth as gTheme } from "./themes/girth.js";
 import "./style.scss";
 import Wrap from "./views/Wrap/Wrap";
 import Calculator from "./views/Calculator/index";
-import Swap from "./views/Swap/index";
+import Swap from "./views/Swap/Swap";
 import { RootState } from "./store";
 import { Banner } from "./components/banner/banner";
 import PoolFarming from "./views/PoolFarming/pool-farming";
