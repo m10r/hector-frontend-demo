@@ -1,5 +1,5 @@
 import { ethers, BigNumber } from "ethers";
-import { addresses, messages } from "../constants";
+import { NETWORKS, messages } from "../constants";
 import { abi as ierc20Abi } from "../abi/IERC20.json";
 import { abi as HectorStaking } from "../abi/HectorStakingv2.json";
 import { abi as StakingHelper } from "../abi/StakingHelper.json";
@@ -7,10 +7,10 @@ import { clearPendingTxn, fetchPendingTxns, getStakingTypeText } from "./Pending
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { fetchAccountSuccess, loadAccountDetails } from "./AccountSlice";
 import { error, info, success } from "./MessagesSlice";
-import { IActionValueAsyncThunk, IChangeApprovalAsyncThunk, IJsonRPCError } from "./interfaces";
+import { IActionValueAsyncThunk, IChangeApprovalAsyncThunk } from "./interfaces";
 import { metamaskErrorWrap } from "src/helpers/MetamaskErrorWrap";
-import { sleep } from "../helpers/Sleep"
-import { setAll } from 'src/helpers';
+import { sleep } from "../helpers/Sleep";
+import { setAll } from "src/helpers";
 
 interface IUAData {
   address: string;
@@ -47,13 +47,13 @@ export const changeApproval = createAsyncThunk(
     }
 
     const signer = provider.getSigner();
-    const hecContract = new ethers.Contract(addresses[networkID].HEC_ADDRESS as string, ierc20Abi, signer);
-    const shecContract = new ethers.Contract(addresses[networkID].SHEC_ADDRESS as string, ierc20Abi, signer);
-    const oldshecContract = new ethers.Contract(addresses[networkID].OLD_SHEC_ADDRESS as string, ierc20Abi, signer);
+    const hecContract = new ethers.Contract(NETWORKS.get(networkID).HEC_ADDRESS, ierc20Abi, signer);
+    const shecContract = new ethers.Contract(NETWORKS.get(networkID).SHEC_ADDRESS, ierc20Abi, signer);
+    const oldshecContract = new ethers.Contract(NETWORKS.get(networkID).OLD_SHEC_ADDRESS, ierc20Abi, signer);
     let approveTx;
-    let stakeAllowance = await hecContract.allowance(address, addresses[networkID].STAKING_HELPER_ADDRESS);
-    let unstakeAllowance = await shecContract.allowance(address, addresses[networkID].STAKING_ADDRESS);
-    let oldunstakeAllowance = await oldshecContract.allowance(address, addresses[networkID].OLD_STAKING_ADDRESS);
+    let stakeAllowance = await hecContract.allowance(address, NETWORKS.get(networkID).STAKING_HELPER_ADDRESS);
+    let unstakeAllowance = await shecContract.allowance(address, NETWORKS.get(networkID).STAKING_ADDRESS);
+    let oldunstakeAllowance = await oldshecContract.allowance(address, NETWORKS.get(networkID).OLD_STAKING_ADDRESS);
 
     // return early if approval has already happened
     if (alreadyApprovedToken(token, stakeAllowance, unstakeAllowance)) {
@@ -73,17 +73,17 @@ export const changeApproval = createAsyncThunk(
       if (token === "hec") {
         // won't run if stakeAllowance > 0
         approveTx = await hecContract.approve(
-          addresses[networkID].STAKING_HELPER_ADDRESS,
+          NETWORKS.get(networkID).STAKING_HELPER_ADDRESS,
           ethers.utils.parseUnits("1000000000", "gwei").toString(),
         );
       } else if (token === "shec") {
         approveTx = await shecContract.approve(
-          addresses[networkID].STAKING_ADDRESS,
+          NETWORKS.get(networkID).STAKING_ADDRESS,
           ethers.utils.parseUnits("1000000000", "gwei").toString(),
         );
       } else if (token === "oldshec") {
         approveTx = await oldshecContract.approve(
-          addresses[networkID].OLD_STAKING_ADDRESS,
+          NETWORKS.get(networkID).OLD_STAKING_ADDRESS,
           ethers.utils.parseUnits("1000000000", "gwei").toString(),
         );
       }
@@ -95,8 +95,7 @@ export const changeApproval = createAsyncThunk(
       await approveTx.wait();
       dispatch(success(messages.tx_successfully_send));
       await sleep(10);
-    } catch (e: any) {
-      ``
+    } catch (e) {
       // dispatch(error((e as IJsonRPCError).message));
       return metamaskErrorWrap(e, dispatch);
     } finally {
@@ -105,9 +104,9 @@ export const changeApproval = createAsyncThunk(
         await sleep(10);
 
         // go get fresh allowances
-        stakeAllowance = await hecContract.allowance(address, addresses[networkID].STAKING_HELPER_ADDRESS);
-        unstakeAllowance = await shecContract.allowance(address, addresses[networkID].STAKING_ADDRESS);
-        oldunstakeAllowance = await shecContract.allowance(address, addresses[networkID].OLD_STAKING_ADDRESS);
+        stakeAllowance = await hecContract.allowance(address, NETWORKS.get(networkID).STAKING_HELPER_ADDRESS);
+        unstakeAllowance = await shecContract.allowance(address, NETWORKS.get(networkID).STAKING_ADDRESS);
+        oldunstakeAllowance = await shecContract.allowance(address, NETWORKS.get(networkID).OLD_STAKING_ADDRESS);
 
         dispatch(clearPendingTxn(approveTx.hash));
         return dispatch(
@@ -135,15 +134,11 @@ export const changeStake = createAsyncThunk(
     const signer = provider.getSigner();
     let staking, stakingHelper;
     if (isOld) {
-      staking = new ethers.Contract(addresses[networkID].OLD_STAKING_ADDRESS as string, HectorStaking, signer);
-      stakingHelper = new ethers.Contract(
-        addresses[networkID].OLD_STAKING_HELPER_ADDRESS as string,
-        StakingHelper,
-        signer,
-      );
+      staking = new ethers.Contract(NETWORKS.get(networkID).OLD_STAKING_ADDRESS, HectorStaking, signer);
+      stakingHelper = new ethers.Contract(NETWORKS.get(networkID).OLD_STAKING_HELPER_ADDRESS, StakingHelper, signer);
     } else {
-      staking = new ethers.Contract(addresses[networkID].STAKING_ADDRESS as string, HectorStaking, signer);
-      stakingHelper = new ethers.Contract(addresses[networkID].STAKING_HELPER_ADDRESS as string, StakingHelper, signer);
+      staking = new ethers.Contract(NETWORKS.get(networkID).STAKING_ADDRESS, HectorStaking, signer);
+      stakingHelper = new ethers.Contract(NETWORKS.get(networkID).STAKING_HELPER_ADDRESS, StakingHelper, signer);
     }
 
     let stakeTx;
@@ -170,7 +165,7 @@ export const changeStake = createAsyncThunk(
       await stakeTx.wait();
       dispatch(success(messages.tx_successfully_send));
       await sleep(10);
-    } catch (e: any) {
+    } catch (e) {
       return metamaskErrorWrap(e, dispatch);
     } finally {
       if (stakeTx) {
@@ -194,7 +189,7 @@ export const changeForfeit = createAsyncThunk(
     }
 
     const signer = provider.getSigner();
-    const staking = new ethers.Contract(addresses[networkID].STAKING_ADDRESS as string, HectorStaking, signer);
+    const staking = new ethers.Contract(NETWORKS.get(networkID).STAKING_ADDRESS, HectorStaking, signer);
     let forfeitTx;
 
     try {
@@ -205,7 +200,7 @@ export const changeForfeit = createAsyncThunk(
       await forfeitTx.wait();
       dispatch(success(messages.tx_successfully_send));
       await sleep(10);
-    } catch (e: any) {
+    } catch (e) {
       return metamaskErrorWrap(e, dispatch);
     } finally {
       if (forfeitTx) {
@@ -229,7 +224,7 @@ export const changeClaim = createAsyncThunk(
     }
 
     const signer = provider.getSigner();
-    const staking = new ethers.Contract(addresses[networkID].STAKING_ADDRESS as string, HectorStaking, signer);
+    const staking = new ethers.Contract(NETWORKS.get(networkID).STAKING_ADDRESS, HectorStaking, signer);
     let claimTx;
 
     try {
@@ -240,7 +235,7 @@ export const changeClaim = createAsyncThunk(
       await claimTx.wait();
       dispatch(success(messages.tx_successfully_send));
       await sleep(10);
-    } catch (e: any) {
+    } catch (e) {
       return metamaskErrorWrap(e, dispatch);
     } finally {
       if (claimTx) {
@@ -260,11 +255,11 @@ export interface IStakeSlice {
 }
 
 const initialState: IStakeSlice = {
-  loading: false
-}
+  loading: false,
+};
 
 const stakeSlice = createSlice({
-  name: 'stake',
+  name: "stake",
   initialState,
   reducers: {
     fetchStakeSuccess(state, action) {
@@ -312,11 +307,10 @@ const stakeSlice = createSlice({
       .addCase(changeClaim.rejected, (state, { error }) => {
         state.loading = false;
         console.error(error.message);
-      })
-  }
+      });
+  },
 });
 
 export default stakeSlice.reducer;
 
 export const { fetchStakeSuccess } = stakeSlice.actions;
-

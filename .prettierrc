@@ -1,9 +1,10 @@
 {
   "arrowParens": "avoid",
+  "quoteProps": "consistent",
   "bracketSpacing": true,
   "printWidth": 120,
   "singleQuote": false,
   "tabWidth": 2,
-  "endOfLine":"auto",
+  "endOfLine": "auto",
   "trailingComma": "all"
 }

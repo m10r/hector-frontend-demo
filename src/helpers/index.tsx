@@ -1,4 +1,4 @@
-import { EPOCH_INTERVAL, BLOCK_RATE_SECONDS, addresses } from "../constants";
+import { EPOCH_INTERVAL, BLOCK_RATE_SECONDS, NETWORKS } from "../constants";
 import { ethers } from "ethers";
 import axios from "axios";
 import { abi as PairContract } from "../abi/PairContract.json";
@@ -116,7 +116,7 @@ export function contractForRedeemHelper({
   networkID: number;
   provider: StaticJsonRpcProvider | JsonRpcSigner;
 }) {
-  return new ethers.Contract(addresses[networkID].REDEEM_HELPER_ADDRESS as string, RedeemHelperAbi, provider);
+  return new ethers.Contract(NETWORKS.get(networkID).REDEEM_HELPER_ADDRESS, RedeemHelperAbi, provider);
 }
 
 /**

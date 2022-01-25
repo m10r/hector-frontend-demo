@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { addresses, TOKEN_DECIMALS } from "../../constants";
+import { useState } from "react";
+import { NETWORKS } from "../../constants";
 import { Link, SvgIcon, Popper, Button, Paper, Typography, Divider, Box, Fade, Slide } from "@material-ui/core";
 import { ReactComponent as InfoIcon } from "../../assets/icons/info-fill.svg";
 import { ReactComponent as ArrowUpIcon } from "../../assets/icons/arrow-up.svg";
@@ -60,14 +60,14 @@ const addTokenToWallet = (tokenSymbol, tokenAddress) => async () => {
 function HecMenu() {
   const [anchorEl, setAnchorEl] = useState(null);
   const isEthereumAPIAvailable = window.ethereum;
+
   const { chainID } = useWeb3Context();
-
   const networkID = chainID;
-
-  const SHEC_ADDRESS = addresses[networkID].SHEC_ADDRESS;
-  const WSHEC_ADDRESS = addresses[networkID].WSHEC_ADDRESS;
-  const HEC_ADDRESS = addresses[networkID].HEC_ADDRESS;
-  const USDC_ADDRESS = addresses[networkID].USDC_ADDRESS;
+  const network = NETWORKS.get(networkID);
+  const SHEC_ADDRESS = network.SHEC_ADDRESS;
+  const WSHEC_ADDRESS = network.WSHEC_ADDRESS;
+  const HEC_ADDRESS = network.HEC_ADDRESS;
+  const USDC_ADDRESS = network.USDC_ADDRESS;
 
   const handleClick = event => {
     setAnchorEl(anchorEl ? null : event.currentTarget);

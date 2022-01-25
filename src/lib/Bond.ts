@@ -4,7 +4,7 @@ import { abi as MimBondContract } from "src/abi/bonds/MimContract.json";
 import { abi as Dai44v3Contract } from "src/abi/bonds/Dai44v3Contract.json";
 import { abi as ierc20Abi } from "src/abi/IERC20.json";
 import { getBondCalculator, getBondCalculator1, getgOHMBondCalculator } from "src/helpers/BondCalculator";
-import { addresses } from "src/constants";
+import { NETWORKS } from "src/constants";
 import React, { ReactNode, useState } from "react";
 
 export enum NetworkID {
@@ -151,7 +151,7 @@ export class LPBond extends Bond {
     if (this.decimals) {
       decimals = this.decimals;
     }
-    let tokenAmount = await token.balanceOf(addresses[networkID].TREASURY_ADDRESS);
+    let tokenAmount = await token.balanceOf(NETWORKS.get(networkID).TREASURY_ADDRESS);
     if (this.isTotal) {
       let bond = this.getContractForBond(networkID, provider);
       tokenAmount = await bond.totalPrinciple();
@@ -178,7 +178,7 @@ export class LPBond extends Bond {
 
 // Generic BondClass we should be using everywhere
 // Assumes the token being deposited follows the standard ERC20 spec
-export interface StableBondOpts extends BondOpts { }
+export interface StableBondOpts extends BondOpts {}
 export class StableBond extends Bond {
   readonly isLP = false;
   readonly reserveContract: ethers.ContractInterface;
@@ -195,7 +195,7 @@ export class StableBond extends Bond {
 
   async getTreasuryBalance(networkID: NetworkID, provider: StaticJsonRpcProvider) {
     let token = this.getContractForReserve(networkID, provider);
-    let tokenAmount = await token.balanceOf(addresses[networkID].TREASURY_ADDRESS);
+    let tokenAmount = await token.balanceOf(NETWORKS.get(networkID).TREASURY_ADDRESS);
     let decimals = 18;
     if (this.decimals) {
       decimals = this.decimals;
@@ -218,7 +218,7 @@ export class StableBond extends Bond {
     if (this.fourAddress) {
       const fourBond = new ethers.Contract(this.fourAddress, MimBondContract, provider);
       balance -= (await fourBond.totalPrinciple()) / Math.pow(10, decimals);
-    };
+    }
     return balance;
   }
 }

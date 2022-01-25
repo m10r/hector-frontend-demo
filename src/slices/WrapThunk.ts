@@ -1,5 +1,5 @@
 import { ethers, BigNumber } from "ethers";
-import { addresses, messages } from "../constants";
+import { NETWORKS, messages } from "../constants";
 import { abi as ierc20ABI } from "../abi/IERC20.json";
 import { abi as wsHEC } from "../abi/wsHec.json";
 import { clearPendingTxn, fetchPendingTxns, getWrappingTypeText } from "./PendingTxnsSlice";
@@ -45,11 +45,11 @@ export const changeApproval = createAsyncThunk(
     }
 
     const signer = provider.getSigner();
-    const shecContract = new ethers.Contract(addresses[networkID].SHEC_ADDRESS as string, ierc20ABI, signer);
-    const wshecContract = new ethers.Contract(addresses[networkID].WSHEC_ADDRESS as string, wsHEC, signer);
+    const shecContract = new ethers.Contract(NETWORKS.get(networkID).SHEC_ADDRESS, ierc20ABI, signer);
+    const wshecContract = new ethers.Contract(NETWORKS.get(networkID).WSHEC_ADDRESS, wsHEC, signer);
     let approveTx;
-    let wrapAllowance = await shecContract.allowance(address, addresses[networkID].WSHEC_ADDRESS);
-    let unwrapAllowance = await wshecContract.allowance(address, addresses[networkID].WSHEC_ADDRESS);
+    let wrapAllowance = await shecContract.allowance(address, NETWORKS.get(networkID).WSHEC_ADDRESS);
+    let unwrapAllowance = await wshecContract.allowance(address, NETWORKS.get(networkID).WSHEC_ADDRESS);
 
     // return early if approval has already happened
     if (alreadyApprovedToken(token, wrapAllowance, unwrapAllowance)) {
@@ -68,12 +68,12 @@ export const changeApproval = createAsyncThunk(
       if (token === "shec") {
         // won't run if wrapAllowance > 0
         approveTx = await shecContract.approve(
-          addresses[networkID].WSHEC_ADDRESS,
+          NETWORKS.get(networkID).WSHEC_ADDRESS,
           ethers.utils.parseUnits("1000000000", "gwei").toString(),
         );
       } else if (token === "wshec") {
         approveTx = await wshecContract.approve(
-          addresses[networkID].WSHEC_ADDRESS,
+          NETWORKS.get(networkID).WSHEC_ADDRESS,
           ethers.utils.parseUnits("1000000000", "gwei").toString(),
         );
       }
@@ -86,7 +86,7 @@ export const changeApproval = createAsyncThunk(
         await approveTx.wait();
         dispatch(success(messages.tx_successfully_send));
       }
-    } catch (e: any) {
+    } catch (e) {
       return metamaskErrorWrap(e, dispatch);
     } finally {
       if (approveTx) {
@@ -96,8 +96,8 @@ export const changeApproval = createAsyncThunk(
 
     await sleep(2);
     // go get fresh allowances
-    wrapAllowance = await shecContract.allowance(address, addresses[networkID].WSHEC_ADDRESS);
-    unwrapAllowance = await wshecContract.allowance(address, addresses[networkID].WSHEC_ADDRESS);
+    wrapAllowance = await shecContract.allowance(address, NETWORKS.get(networkID).WSHEC_ADDRESS);
+    unwrapAllowance = await wshecContract.allowance(address, NETWORKS.get(networkID).WSHEC_ADDRESS);
 
     return dispatch(
       fetchAccountSuccess({
@@ -119,7 +119,7 @@ export const changeWrap = createAsyncThunk(
     }
 
     const signer = provider.getSigner();
-    const wshecContract = new ethers.Contract(addresses[networkID].WSHEC_ADDRESS as string, wsHEC, signer);
+    const wshecContract = new ethers.Contract(NETWORKS.get(networkID).WSHEC_ADDRESS, wsHEC, signer);
 
     let wrapTx;
     let uaData: IUAData = {
@@ -142,11 +142,10 @@ export const changeWrap = createAsyncThunk(
       dispatch(fetchPendingTxns({ txnHash: wrapTx.hash, text: getWrappingTypeText(action), type: pendingTxnType }));
       await wrapTx.wait();
       dispatch(success(messages.tx_successfully_send));
-    } catch (e: unknown) {
+    } catch (e) {
       return metamaskErrorWrap(e, dispatch);
     } finally {
       if (wrapTx) {
-
         dispatch(clearPendingTxn(wrapTx.hash));
       }
     }
