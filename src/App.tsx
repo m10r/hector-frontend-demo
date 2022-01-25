@@ -258,9 +258,6 @@ function App() {
             <Route exact path="/dashboard">
               <TreasuryDashboard />
             </Route>
-            {/* <Route exact path="/investments">
-              <Investments />
-            </Route> */}
 
             <Route exact path="/">
               <Redirect to="/stake" />
@@ -286,12 +283,15 @@ function App() {
               })}
               <ChooseBond />
             </Route>
-            <Route path="/farming">
+            {/* <Route path="/farming">
               <PoolFarming theme={themeMode} />
             </Route>
             <Route path="/swap">
               <Swap />
             </Route>
+            <Route exact path="/investments">
+              <Investments />
+            </Route> */}
 
             <Route component={NotFound} />
           </Switch>
