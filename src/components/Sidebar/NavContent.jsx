@@ -143,7 +143,7 @@ function NavContent() {
                 component={NavLink}
                 id="swap-nav"
                 to="/swap"
-                onClick={event => event.preventDefault()}
+                // onClick={event => event.preventDefault()}
                 isActive={(match, location) => {
                   return checkPage(match, location, "swap");
                 }}
@@ -161,7 +161,7 @@ function NavContent() {
                 component={NavLink}
                 id="farm-nav"
                 to="/farming"
-                onClick={event => event.preventDefault()}
+                // onClick={event => event.preventDefault()}
                 isActive={(match, location) => {
                   return checkPage(match, location, "farming");
                 }}
@@ -179,7 +179,7 @@ function NavContent() {
                 component={NavLink}
                 id="investments-nav"
                 to="/investments"
-                onClick={event => event.preventDefault()}
+                // onClick={event => event.preventDefault()}
                 isActive={(match, location) => {
                   return checkPage(match, location, "investments");
                 }}

@@ -283,7 +283,7 @@ function App() {
               })}
               <ChooseBond />
             </Route>
-            {/* <Route path="/farming">
+            <Route path="/farming">
               <PoolFarming theme={themeMode} />
             </Route>
             <Route path="/swap">
@@ -291,7 +291,7 @@ function App() {
             </Route>
             <Route exact path="/investments">
               <Investments />
-            </Route> */}
+            </Route>
 
             <Route component={NotFound} />
           </Switch>
