@@ -6,6 +6,7 @@ import externalUrls from "./externalUrls";
 import { ReactComponent as StakeIcon } from "../../assets/icons/stake.svg";
 import { ReactComponent as BondIcon } from "../../assets/icons/bond.svg";
 import { ReactComponent as GlobeIcon } from "../../assets/icons/globe.svg";
+import { ReactComponent as SwapIcon } from "../../assets/icons/swap.svg";
 import { ReactComponent as DashboardIcon } from "../../assets/icons/dashboard.svg";
 import { ReactComponent as WrapIcon } from "../../assets/icons/wrap.svg";
 import { ReactComponent as HectorIcon } from "../../assets/icons/hector-nav-logo.svg";
@@ -41,6 +42,9 @@ function NavContent() {
       return true;
     }
     if (currentPath.indexOf("farming") >= 0 && page === "farming") {
+      return true;
+    }
+    if (currentPath.indexOf("swap") >= 0 && page === "swap") {
       return true;
     }
     if ((currentPath.indexOf("bonds") >= 0 || currentPath.indexOf("choose_bond") >= 0) && page === "bonds") {
@@ -102,6 +106,21 @@ function NavContent() {
                 <Typography variant="h6">
                   <SvgIcon color="primary" component={StakeIcon} />
                   Stake
+                </Typography>
+              </Link>
+
+              <Link
+                component={NavLink}
+                id="swap-nav"
+                to="/swap"
+                isActive={(match, location) => {
+                  return checkPage(match, location, "swap");
+                }}
+                className={`button-dapp-menu ${isActive ? "active" : ""}`}
+              >
+                <Typography variant="h6">
+                  <SvgIcon color="primary" component={SwapIcon} viewBox="0 0 24 18" />
+                  Swap
                 </Typography>
               </Link>
 
@@ -211,6 +230,7 @@ function NavContent() {
                   Calculator
                 </Typography>
               </Link>
+
             </div>
           </div>
         </div>

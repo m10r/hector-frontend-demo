@@ -31,6 +31,7 @@ import { girth as gTheme } from "./themes/girth.js";
 import "./style.scss";
 import Wrap from "./views/Wrap/Wrap";
 import Calculator from "./views/Calculator/index";
+import Swap from "./views/Swap/index";
 import { RootState } from "./store";
 import { Banner } from "./components/banner/banner";
 import PoolFarming from "./views/PoolFarming/pool-farming";
@@ -273,6 +274,9 @@ function App() {
             </Route>
             <Route path="/calculator">
               <Calculator />
+            </Route>
+            <Route path="/swap">
+              <Swap />
             </Route>
 
             <Route path="/bonds">
