@@ -8,10 +8,6 @@ on:
       ref:
         type: string
         description: Deploy a specific commit by hash (optional)
-      accept:
-        type: boolean
-        required: true
-        description: Yes, really deploy!
 jobs:
   deploy:
     runs-on: ubuntu-latest
