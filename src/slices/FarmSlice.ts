@@ -109,7 +109,7 @@ export const stake = createAsyncThunk("farm/stake", async ({ networkID, provider
 export const approve = createAsyncThunk("farm/approve", async ({ networkID, provider, address }: IBaseAddressAsyncThunk, { dispatch }) => {
   try {
     const approveTrans = await hugsPoolContract(networkID, provider, address).approve(
-      addresses[networkID].FARMINNG_STAKING_REWARDS_ADDRESS as string,
+      NETWORKS.get(networkID).FARMINNG_STAKING_REWARDS_ADDRESS as string,
       "1000000000000000000000000",
     );
     await approveTrans.wait();
