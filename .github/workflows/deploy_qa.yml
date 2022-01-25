@@ -46,4 +46,4 @@ jobs:
         # How verbose should the information be - minimal, standard, or verbose
         log-level: standard
         # strict or loose
-        security: strict
+        security: loose
