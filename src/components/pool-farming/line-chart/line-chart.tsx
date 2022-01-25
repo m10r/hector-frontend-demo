@@ -38,7 +38,7 @@ export default function ProjectionLineChart({ apr, quantity }: ProjectionProps) 
   }
 
   const renderLegend = () => {
-    return <div>Based on current APR</div>;
+    return <div className="apr-text">Based on current APR</div>;
   };
 
   return (

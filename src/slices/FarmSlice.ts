@@ -60,18 +60,32 @@ export const getStakingInfo = createAsyncThunk("farm/getStakingInfo", async ({ n
     return await stakingGateway(networkID, provider).getStakingInfo(address, amt);
 });
 
-export const withDrawStaked = createAsyncThunk("farm/withDrawStaked", async ({ networkID, provider, address }: IBaseAddressAsyncThunk, { dispatch, getState }) => {
+export const withDrawStaked = createAsyncThunk("farm/withDrawStaked", async ({ networkID, provider, address, value }: IValueAsyncThunk, { dispatch }) => {
     try {
-        const { stakingRewardsInfo } = (getState() as RootState).farm;
-        const withdrawTrans = await stakingRewardsContract(networkID, provider, address).withdraw(stakingRewardsInfo?.originalBalance);
+        const withdrawTrans = await stakingRewardsContract(networkID, provider, address).withdraw(ethers.utils.parseUnits(value, 'ether'));
         await withdrawTrans.wait();
         dispatch(success(messages.tx_successfully_send));
         await sleep(7);
         dispatch(info(messages.your_balance_update_soon));
         await sleep(9);
         dispatch(info(messages.your_balance_updated));
-    } catch {
+    } catch (e) {
+        console.log(e);
         dispatch(error("Failed to withdraw"));
+    }
+});
+
+export const stake = createAsyncThunk("farm/stake", async ({ networkID, provider, address, value }: IValueAsyncThunk, { dispatch }) => {
+    try {
+        const stakeTrans = await stakingRewardsContract(networkID, provider, address).stake(ethers.utils.parseUnits(value, "ether"));
+        await stakeTrans.wait();
+        dispatch(success(messages.tx_successfully_send));
+        await sleep(7);
+        dispatch(info(messages.your_balance_update_soon));
+        await sleep(9);
+        dispatch(info(messages.your_balance_updated));
+    } catch (e) {
+        dispatch(error("Failed to stake"));
     }
 });
 
@@ -91,21 +105,6 @@ export const approve = createAsyncThunk("farm/approve", async ({ networkID, prov
         dispatch(error("Failed to approve"));
     }
 });
-export const stake = createAsyncThunk("farm/stake", async ({ networkID, provider, address }: IBaseAddressAsyncThunk, { dispatch, getState }) => {
-    try {
-        const { hugsPoolInfo } = (getState() as RootState).farm;
-        const stakeTrans = await stakingRewardsContract(networkID, provider, address).stake(hugsPoolInfo.originalBalance);
-        await stakeTrans.wait();
-        dispatch(success(messages.tx_successfully_send));
-        await sleep(7);
-        dispatch(info(messages.your_balance_update_soon));
-        await sleep(9);
-        dispatch(info(messages.your_balance_updated));
-    } catch (e) {
-        dispatch(error("Failed to stake"));
-    }
-});
-
 export const claimRewards = createAsyncThunk("farm/claimRewards", async ({ networkID, provider, address }: IBaseAddressAsyncThunk, { dispatch }) => {
     try {
         const stakeTrans = await stakingRewardsContract(networkID, provider, address).getReward();

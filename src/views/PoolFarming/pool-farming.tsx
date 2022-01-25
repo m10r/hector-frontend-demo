@@ -10,6 +10,8 @@ import {
   Link,
   OutlinedInput,
   SvgIcon,
+  Tab,
+  Tabs,
   Tooltip,
 } from "@material-ui/core";
 import { useWeb3Context } from "src/hooks/web3Context";
@@ -36,15 +38,32 @@ import { StakingInfo } from "src/types/farming.model";
 import { Skeleton } from "@material-ui/lab";
 import { ReactComponent as TorSVG } from "../../assets/tokens/TOR.svg";
 import InfoTooltip from "src/components/InfoTooltip/InfoTooltip";
+import TabPanel from "src/components/TabPanel";
+import { error } from "src/slices/MessagesSlice";
 
 const TOOLTIP_TEXT = `Farming is a rewards system where you earn FTM rewards in exchange for loaning your liquidity to Hector DAO. To participate you stake your tokens into our farm and while they are staked you earn rewards against what you've loaned.  You can unstake or 'withdraw' your tokens at any time, however if your staked balance reaches 0 you will no longer be earning passive FTM rewards. While your tokens are staked in the Hector DAO farm they are backed by the Hector DAO treasury.`;
+type UserAction = "stake" | "withdraw" | "approve";
+function a11yProps(index: any) {
+  return {
+    id: `simple-tab-${index}`,
+    "aria-controls": `simple-tabpanel-${index}`,
+  };
+}
 
 export default function PoolFarming({ theme }: any) {
   const { assetPrice, stakingRewardsInfo, hugsPoolInfo, stakingInfo, isLoading } = useSelector(
     (state: RootState) => state.farm,
   );
   const [quantity, setQuantity] = useState("");
+  const [stakeQuantity, setStakeQuantity] = useState("");
+  const [withdrawQuantity, setWtihdrawQuantity] = useState("");
   const [calcQuantity, setCalcQuantity] = useState(0);
+  const [view, setView] = useState(0);
+
+  const handleChange = (event: React.ChangeEvent<{}>, newValue: number) => {
+    setView(newValue);
+  };
+
   const dispatch = useDispatch();
   const { provider, chainID, address } = useWeb3Context();
 
@@ -55,6 +74,14 @@ export default function PoolFarming({ theme }: any) {
   const hasLpBalance = useCallback(() => hugsPoolInfo?.balance > 0 && hugsPoolInfo?.allowance > hugsPoolInfo?.balance, [
     hugsPoolInfo,
   ]);
+
+  const setMax = () => {
+    if (view === 0) {
+      setStakeQuantity(ethers.utils.formatEther(hugsPoolInfo.originalBalance));
+    } else {
+      setWtihdrawQuantity(ethers.utils.formatEther(stakingRewardsInfo.originalBalance));
+    }
+  };
 
   const renderer = ({ days, hours, minutes, seconds, completed }: any) => {
     if (completed) {
@@ -92,18 +119,35 @@ export default function PoolFarming({ theme }: any) {
     await dispatch(claimRewards({ networkID: chainID, provider, address }));
     dispatchStakingInfo();
   }
-  async function dispatchStake(): Promise<void> {
-    await dispatch(stake({ networkID: chainID, provider, address }));
+
+  const onUserAction = async (action: UserAction) => {
+    let value: string;
+    view === 0 ? (value = stakeQuantity) : (value = withdrawQuantity);
+
+    if (value === "0" || value === "0.0") {
+      return dispatch(error("Please enter a value greater than 0"));
+    }
+    if (action === "stake" && +value > +ethers.utils.formatEther(hugsPoolInfo.originalBalance)) {
+      return dispatch(error("You cannot stake more than your balance."));
+    }
+    if (action === "withdraw" && +value > +ethers.utils.formatEther(stakingRewardsInfo.originalBalance)) {
+      return dispatch(error("You cannot withdraw more than your balance."));
+    }
+    switch (action) {
+      case "stake":
+        await dispatch(stake({ networkID: chainID, provider, address, value: stakeQuantity }));
+        break;
+      case "withdraw":
+        await dispatch(withDrawStaked({ networkID: chainID, provider, address, value: withdrawQuantity }));
+        break;
+      case "approve":
+        await dispatch(approve({ networkID: chainID, provider, address }));
+        break;
+    }
     getAllData();
-  }
-  async function dispatchWithDraw(): Promise<void> {
-    await dispatch(withDrawStaked({ networkID: chainID, provider, address }));
-    getAllData();
-  }
-  async function dispatchApprove(): Promise<void> {
-    await dispatch(approve({ networkID: chainID, provider, address }));
-    getAllData();
-  }
+    setStakeQuantity("");
+    setWtihdrawQuantity("");
+  };
 
   async function getAllData() {
     await dispatch(getAssetPrice({ networkID: chainID, provider }));
@@ -117,17 +161,27 @@ export default function PoolFarming({ theme }: any) {
       getAllData();
     }
   }, [chainID, provider, address]);
+
+  useEffect(() => {
+    const updateInterval = setInterval(() => {
+      dispatch(getStakingInfo({ networkID: chainID, provider, address, value: "0" }));
+    }, 1000 * 60);
+    return () => {
+      clearInterval(updateInterval);
+    };
+  }, []);
+
   return (
     <div className="pool-farming">
       <div className="MuiPaper-root hec-card farming">
         <div className="header">
           <TorSVG style={{ height: "45px", width: "45px", marginRight: "10px" }} />
-          <div className="title">TOR Farming</div>
+          <div className="header-title">TOR Farming</div>
           <InfoTooltip message={TOOLTIP_TEXT} />
         </div>
         <div className="info">
           <div>
-            <div className="title">Apr:</div>
+            <div className="title">APR:</div>
             <div className={theme.palette.text?.gold + " data"}>
               {stakingInfo ? getFormattedStakingInfo("_apr", "mwei").toFixed(2) : <Skeleton width="50%" />}%
             </div>
@@ -163,14 +217,78 @@ export default function PoolFarming({ theme }: any) {
       </div>
       <div className="MuiPaper-root hec-card farming">
         <div className="header">
-          <div className="title">Earned Rewards</div>
+          <div className="title">Rewards</div>
           <Link className="lp-link" target="_blank" href="https://ftm.curve.fi/factory/62/deposit">
+            {hugsPoolInfo?.balance || hugsPoolInfo?.balance === 0 ? (
+              <div>{hugsPoolInfo?.balance.toFixed(2)}</div>
+            ) : (
+              <Skeleton width="40%" />
+            )}
             LP
             <SvgIcon component={ArrowUp} htmlColor="#A3A3A3" />
           </Link>
         </div>
+        <div className="tab-group">
+          <Tabs
+            className="tabs"
+            textColor="primary"
+            indicatorColor="primary"
+            value={view}
+            onChange={handleChange}
+            aria-label="simple tabs example"
+          >
+            <Tab label="Stake" {...a11yProps(0)} />
+            <Tab label="Withdraw" {...a11yProps(1)} />
+          </Tabs>
+
+          <TabPanel value={view} index={0}>
+            <FormControl className="input-amount" fullWidth variant="outlined">
+              <InputLabel htmlFor="outlined-adornment-amount">Amount</InputLabel>
+              <OutlinedInput
+                id="outlined-adornment-amount"
+                type="number"
+                value={stakeQuantity}
+                onChange={e => setStakeQuantity(e.target.value)}
+                endAdornment={
+                  <InputAdornment position="end">
+                    {" "}
+                    {hasLpBalance() && (
+                      <Button variant="text" onClick={setMax} color="inherit">
+                        Max
+                      </Button>
+                    )}
+                  </InputAdornment>
+                }
+                labelWidth={60}
+              />
+            </FormControl>
+          </TabPanel>
+          <TabPanel value={view} index={1}>
+            <FormControl className="input-amount" fullWidth variant="outlined">
+              <InputLabel htmlFor="outlined-adornment-amount">Amount</InputLabel>
+              <OutlinedInput
+                id="outlined-adornment-amount"
+                type="number"
+                value={withdrawQuantity}
+                endAdornment={
+                  <InputAdornment position="end">
+                    {" "}
+                    {stakingRewardsInfo?.balance > 0 && (
+                      <Button variant="text" onClick={setMax} color="inherit">
+                        Max
+                      </Button>
+                    )}
+                  </InputAdornment>
+                }
+                onChange={e => setWtihdrawQuantity(e.target.value)}
+                labelWidth={60}
+              />
+            </FormControl>
+          </TabPanel>
+        </div>
+
         <div className="info">
-          <div>
+          {/* <div>
             <div className="title">Your LP Tokens:</div>
             <div className="data">
               {hugsPoolInfo?.balance || hugsPoolInfo?.balance === 0 ? (
@@ -179,7 +297,7 @@ export default function PoolFarming({ theme }: any) {
                 <Skeleton width="40%" />
               )}
             </div>
-          </div>
+          </div> */}
           <div>
             <div className="title">Staked LP Tokens: </div>
             <div className="data">
@@ -220,16 +338,29 @@ export default function PoolFarming({ theme }: any) {
                     </Button>
                   </>
                 )}
-                {hasLpBalance() && (
+                {view === 0 && (
                   <Button
                     className="stake-button"
                     variant="contained"
                     color="primary"
-                    disabled={isLoading}
-                    onClick={() => dispatchStake()}
+                    disabled={!hasLpBalance() || isLoading}
+                    onClick={() => onUserAction("stake")}
                   >
                     Stake
                   </Button>
+                )}
+                {view === 1 && (
+                  <>
+                    <Button
+                      className="stake-button"
+                      variant="contained"
+                      color="primary"
+                      disabled={isLoading || !(stakingRewardsInfo?.balance > 0)}
+                      onClick={() => onUserAction("withdraw")}
+                    >
+                      Withdraw
+                    </Button>
+                  </>
                 )}
                 {hasAllowance() && (
                   <Button
@@ -237,23 +368,10 @@ export default function PoolFarming({ theme }: any) {
                     variant="contained"
                     color="primary"
                     disabled={isLoading}
-                    onClick={() => dispatchApprove()}
+                    onClick={() => onUserAction("approve")}
                   >
                     Approve
                   </Button>
-                )}
-                {stakingRewardsInfo?.balance > 0 && (
-                  <>
-                    <Button
-                      className="stake-button"
-                      variant="contained"
-                      color="primary"
-                      disabled={isLoading}
-                      onClick={() => dispatchWithDraw()}
-                    >
-                      Withdraw
-                    </Button>
-                  </>
                 )}
               </>
             ) : (

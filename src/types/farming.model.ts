@@ -22,7 +22,7 @@ export interface HugsPoolContract {
 export interface StakingRewardsContract {
     balanceOf: (address: string) => BigNumber;
     stake: (amount: BigNumber) => any;
-    withdraw: (amount: any) => any;
+    withdraw: (amount: BigNumber) => any;
     getReward: () => any;
 }
 

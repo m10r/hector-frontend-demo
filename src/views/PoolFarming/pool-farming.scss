@@ -1,7 +1,7 @@
 @mixin info-row {
   > div {
     display: grid;
-    grid-template-columns: 1fr 0.5fr;
+    grid-template-columns: 1fr 0.8fr;
   }
 }
 
@@ -15,13 +15,9 @@
   align-content: center;
   justify-content: center;
 
-  .title {
-    font-size: 23px;
-    align-self: center;
-  }
-
+  .title,
   .data {
-    font-size: 16px;
+    font-size: 20px;
     align-self: center;
   }
 
@@ -45,13 +41,16 @@
 
   .farming {
     display: grid;
-    grid: max-content 1fr / 1fr;
     box-sizing: border-box;
-    row-gap: 20px;
+    grid-template-rows: max-content;
     .header {
       grid: 50px / max-content 1fr max-content;
+      height: fit-content;
       :last-child {
         justify-self: flex-end;
+      }
+      .header-title {
+        font-size: 23px;
       }
       svg {
         width: 17px;
@@ -62,6 +61,21 @@
         align-items: center;
         justify-content: flex-end;
         column-gap: 5px;
+      }
+    }
+
+    .tab-group {
+      height: fit-content;
+      .tabs {
+        display: grid;
+        justify-content: center;
+      }
+      [id^="simple-tabpanel-"] {
+        > div {
+          padding-bottom: 0;
+          padding-right: 0;
+          padding-left: 0;
+        }
       }
     }
     .info {
@@ -116,7 +130,7 @@
     grid-column-start: span 2;
     grid: 1fr / 1fr 2fr;
     box-sizing: border-box;
-
+    padding-top: 30px !important;
     .investment-plan {
       display: grid;
       grid: max-content max-content 1fr / max-content;

@@ -134,7 +134,7 @@ function NavContent() {
                   Bond
                 </Typography>
               </Link>
-              {/* <Link
+              <Link
                 component={NavLink}
                 id="farm-nav"
                 to="/farming"
@@ -147,7 +147,7 @@ function NavContent() {
                   <SvgIcon color="primary" component={FarmIcon} />
                   Farm
                 </Typography>
-              </Link> */}
+              </Link>
 
               {/* <div className="dapp-menu-data discounts">
                 <div className="bond-discounts">
