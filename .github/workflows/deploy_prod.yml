@@ -8,8 +8,13 @@ on:
       ref:
         type: string
         description: Deploy a specific commit by hash (optional)
+      accept:
+        type: string
+        description: Confirm by typing "deploy to prod"
+        required: true
 jobs:
   deploy:
+    if: github.event.inputs.accept == 'deploy to prod'
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
