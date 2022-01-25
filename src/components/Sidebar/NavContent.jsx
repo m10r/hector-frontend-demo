@@ -142,7 +142,6 @@ function NavContent() {
                 component={NavLink}
                 id="swap-nav"
                 to="/swap"
-                onClick={event => event.preventDefault()}
                 isActive={(match, location) => {
                   return checkPage(match, location, "swap");
                 }}
@@ -161,7 +160,6 @@ function NavContent() {
                 id="farm-nav"
                 to="/farming"
                 disabled={true}
-                onClick={event => event.preventDefault()}
                 isActive={(match, location) => {
                   return checkPage(match, location, "farming");
                 }}
