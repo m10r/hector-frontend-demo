@@ -74,7 +74,7 @@ function Swap() {
       }
     }
     update();
-  }, [wallet]);
+  }, [rubic, wallet]);
 
   const [from, setFrom] = useState<Token>(tokens.find(token => token.symbol === "FTM"));
   const [to, setTo] = useState<Token>(tokens.find(token => token.address === FANTOM.HEC_ADDRESS));
@@ -215,7 +215,7 @@ function Swap() {
         <div className="swap">
           <button
             onClick={() => {
-              setAmount(bestTrade.to.tokenAmount.toString())
+              setAmount(bestTrade?.to.tokenAmount.toString() ?? "");
               setFrom(to);
               setTo(from);
             }}
@@ -236,7 +236,6 @@ function Swap() {
           <button
             className="swap-button"
             onClick={async () => {
-              console.log("click");
               setShowConfirmation("show");
               try {
                 await bestTrade?.swap({
@@ -372,7 +371,6 @@ const TokenSelect: React.VFC<TokenSelectProps> = ({ show, onClose }) => {
       <div className="token-select-background" onClick={() => onClose()} />
       <div className="token-select" style={{ transform: `translate(-50%, calc(-50% + ${show ? 0 : 30}px))` }}>
         <form
-          style={{ padding: "10px", boxShadow: "0px 2px 8px #eee" }}
           onSubmit={e => {
             e.preventDefault();
             onClose(filteredTokens[0]);
