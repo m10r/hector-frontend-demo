@@ -40,7 +40,6 @@ const initialConfiguration: Configuration = {
 };
 
 function Swap() {
-  console.log("env!!!", HECTOR_ENV);
   const [configuration, setConfiguration] = useState(initialConfiguration);
   const [rubic, setRubic] = useState<SDK>(null);
   useEffect(() => {
