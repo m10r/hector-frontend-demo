@@ -48,6 +48,17 @@
     margin-top: 0px;
     height: 20px;
     pointer-events: none;
+    .spinner {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 2;
+      // color: var(--secondary-text-color);
+      color: var(--action-background-color);
+      transition: opacity 500ms linear;
+      pointer-events: none;
+    }
 
     > button {
       color: var(--secondary-text-color);

@@ -13,6 +13,7 @@ import { sleep } from "src/helpers/Sleep";
 import tokens from "src/assets/tokens.json";
 import { ReactComponent as ChevronIcon } from "src/assets/icons/chevron.svg";
 import { ReactComponent as ArrowDownIcon } from "src/assets/icons/arrow-down.svg";
+import { ReactComponent as Spinner } from "src/assets/icons/spinner.svg";
 import { BigNumber as EthersBigNumber, ethers } from "ethers";
 import { abi as ierc20Abi } from "src/abi/IERC20.json";
 import { abi as erc20Abi } from "src/abi/ERC20.json";
@@ -81,6 +82,7 @@ function Swap() {
   const [to, setTo] = useState<Token>(tokens.find(token => token.address === FANTOM.HEC_ADDRESS));
   const [amount, setAmount] = useState("");
   const [trades, setTrades] = useState<InstantTrade[]>([]);
+  const [loading, setLoading] = useState(false);
   const bestTrade: InstantTrade | undefined = trades[0];
 
   const [decimals, setDecimals] = useState<number>(18);
@@ -150,12 +152,19 @@ function Swap() {
       }
       newTrades.sort((a, b) => b.to.tokenAmount.comparedTo(a.to.tokenAmount));
       setTrades(newTrades);
+      setLoading(false);
     }
     setTrades([]);
-    run();
-    return () => {
-      disposed = true;
-    };
+
+    if (amount) {
+      setLoading(true);
+      run();
+      return () => {
+        disposed = true;
+      };
+    } else {
+      setLoading(false);
+    }
   }, [from, to, amount, rubic]);
 
   const [showConfirmation, setShowConfirmation] = useState<"hide" | "show" | "poor">("hide");
@@ -214,6 +223,7 @@ function Swap() {
           </button>
         </div>
         <div className="swap">
+          <Spinner className="spinner" style={{ opacity: loading ? "1" : "0" }} />
           <button
             onClick={() => {
               setAmount(bestTrade?.to.tokenAmount.toString() ?? "");
