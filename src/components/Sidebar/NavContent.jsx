@@ -17,6 +17,7 @@ import { useAddress, useWeb3Context } from "src/hooks/web3Context";
 import useBonds from "../../hooks/Bonds";
 import { Paper, Link, Box, Typography, SvgIcon } from "@material-ui/core";
 import "./sidebar.scss";
+import { HECTOR_ENV } from "../../helpers/Environment";
 
 function NavContent() {
   const [isActive] = useState();
@@ -143,7 +144,11 @@ function NavContent() {
                 component={NavLink}
                 id="swap-nav"
                 to="/swap"
-                // onClick={event => event.preventDefault()}
+                onClick={event => {
+                  if (HECTOR_ENV === "prod") {
+                    event.preventDefault();
+                  }
+                }}
                 isActive={(match, location) => {
                   return checkPage(match, location, "swap");
                 }}
@@ -161,7 +166,11 @@ function NavContent() {
                 component={NavLink}
                 id="farm-nav"
                 to="/farming"
-                // onClick={event => event.preventDefault()}
+                onClick={event => {
+                  if (HECTOR_ENV === "prod") {
+                    event.preventDefault();
+                  }
+                }}
                 isActive={(match, location) => {
                   return checkPage(match, location, "farming");
                 }}
@@ -179,7 +188,11 @@ function NavContent() {
                 component={NavLink}
                 id="investments-nav"
                 to="/investments"
-                // onClick={event => event.preventDefault()}
+                onClick={event => {
+                  if (HECTOR_ENV === "prod") {
+                    event.preventDefault();
+                  }
+                }}
                 isActive={(match, location) => {
                   return checkPage(match, location, "investments");
                 }}

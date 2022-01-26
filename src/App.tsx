@@ -36,6 +36,7 @@ import { RootState } from "./store";
 import { Banner } from "./components/banner/banner";
 import PoolFarming from "./views/PoolFarming/pool-farming";
 import Investments from "./views/Investments/investments";
+import { HECTOR_ENV } from "./helpers/Environment";
 
 const drawerWidth = 300;
 const transitionDuration = 969;
@@ -283,15 +284,21 @@ function App() {
               })}
               <ChooseBond />
             </Route>
-            <Route path="/farming">
-              <PoolFarming theme={themeMode} />
-            </Route>
-            <Route path="/swap">
-              <Swap />
-            </Route>
-            <Route exact path="/investments">
-              <Investments />
-            </Route>
+            {HECTOR_ENV !== "prod" && (
+              <Route path="/farming">
+                <PoolFarming theme={themeMode} />
+              </Route>
+            )}
+            {HECTOR_ENV !== "prod" && (
+              <Route path="/swap">
+                <Swap />
+              </Route>
+            )}
+            {HECTOR_ENV !== "prod" && (
+              <Route exact path="/investments">
+                <Investments />
+              </Route>
+            )}
 
             <Route component={NotFound} />
           </Switch>
