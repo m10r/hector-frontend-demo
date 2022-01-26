@@ -17,6 +17,7 @@ import { BigNumber as EthersBigNumber, ethers } from "ethers";
 import { abi as ierc20Abi } from "src/abi/IERC20.json";
 import { abi as erc20Abi } from "src/abi/ERC20.json";
 import BigNumber from "bignumber.js";
+import { HECTOR_ENV } from "src/helpers/Environment";
 
 const NATIVE_ADDRESS = "0x0000000000000000000000000000000000000000";
 
@@ -39,6 +40,7 @@ const initialConfiguration: Configuration = {
 };
 
 function Swap() {
+  console.log("env!!!", HECTOR_ENV);
   const [configuration, setConfiguration] = useState(initialConfiguration);
   const [rubic, setRubic] = useState<SDK>(null);
   useEffect(() => {

@@ -1,4 +1,4 @@
-import { EnvHelper } from "./Environment";
+import { getGeoapifyAPIKey } from "./Environment";
 import { retrieveUTMQueryParameters } from "./QueryParameterHelper";
 
 /**
@@ -8,7 +8,7 @@ import { retrieveUTMQueryParameters } from "./QueryParameterHelper";
 async function countryLookup() {
   // Determine the country the user is from, based on IP
   // Geoapify offers 3000 lookups/day, so we should be fine
-  var apiKey = EnvHelper.getGeoapifyAPIKey();
+  var apiKey = getGeoapifyAPIKey();
 
   if (!apiKey) return "";
 

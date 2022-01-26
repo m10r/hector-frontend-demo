@@ -1,31 +1,34 @@
 /**
- * Access `process.env` in an environment helper
- * Usage: `EnvHelper.env`
- * - Other static methods can be added as needed per
- * https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes/static
+ * Returns env contingent segment api key
+ * @returns segment
  */
-export class EnvHelper {
-  /**
-   * @returns `process.env`
-   */
-  static env = process.env;
-  static whitespaceRegex = /\s+/;
+export function getSegmentKey() {
+  return process.env.REACT_APP_SEGMENT_API_KEY;
+}
 
-  /**
-   * Returns env contingent segment api key
-   * @returns segment
-   */
-  static getSegmentKey() {
-    return EnvHelper.env.REACT_APP_SEGMENT_API_KEY;
+export function getGeoapifyAPIKey() {
+  const apiKey = process.env.REACT_APP_GEOAPIFY_API_KEY;
+  if (!apiKey) {
+    console.warn("Missing REACT_APP_GEOAPIFY_API_KEY environment variable");
+    return null;
   }
 
-  static getGeoapifyAPIKey() {
-    var apiKey = EnvHelper.env.REACT_APP_GEOAPIFY_API_KEY;
-    if (!apiKey) {
-      console.warn("Missing REACT_APP_GEOAPIFY_API_KEY environment variable");
-      return null;
-    }
+  return apiKey;
+}
 
-    return apiKey;
+function hectorEnv(): "prod" | "qa" | "dev" {
+  if (!process.env.REACT_APP_HECTOR_ENV) {
+    return "prod";
+  }
+  switch (process.env.REACT_APP_HECTOR_ENV.toLowerCase()) {
+    case "prod":
+      return "prod";
+    case "qa":
+      return "qa";
+    case "dev":
+      return "dev";
+    default:
+      return "prod";
   }
 }
+export const HECTOR_ENV = hectorEnv();
