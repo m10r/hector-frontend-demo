@@ -215,10 +215,6 @@ function Calculator() {
                                         <Typography>Potential return</Typography>
                                         <Typography>{isAppLoading ? <Skeleton width="80px" /> : <>${potentialReturn}</>}</Typography>
                                     </Box>
-                                    <Box className="data-row">
-                                        <Typography>Potential number of Tesla Roadsters</Typography>
-                                        <Typography>{isAppLoading ? <Skeleton width="80px" /> : <>{Math.floor(Number(potentialReturn) / 220000)}</>}</Typography>
-                                    </Box>
                                 </Box>
                             </Box>
                         </Box>
