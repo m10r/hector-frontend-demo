@@ -255,7 +255,7 @@ function NavContent() {
                     ))}
                 </div>
               </div> */}
-              {/* <Link
+              <Link
                 component={NavLink}
                 id="calc-nav"
                 to="/calculator"
@@ -268,7 +268,7 @@ function NavContent() {
                   <SvgIcon color="primary" component={GlobeIcon} viewBox="0 0 24 24" />
                   Calculator
                 </Typography>
-              </Link> */}
+              </Link>
             </div>
           </div>
         </div>

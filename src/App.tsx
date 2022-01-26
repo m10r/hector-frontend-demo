@@ -270,9 +270,9 @@ function App() {
             <Route path="/wrap">
               <Wrap />
             </Route>
-            {/* <Route path="/calculator">
+            <Route path="/calculator">
               <Calculator />
-            </Route> */}
+            </Route>
 
             <Route path="/bonds">
               {bonds.map(bond => {
