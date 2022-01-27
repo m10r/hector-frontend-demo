@@ -10,7 +10,6 @@ import SDK, {
 import { useWeb3Context } from "src/hooks";
 import { FANTOM } from "src/constants";
 import { sleep } from "src/helpers/Sleep";
-import allTokens from "src/assets/tokens.json";
 import { ReactComponent as ChevronIcon } from "src/assets/icons/chevron.svg";
 import { ReactComponent as ArrowDownIcon } from "src/assets/icons/arrow-down.svg";
 import { ReactComponent as Spinner } from "src/assets/icons/spinner.svg";
@@ -19,6 +18,27 @@ import { BigNumber as EthersBigNumber, ethers } from "ethers";
 import { abi as ierc20Abi } from "src/abi/IERC20.json";
 import { abi as erc20Abi } from "src/abi/ERC20.json";
 import BigNumber from "bignumber.js";
+
+import unprocessedTokens from "src/assets/tokens.json";
+let allTokens: Token[] = unprocessedTokens;
+{
+  // We're pre-sorting the list of tokens here because it only needs to be done once.
+
+  // Sort by name first.
+  allTokens.sort((a, b) => a.name.localeCompare(b.name));
+
+  // Then sort by favorite.
+  const favorites = [];
+  const others = [];
+  for (const token of allTokens) {
+    if (token.favorite) {
+      favorites.push(token);
+    } else {
+      others.push(token);
+    }
+  }
+  allTokens = [...favorites, ...others];
+}
 
 const NATIVE_ADDRESS = "0x0000000000000000000000000000000000000000";
 
@@ -361,16 +381,6 @@ const TokenSelect: React.VFC<TokenSelectProps> = ({ show, onClose }) => {
     const isSymbolMatch = symbol.toLowerCase().includes(normalizedFilter);
     return isNameMatch || isSymbolMatch;
   });
-  const favorites = [];
-  const others = [];
-  for (const token of filteredTokens) {
-    if (token.favorite) {
-      favorites.push(token);
-    } else {
-      others.push(token);
-    }
-  }
-  const tokens = [...favorites, ...others];
 
   useEffect(() => {
     if (!show) {
@@ -409,7 +419,7 @@ const TokenSelect: React.VFC<TokenSelectProps> = ({ show, onClose }) => {
           />
         </form>
         <div className="tokens-list">
-          {tokens.map(token => (
+          {filteredTokens.map(token => (
             <div key={token.address} onClick={() => onClose(token)}>
               <img src={token.logo} width="24" height="24" />
               <div className="token-name">{token.name}</div>
