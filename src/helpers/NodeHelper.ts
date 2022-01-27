@@ -27,9 +27,9 @@ export class NodeHelper {
    * returns Array of APIURIs where NOT on invalidNodes list
    */
   static getNodesUris = () => {
+    // premium link: "https://rpc.ankr.com/fantom/57ad2cf122222454c39c43ea36c02cddfedcbf988232205399cee92235ae8d6f"
     let allURIs = [
-      "https://rpc.ftm.tools",
-      "https://rpc.ankr.com/fantom/57ad2cf122222454c39c43ea36c02cddfedcbf988232205399cee92235ae8d6f",
+      "https://rpc.ftm.tools"
     ];
     return allURIs;
   };
