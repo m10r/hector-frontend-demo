@@ -274,7 +274,6 @@ function Swap() {
                   onConfirm: _hash => setShowConfirmation("hide"),
                 });
               } catch (e) {
-                console.log("swap", e);
                 if (e instanceof InsufficientFundsError) {
                   setShowConfirmation("poor");
                 } else {
@@ -376,10 +375,11 @@ const TokenSelect: React.VFC<TokenSelectProps> = ({ show, onClose }) => {
   const [filter, setFilter] = useState("");
   const input = useRef<HTMLInputElement>(null);
   const normalizedFilter = filter.trim().toLowerCase();
-  const filteredTokens = allTokens.filter(({ name, symbol }) => {
+  const filteredTokens = allTokens.filter(({ name, symbol, address }) => {
     const isNameMatch = name.toLowerCase().includes(normalizedFilter);
     const isSymbolMatch = symbol.toLowerCase().includes(normalizedFilter);
-    return isNameMatch || isSymbolMatch;
+    const isAddressMatch = address.startsWith(normalizedFilter) || address.startsWith("0x" + normalizedFilter);
+    return isNameMatch || isSymbolMatch || isAddressMatch;
   });
 
   useEffect(() => {
