@@ -22,8 +22,6 @@ query {
     treasuryUsdcRiskFreeValue
     treasuryWFTMMarketValue
     treasuryWFTMRiskFreeValue
-    treasuryMIMRiskFreeValue
-    treasuryMIMMarketValue
     treasuryFRAXRiskFreeValue
     treasuryFRAXMarketValue
     treasuryBOOMarketValue
