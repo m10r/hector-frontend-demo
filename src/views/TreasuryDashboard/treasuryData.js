@@ -75,21 +75,21 @@ export const bulletpoints = {
       top: -12,
       background: "linear-gradient(180deg, #768299 -10%, #98B3E9 100%)",
     },
-    {
-      right: 29,
-      top: -12,
-      background: "linear-gradient(180deg, #8351ff -10%, #b151ff 100%)",
-    },
+    // {
+    //   right: 29,
+    //   top: -12,
+    //   background: "linear-gradient(180deg, #8351ff -10%, #b151ff 100%)",
+    // },
     {
       right: 29,
       top: -12,
       background: "linear-gradient(180deg, #c6c6c6 -10%, #545454 100%)",
     },
-    {
-      right: 29,
-      top: -12,
-      background: "linear-gradient(180deg, #ffffff -10%, #d5d5d5 100%)",
-    },
+    // {
+    //   right: 29,
+    //   top: -12,
+    //   background: "linear-gradient(180deg, #ffffff -10%, #d5d5d5 100%)",
+    // },
     {
       right: 29,
       top: -12,
@@ -172,7 +172,7 @@ export const bulletpoints = {
 
 export const tooltipItems = {
   tvl: ["Total Value Deposited"],
-  coin: ["DAI", "USDC", "MiM", "FRAX", "WFTM", "BOO", "CRV", "WETH"],
+  coin: ["DAI", "USDC", "FRAX", "WFTM", "BOO", "CRV", "WETH"],
   apy: ["APY"],
   runway: ["Days"],
   pol: ["SLP Treasury", "Market SLP"],
