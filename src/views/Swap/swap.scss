@@ -7,6 +7,10 @@
   --interact-text-color: white;
   --overlay-background-color: black;
   --action-background-color: #d27b37;
+  --info-background-color: #4163ab;
+  --info-text-color: #ffffff;
+  --error-background-color: #a83838;
+  --error-text-color: #ffffff;
 }
 
 .app.light {
@@ -18,6 +22,10 @@
   --interact-text-color: #253449;
   --overlay-background-color: #253449;
   --action-background-color: #f39e28;
+  --info-background-color: #bdd9ff;
+  --info-text-color: #0147af;
+  --error-background-color: #ffcfcf;
+  --error-text-color: #cb1029;
 }
 
 .swap-view {
@@ -366,14 +374,14 @@
 
 .confirmation-prompt {
   padding: 20px 40px;
-  background-color: hsl(214deg 100% 87%);
-  color: #0147af;
+  background-color: var(--info-background-color);
+  color: var(--info-text-color);
   text-align: center;
 }
 
 .poor-prompt {
   padding: 20px 40px;
-  background-color: #ffcfcf;
-  color: #cb1029;
+  background-color: var(--error-background-color);
+  color: var(--error-text-color);
   text-align: center;
 }

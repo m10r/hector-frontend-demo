@@ -413,7 +413,7 @@ const TokenSelect: React.VFC<TokenSelectProps> = ({ show, onClose }) => {
             <div key={token.address} onClick={() => onClose(token)}>
               <img src={token.logo} width="24" height="24" />
               <div className="token-name">{token.name}</div>
-              {token.favorite && <StarIcon width="16" height="16" className="token-favorite"/>}
+              {token.favorite && <StarIcon width="16" height="16" className="token-favorite" />}
             </div>
           ))}
         </div>
