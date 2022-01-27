@@ -10,15 +10,35 @@ import SDK, {
 import { useWeb3Context } from "src/hooks";
 import { FANTOM } from "src/constants";
 import { sleep } from "src/helpers/Sleep";
-import tokens from "src/assets/tokens.json";
 import { ReactComponent as ChevronIcon } from "src/assets/icons/chevron.svg";
 import { ReactComponent as ArrowDownIcon } from "src/assets/icons/arrow-down.svg";
 import { ReactComponent as Spinner } from "src/assets/icons/spinner.svg";
+import { ReactComponent as StarIcon } from "src/assets/icons/star.svg";
 import { BigNumber as EthersBigNumber, ethers } from "ethers";
 import { abi as ierc20Abi } from "src/abi/IERC20.json";
 import { abi as erc20Abi } from "src/abi/ERC20.json";
 import BigNumber from "bignumber.js";
-import { HECTOR_ENV } from "src/helpers/Environment";
+
+import unprocessedTokens from "src/assets/tokens.json";
+let allTokens: Token[] = unprocessedTokens;
+{
+  // We're pre-sorting the list of tokens here because it only needs to be done once.
+
+  // Sort by name first.
+  allTokens.sort((a, b) => a.name.localeCompare(b.name));
+
+  // Then sort by favorite.
+  const favorites = [];
+  const others = [];
+  for (const token of allTokens) {
+    if (token.favorite) {
+      favorites.push(token);
+    } else {
+      others.push(token);
+    }
+  }
+  allTokens = [...favorites, ...others];
+}
 
 const NATIVE_ADDRESS = "0x0000000000000000000000000000000000000000";
 
@@ -27,6 +47,7 @@ interface Token {
   address: string;
   symbol: string;
   logo: string;
+  favorite?: boolean;
 }
 
 const initialConfiguration: Configuration = {
@@ -78,8 +99,8 @@ function Swap() {
     update();
   }, [rubic, wallet]);
 
-  const [from, setFrom] = useState<Token>(tokens.find(token => token.symbol === "FTM"));
-  const [to, setTo] = useState<Token>(tokens.find(token => token.address === FANTOM.HEC_ADDRESS));
+  const [from, setFrom] = useState<Token>(allTokens.find(token => token.symbol === "FTM"));
+  const [to, setTo] = useState<Token>(allTokens.find(token => token.address === FANTOM.HEC_ADDRESS));
   const [amount, setAmount] = useState("");
   const [trades, setTrades] = useState<InstantTrade[]>([]);
   const [loading, setLoading] = useState(false);
@@ -156,7 +177,7 @@ function Swap() {
     }
     setTrades([]);
 
-    if (amount) {
+    if (amount && parseFloat(amount) > 0) {
       setLoading(true);
       run();
       return () => {
@@ -354,11 +375,13 @@ const TokenSelect: React.VFC<TokenSelectProps> = ({ show, onClose }) => {
   const [filter, setFilter] = useState("");
   const input = useRef<HTMLInputElement>(null);
   const normalizedFilter = filter.trim().toLowerCase();
-  const filteredTokens = tokens.filter(({ name, symbol }) => {
+  const filteredTokens = allTokens.filter(({ name, symbol, address }) => {
     const isNameMatch = name.toLowerCase().includes(normalizedFilter);
     const isSymbolMatch = symbol.toLowerCase().includes(normalizedFilter);
-    return isNameMatch || isSymbolMatch;
+    const isAddressMatch = address.startsWith(normalizedFilter) || address.startsWith("0x" + normalizedFilter);
+    return isNameMatch || isSymbolMatch || isAddressMatch;
   });
+
   useEffect(() => {
     if (!show) {
       return;
@@ -399,7 +422,8 @@ const TokenSelect: React.VFC<TokenSelectProps> = ({ show, onClose }) => {
           {filteredTokens.map(token => (
             <div key={token.address} onClick={() => onClose(token)}>
               <img src={token.logo} width="24" height="24" />
-              <div>{token.name}</div>
+              <div className="token-name">{token.name}</div>
+              {token.favorite && <StarIcon width="16" height="16" className="token-favorite" />}
             </div>
           ))}
         </div>
