@@ -234,6 +234,12 @@
     display: flex;
     align-items: center;
     gap: 10px;
+    .token-name {
+      flex-grow: 1;
+    }
+    .token-favorite {
+      color: var(--action-background-color);
+    }
     &:hover {
       background-color: var(--secondary-background-color);
     }
