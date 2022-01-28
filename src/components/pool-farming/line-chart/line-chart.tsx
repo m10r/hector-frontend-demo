@@ -1,15 +1,4 @@
-import {
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Line,
-  LineChart,
-  AreaChart,
-  Area,
-  Legend,
-} from "recharts";
+import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, Legend } from "recharts";
 
 import "./line-chart.scss";
 
@@ -30,11 +19,9 @@ export default function ProjectionLineChart({ apr, quantity }: ProjectionProps) 
   let balance = 0;
   for (let i = 0; i < 12; i++) {
     balance += monthlyIncrease;
-    if (!(i % 2 === 0)) {
-      const date = new Date();
-      date.setMonth(date.getMonth() + i);
-      data.push({ name: date.toLocaleDateString(), amount: Math.round(balance + quantity) });
-    }
+    const date = new Date();
+    date.setMonth(date.getMonth() + i);
+    data.push({ name: date.toLocaleString("default", { month: "short" }), amount: Math.round(balance + quantity) });
   }
 
   const renderLegend = () => {
