@@ -114,6 +114,9 @@
       grid-auto-flow: column;
       column-gap: 20px;
       grid-template-columns: none !important;
+      button {
+        justify-items: center;
+      }
     }
 
     @media screen and (max-width: 410px) {
@@ -133,7 +136,7 @@
     padding-top: 30px !important;
     .investment-plan {
       display: grid;
-      grid: max-content max-content 1fr / max-content;
+      grid: max-content max-content 1fr / 1fr;
       row-gap: 20px;
       .optimal-amount {
         display: grid;
@@ -142,7 +145,7 @@
         row-gap: 10px;
         text-align: left !important;
       }
-      @media screen and (max-width: 400px) {
+      @media screen and (max-width: 750px) {
         .optimal-amount {
           grid: max-content 1fr / repeat(3, max-content);
           row-gap: 10px;
@@ -155,7 +158,6 @@
       .calculate {
         display: grid;
         row-gap: 10px;
-        align-self: center;
         column-gap: 20px;
       }
     }
@@ -166,17 +168,17 @@
         row-gap: 10px;
       }
     }
-
-    @media screen and (max-width: 400px) {
-      .chart {
-        min-height: 200px;
-        max-width: 300px;
+    @media screen and (max-width: 750px) {
+      .investment-plan {
+        grid-template-columns: 1fr;
       }
     }
   }
   @media screen and (max-width: 750px) {
     .projection {
       grid-column-start: initial;
+      grid: 1fr/1fr;
+      row-gap: 20px;
     }
   }
   @media screen and (max-width: 400px) {
