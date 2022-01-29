@@ -84,7 +84,7 @@ function Calculator() {
                   <Grid item xs={12} sm={4} md={4} lg={4}>
                     <Box className="calculator-card-apy">
                       <Typography variant="h5" color="textSecondary">
-                        HEC Price
+                        Current HEC Price
                       </Typography>
                       <Typography variant="h4">
                         {isAppLoading ? (
