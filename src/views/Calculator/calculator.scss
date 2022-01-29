@@ -211,6 +211,11 @@
         margin: auto;
         padding: 0 5px;
         margin-top: 30px;
+        @media (max-width: 600px) {
+            > div {
+                flex-direction: column;
+            }
+        }
       }
     }
   }

@@ -28,8 +28,10 @@ function Calculator() {
   const [inputFinalPrice, setInputFinalPrice] = useState<string>(marketPrice !== 0 && marketPrice.toFixed(2));
   const [inputDays, setInputDays] = useState(30);
 
-  const [rewardsEstimation, setRewardsEstimation] = useState("0");
-  const [potentialReturn, setPotentialReturn] = useState("0");
+  const [hecReturn, setHecReturn] = useState("0");
+  const [usdReturn, setUsdReturn] = useState("0");
+  const [hecRoi, setHecRoi] = useState("0");
+  const [usdRoi, setUsdRoi] = useState("0");
 
   useEffect(() => {
     if (shecBalance !== 0 && !inputInitialShec) {
@@ -49,11 +51,11 @@ function Calculator() {
     setInputFinalPrice(inputFinalPrice || marketPrice.toFixed(2));
   }, [marketPrice]);
 
-  const initialUsd = useMemo(() => {
+  const [initialUsdDisplay, initialUsd] = useMemo(() => {
     const shec = parseFloat(inputInitialShec) || 0;
     const price = parseFloat(inputInitialPrice) || 0;
     const amount = shec * price;
-    return prettyDisplayNumber(new BigNumber(amount));
+    return [prettyDisplayNumber(new BigNumber(amount)), amount];
   }, [inputInitialShec, inputInitialPrice]);
 
   useEffect(() => {
@@ -62,10 +64,12 @@ function Calculator() {
     const apr = DAYS_PER_YEAR * Math.pow(apy + 1, 1 / DAYS_PER_YEAR) - DAYS_PER_YEAR;
     const startBalance = parseFloat(inputInitialShec);
     const endBalance = startBalance * Math.pow(1 + apr / DAYS_PER_YEAR, inputDays);
-    setRewardsEstimation(prettyDisplayNumber(new BigNumber(endBalance)));
+    setHecReturn(prettyDisplayNumber(new BigNumber(endBalance)));
     const newPotentialReturn = endBalance * (parseFloat(inputFinalPrice) || 0);
-    setPotentialReturn(prettyDisplayNumber(new BigNumber(newPotentialReturn))); //trim(newPotentialReturn, 2));
-  }, [inputDays, inputApy, inputFinalPrice, inputInitialShec]);
+    setUsdReturn(prettyDisplayNumber(new BigNumber(newPotentialReturn)));
+    setHecRoi(prettyDisplayNumber(new BigNumber(((endBalance - startBalance) / startBalance) * 100)));
+    setUsdRoi(prettyDisplayNumber(new BigNumber(((newPotentialReturn - initialUsd) / initialUsd) * 100)));
+  }, [inputDays, inputApy, inputFinalPrice, inputInitialShec, initialUsd]);
 
   return (
     <div className="calculator-view">
@@ -245,7 +249,7 @@ function Calculator() {
                       ) : (
                         <>
                           <span className="currency-hec">{inputInitialShec} HEC</span> ={" "}
-                          <span className="currency-usd">${initialUsd}</span>
+                          <span className="currency-usd">${initialUsdDisplay}</span>
                         </>
                       )}
                     </Typography>
@@ -257,8 +261,21 @@ function Calculator() {
                         <Skeleton width="80px" />
                       ) : (
                         <>
-                          <span className="currency-hec">{rewardsEstimation} HEC</span> ={" "}
-                          <span className="currency-usd">${potentialReturn}</span>
+                          <span className="currency-hec">{hecReturn} HEC</span> ={" "}
+                          <span className="currency-usd">${usdReturn}</span>
+                        </>
+                      )}
+                    </Typography>
+                  </Box>
+                  <Box className="data-row">
+                    <Typography>ROI after {inputDays} days</Typography>
+                    <Typography>
+                      {isAppLoading ? (
+                        <Skeleton width="80px" />
+                      ) : (
+                        <>
+                          <span className="currency-hec">{hecRoi}% HEC</span> /{" "}
+                          <span className="currency-usd">{usdRoi}% USD</span>
                         </>
                       )}
                     </Typography>
