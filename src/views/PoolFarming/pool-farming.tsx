@@ -47,8 +47,6 @@ import { error } from "src/slices/MessagesSlice";
 import DaiToken from "../../assets/tokens/DAI.svg";
 import UsdcToken from "../../assets/tokens/USDC.svg";
 import useBonds, { IAllBondData } from "src/hooks/Bonds";
-import { changeApproval } from "src/slices/BondSlice";
-import { Bond } from "src/lib/Bond";
 
 const TOOLTIP_TEXT = `Farming is a rewards system where you earn FTM rewards in exchange for loaning your liquidity to Hector DAO. To participate you stake your tokens into our farm and while they are staked you earn rewards against what you've loaned.  You can unstake or 'withdraw' your tokens at any time, however if your staked balance reaches 0 you will no longer be earning passive FTM rewards. While your tokens are staked in the Hector DAO farm they are backed by the Hector DAO treasury.`;
 type UserAction = "stake" | "withdraw" | "approve" | "mint" | "daiApprove" | "usdcApprove";
@@ -70,6 +68,8 @@ export default function PoolFarming({ theme }: any) {
     mintAllowance,
     isLoading,
   } = useSelector((state: RootState) => state.farm);
+  const dispatch = useDispatch();
+
   const [quantity, setQuantity] = useState("");
   const [stakeQuantity, setStakeQuantity] = useState("");
   const [withdrawQuantity, setWtihdrawQuantity] = useState("");
@@ -78,6 +78,7 @@ export default function PoolFarming({ theme }: any) {
   const [calcQuantity, setCalcQuantity] = useState(0);
   const [view, setView] = useState(0);
   let { bonds } = useBonds();
+  const { provider, chainID, address } = useWeb3Context();
 
   const daiBond = bonds.find(bond => bond.displayName === "DAI" && !bond.isOld) as IAllBondData;
   const usdcBond = bonds.find(bond => bond.displayName === "USDC" && !bond.isOld) as IAllBondData;
@@ -85,9 +86,6 @@ export default function PoolFarming({ theme }: any) {
   const handleChange = (event: React.ChangeEvent<{}>, newValue: number) => {
     setView(newValue);
   };
-
-  const dispatch = useDispatch();
-  const { provider, chainID, address } = useWeb3Context();
 
   const hasAllowance = useCallback(() => {
     return hugsPoolInfo?.allowance < hugsPoolInfo?.balance;
@@ -232,8 +230,11 @@ export default function PoolFarming({ theme }: any) {
 
   useEffect(() => {
     const updateInterval = setInterval(() => {
-      dispatch(getStakingInfo({ networkID: chainID, provider, address, value: "0" }));
-      dispatch(getTorInfo({ networkID: chainID, provider, address }));
+      if (address) {
+        console.log("dispatched");
+        dispatch(getStakingInfo({ networkID: chainID, provider, address, value: "0" }));
+        dispatch(getTorInfo({ networkID: chainID, provider, address }));
+      }
     }, 1000 * 60);
     return () => {
       clearInterval(updateInterval);
