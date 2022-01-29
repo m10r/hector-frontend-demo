@@ -38,7 +38,7 @@ function Calculator() {
   }, [shecBalance]);
   useEffect(() => {
     if (stakingApy !== 0 && !inputApy) {
-      setInputApy(stakingApy.toFixed(2));
+      setInputApy((stakingApy * 100).toFixed(2));
     }
   }, [stakingApy]);
   useEffect(() => {
