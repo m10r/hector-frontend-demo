@@ -102,8 +102,12 @@ export const getHugsPoolInfo = createAsyncThunk(
 export const getStakingInfo = createAsyncThunk(
   "farm/getStakingInfo",
   async ({ networkID, provider, address, value }: IValueAsyncThunk) => {
-    const amt = BigInt(value === "" ? 0 : +value) * BigInt(1e18);
-    return await stakingGateway(networkID, provider).getStakingInfo(address, amt);
+    try {
+      const amt = BigInt(value === "" ? 0 : +value) * BigInt(1e18);
+      return await stakingGateway(networkID, provider).getStakingInfo(address, amt);
+    } catch (e) {
+      console.error(e);
+    }
   },
 );
 
