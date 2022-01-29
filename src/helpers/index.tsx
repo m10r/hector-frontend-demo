@@ -1,9 +1,9 @@
 import { EPOCH_INTERVAL, BLOCK_RATE_SECONDS, NETWORKS } from "../constants";
 import { ethers } from "ethers";
+import BigNumber from "bignumber.js";
 import axios from "axios";
 import { abi as PairContract } from "../abi/PairContract.json";
 import { abi as RedeemHelperAbi } from "../abi/RedeemHelper.json";
-
 import { dailp } from "./all-bonds/dai-bonds";
 import { JsonRpcSigner, StaticJsonRpcProvider } from "@ethersproject/providers";
 import { IBaseAsyncThunk } from "src/slices/interfaces";
@@ -49,6 +49,44 @@ export function trim(number = 0, precision = 0) {
   array.push(poppedNumber.substring(0, precision));
   const trimmedNumber = array.join(".");
   return trimmedNumber;
+}
+
+export function prettyDisplayNumber(number: BigNumber): string {
+  if (number.gte(1000)) {
+    return number.toFormat(0);
+  } else if (number.gt(1)) {
+    return number.toFormat(2);
+  } else {
+    return trimVerboseDecimals(number.toFormat());
+  }
+}
+
+export function prettyInputNumber(number: BigNumber): string {
+  if (number.gte(1000)) {
+    return number.toFixed(0);
+  } else if (number.gt(1)) {
+    return number.toFixed(2);
+  } else {
+    return trimVerboseDecimals(number.toString());
+  }
+}
+
+function trimVerboseDecimals(number: string): string {
+  const decimalIndex = number.indexOf(".");
+  if (decimalIndex === -1) {
+    return number;
+  }
+
+  let zeroDecimals = 0;
+  for (let i = decimalIndex + 1; i < number.length; i += 1) {
+    if (number[i] === "0") {
+      zeroDecimals += 1;
+    } else {
+      break;
+    }
+  }
+  const MEANINGFUL_DECIMAL_PLACES = 6;
+  return number.substring(0, decimalIndex + zeroDecimals + 1 + MEANINGFUL_DECIMAL_PLACES);
 }
 
 export function getRebaseBlock(currentBlock: number) {
