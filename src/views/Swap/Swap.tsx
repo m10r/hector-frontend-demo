@@ -17,9 +17,9 @@ import { ReactComponent as StarIcon } from "src/assets/icons/star.svg";
 import { BigNumber as EthersBigNumber, ethers } from "ethers";
 import { abi as ierc20Abi } from "src/abi/IERC20.json";
 import { abi as erc20Abi } from "src/abi/ERC20.json";
-import BigNumber from "bignumber.js";
 
 import unprocessedTokens from "src/assets/tokens.json";
+import { prettyDisplayNumber } from "src/helpers";
 let allTokens: Token[] = unprocessedTokens;
 {
   // We're pre-sorting the list of tokens here because it only needs to be done once.
@@ -261,7 +261,7 @@ function Swap() {
             {to.symbol}
             <ChevronIcon width="10" height="10" />
           </button>
-          <div className="amount">{bestTrade ? prettyNumber(bestTrade.to.tokenAmount) : "—"}</div>
+          <div className="amount">{bestTrade ? prettyDisplayNumber(bestTrade.to.tokenAmount) : "—"}</div>
         </div>
         <TradeDetail trade={bestTrade} />
         {web3.connected ? (
@@ -305,38 +305,6 @@ function Swap() {
   );
 }
 
-function prettyNumber(number: BigNumber): string {
-  if (number.gte(1000)) {
-    return number.toFormat(0);
-  }
-  if (number.gt(1)) {
-    return number.toFormat(2);
-  }
-
-  // Since the number is less than 1, we need to decide how many decimals to display.
-  // The strategy here is to always display a fixed amount of _meaningful_ decimal places.
-  // A meaningful decimal place is a number that isn't zero.
-  //
-  // So, we'll render the string and then trim it past a certain point.
-
-  const n = number.toFormat();
-  const decimalIndex = n.indexOf(".");
-  if (decimalIndex === -1) {
-    return n;
-  }
-
-  let zeroDecimals = 0;
-  for (let i = decimalIndex + 1; i < n.length; i += 1) {
-    if (n[i] === "0") {
-      zeroDecimals += 1;
-    } else {
-      break;
-    }
-  }
-  const MEANINGFUL_DECIMAL_PLACES = 6;
-  return n.substring(0, decimalIndex + zeroDecimals + 1 + MEANINGFUL_DECIMAL_PLACES);
-}
-
 interface TradeDetailProps {
   trade?: InstantTrade;
 }
@@ -345,14 +313,14 @@ const TradeDetail: VFC<TradeDetailProps> = ({ trade }) => {
     <div className="trade-detail">
       <div className="detail">
         <div>Minimum received:</div>
-        <div>{trade ? `${prettyNumber(trade.toTokenAmountMin.tokenAmount)} ${trade.to.symbol}` : "—"}</div>
+        <div>{trade ? `${prettyDisplayNumber(trade.toTokenAmountMin.tokenAmount)} ${trade.to.symbol}` : "—"}</div>
       </div>
       <div className="detail">
         <div>Price:</div>
         <div>
           {trade ? (
             <div>
-              1 {trade.to.symbol} = {prettyNumber(trade.to.price.dividedBy(trade.from.price))} {trade.from.symbol}
+              1 {trade.to.symbol} = {prettyDisplayNumber(trade.to.price.dividedBy(trade.from.price))} {trade.from.symbol}
             </div>
           ) : (
             <div>&mdash;</div>
@@ -476,7 +444,7 @@ const Confirmation: React.VFC<ConfirmationProps> = ({ show, onClose, from, to, t
               {from.symbol}
             </div>
             <div className="transaction-amount" style={{ color: show === "poor" ? "#e80625" : undefined }}>
-              {trade ? prettyNumber(trade.from.tokenAmount) : "n/a"}
+              {trade ? prettyDisplayNumber(trade.from.tokenAmount) : "n/a"}
             </div>
           </div>
           <div className="transaction-direction">
@@ -487,7 +455,7 @@ const Confirmation: React.VFC<ConfirmationProps> = ({ show, onClose, from, to, t
               <img src={to.logo} width="16" height="16" />
               {to.symbol}
             </div>
-            <div className="transaction-amount">{trade ? prettyNumber(trade.to.tokenAmount) : "n/a"}</div>
+            <div className="transaction-amount">{trade ? prettyDisplayNumber(trade.to.tokenAmount) : "n/a"}</div>
           </div>
         </div>
         {show === "poor" && <div className="poor-prompt">Your wallet doesn't have enough {from.symbol}</div>}

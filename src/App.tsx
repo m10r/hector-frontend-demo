@@ -30,7 +30,7 @@ import { light as lightTheme } from "./themes/light.js";
 import { girth as gTheme } from "./themes/girth.js";
 import "./style.scss";
 import Wrap from "./views/Wrap/Wrap";
-import Calculator from "./views/Calculator/index";
+import Calculator from "./views/Calculator/Calculator";
 import Swap from "./views/Swap/Swap";
 import { RootState } from "./store";
 import { Banner } from "./components/banner/banner";
