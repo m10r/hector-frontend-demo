@@ -1,7 +1,7 @@
 import "./pool-farming.scss";
 import { useCallback, useEffect, useState } from "react";
 
-import { ethers } from "ethers";
+import { BigNumber, ethers } from "ethers";
 import {
   Button,
   FormControl,
@@ -27,6 +27,7 @@ import {
   getStakingInfo,
   getStakingRewardsInfo,
   getTorInfo,
+  getWhitelistAmount,
   mint,
   stake,
   withDrawStaked,
@@ -45,7 +46,6 @@ import UsdcToken from "../../assets/tokens/USDC.svg";
 import useBonds, { IAllBondData } from "src/hooks/Bonds";
 import { changeApproval } from "src/slices/BondSlice";
 import { Bond } from "src/lib/Bond";
-import { whiteListUsers } from "./whitelist";
 
 const TOOLTIP_TEXT = `Farming is a rewards system where you earn FTM rewards in exchange for loaning your liquidity to Hector DAO. To participate you stake your tokens into our farm and while they are staked you earn rewards against what you've loaned.  You can unstake or 'withdraw' your tokens at any time, however if your staked balance reaches 0 you will no longer be earning passive FTM rewards. While your tokens are staked in the Hector DAO farm they are backed by the Hector DAO treasury.`;
 type UserAction = "stake" | "withdraw" | "approve" | "mint" | "daiApprove" | "usdcApprove";
@@ -57,7 +57,7 @@ function a11yProps(index: any) {
 }
 
 export default function PoolFarming({ theme }: any) {
-  const { assetPrice, stakingRewardsInfo, hugsPoolInfo, stakingInfo, torInfo, isLoading } = useSelector(
+  const { assetPrice, stakingRewardsInfo, hugsPoolInfo, stakingInfo, torInfo, whiteList, isLoading } = useSelector(
     (state: RootState) => state.farm,
   );
   const [quantity, setQuantity] = useState("");
@@ -84,8 +84,10 @@ export default function PoolFarming({ theme }: any) {
   }, [hugsPoolInfo]);
 
   const inWhitelist = useCallback(() => {
-    return whiteListUsers.includes(address);
-  }, [whiteListUsers]);
+    if (whiteList) {
+      return +ethers.utils.formatUnits(whiteList?.minted) > 0;
+    }
+  }, [whiteList]);
 
   const hasLpBalance = useCallback(() => hugsPoolInfo?.balance > 0 && hugsPoolInfo?.allowance > hugsPoolInfo?.balance, [
     hugsPoolInfo,
@@ -214,6 +216,8 @@ export default function PoolFarming({ theme }: any) {
     await dispatch(getStakingRewardsInfo({ networkID: chainID, provider, address }));
     await dispatch(getHugsPoolInfo({ networkID: chainID, provider, address }));
     await dispatch(getTorInfo({ networkID: chainID, provider, address }));
+
+    await dispatch(getWhitelistAmount({ networkID: chainID, provider, address }));
   }
 
   useEffect(() => {
@@ -506,7 +510,13 @@ export default function PoolFarming({ theme }: any) {
         <div className="MuiPaper-root hec-card mint">
           <div className="header">
             <div className="header-title">Mint</div>
-            <div className="max">$500 Max</div>
+            <div className="max">
+              {inWhitelist()
+                ? `${
+                    +ethers.utils.formatUnits(whiteList?.limitPerAccount) - +ethers.utils.formatUnits(whiteList?.minted)
+                  } Limit`
+                : "Not Whitelisted"}
+            </div>
           </div>
           <div className="content">
             <div className="tor-balance">

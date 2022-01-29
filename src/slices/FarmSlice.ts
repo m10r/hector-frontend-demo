@@ -17,6 +17,7 @@ import {
 import { abi as farmingAggregatorAbi } from "../abi/farmingAggregatorContract.json";
 import { abi as hugsPoolAbi } from "../abi/farmingHugsPoolContract.json";
 import { abi as stakingRewardsAbi } from "../abi/farmingStakingRewardsContract.json";
+import { abi as whitelistAbi } from "../abi/WhitelistContract.json";
 import { abi as torAbi } from "../abi/bonds/torContract.json";
 import { abi as torMinterAbi } from "../abi/TorMinterContract.json";
 import { IBaseAddressAsyncThunk, IBaseAsyncThunk, IValueAsyncThunk } from "./interfaces";
@@ -189,13 +190,24 @@ export const mint = createAsyncThunk("farm/mint", async ({ networkID, provider, 
   }
 });
 
+export const getWhitelistAmount = createAsyncThunk(
+  "farm/getWhitelistAmount",
+  async ({ networkID, provider, address }: IBaseAddressAsyncThunk) => {
+    const whiteListContract = new ethers.Contract(NETWORKS.get(networkID).TOR_WHITELIST, whitelistAbi, provider);
+    const minted = await whiteListContract.minted(address);
+    const limitPerAccount = await whiteListContract.limitPerAccount();
+    return { minted, limitPerAccount };
+  },
+);
+
 const initialState: IFarmSlice = {
   isLoading: false,
   assetPrice: undefined,
   stakingRewardsInfo: undefined,
   hugsPoolInfo: undefined,
   stakingInfo: undefined,
-  torInfo: undefined
+  torInfo: undefined,
+  whiteList: undefined
 };
 
 interface IFarmSlice {
@@ -205,6 +217,7 @@ interface IFarmSlice {
   hugsPoolInfo: HugsPoolInfo;
   stakingInfo: StakingInfo;
   torInfo: TorInfo;
+  whiteList: any;
 }
 
 const farmSlice = createSlice({
@@ -319,6 +332,17 @@ const farmSlice = createSlice({
         state.isLoading = false;
       })
       .addCase(mint.rejected, (state, { error }) => {
+        state.isLoading = false;
+        console.error(error.name, error.message, error.stack);
+      })
+      .addCase(getWhitelistAmount.pending, state => {
+        state.isLoading = true;
+      })
+      .addCase(getWhitelistAmount.fulfilled, (state, action) => {
+        state.whiteList = action.payload;
+        state.isLoading = false;
+      })
+      .addCase(getWhitelistAmount.rejected, (state, { error }) => {
         state.isLoading = false;
         console.error(error.name, error.message, error.stack);
       });
