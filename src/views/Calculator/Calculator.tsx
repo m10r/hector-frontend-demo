@@ -57,7 +57,7 @@ function Calculator() {
   }, [inputInitialShec, inputInitialPrice]);
 
   useEffect(() => {
-    const DAYS_PER_YEAR = 365.25;
+    const DAYS_PER_YEAR = 365;
     const apy = parseFloat(inputApy) / 100;
     const apr = DAYS_PER_YEAR * Math.pow(apy + 1, 1 / DAYS_PER_YEAR) - DAYS_PER_YEAR;
     const startBalance = parseFloat(inputInitialShec);
