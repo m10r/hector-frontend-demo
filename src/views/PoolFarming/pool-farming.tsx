@@ -517,9 +517,9 @@ export default function PoolFarming({ theme }: any) {
             <div className="header-title">Mint</div>
             <div className="max">
               {inWhitelist()
-                ? `${
+                ? `${(
                     +ethers.utils.formatUnits(whiteList?.limitPerAccount) - +ethers.utils.formatUnits(whiteList?.minted)
-                  } Limit`
+                  ).toFixed(2)} Limit`
                 : "Not Whitelisted"}
             </div>
           </div>
