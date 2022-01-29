@@ -244,8 +244,8 @@ function Calculator() {
                         <Skeleton width="80px" />
                       ) : (
                         <>
-                          <span className="currency-usd">${initialUsd}</span> ={" "}
-                          <span className="currency-hec">{inputInitialShec} HEC</span>
+                          <span className="currency-hec">{inputInitialShec} HEC</span> ={" "}
+                          <span className="currency-usd">${initialUsd}</span>
                         </>
                       )}
                     </Typography>
@@ -257,8 +257,8 @@ function Calculator() {
                         <Skeleton width="80px" />
                       ) : (
                         <>
-                          <span className="currency-usd">${potentialReturn}</span> ={" "}
-                          <span className="currency-hec">{rewardsEstimation} HEC</span>
+                          <span className="currency-hec">{rewardsEstimation} HEC</span> ={" "}
+                          <span className="currency-usd">${potentialReturn}</span>
                         </>
                       )}
                     </Typography>
