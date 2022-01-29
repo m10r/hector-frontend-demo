@@ -229,6 +229,7 @@ export default function PoolFarming({ theme }: any) {
   useEffect(() => {
     const updateInterval = setInterval(() => {
       dispatch(getStakingInfo({ networkID: chainID, provider, address, value: "0" }));
+      dispatch(getTorInfo({ networkID: chainID, provider, address }));
     }, 1000 * 60);
     return () => {
       clearInterval(updateInterval);
