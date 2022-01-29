@@ -231,7 +231,6 @@ export default function PoolFarming({ theme }: any) {
   useEffect(() => {
     const updateInterval = setInterval(() => {
       if (address) {
-        console.log("dispatched");
         dispatch(getStakingInfo({ networkID: chainID, provider, address, value: "0" }));
         dispatch(getTorInfo({ networkID: chainID, provider, address }));
       }
@@ -239,7 +238,7 @@ export default function PoolFarming({ theme }: any) {
     return () => {
       clearInterval(updateInterval);
     };
-  }, []);
+  }, [address]);
 
   return (
     <div className="pool-farming">
