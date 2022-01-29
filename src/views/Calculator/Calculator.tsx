@@ -22,10 +22,10 @@ function Calculator() {
     return (state.account.balances && parseFloat(state.account.balances.shec)) || 0;
   });
 
-  const [inputInitialShec, setInputInitialShec] = useState<string>(shecBalance !== 0 && shecBalance.toString());
-  const [inputApy, setInputApy] = useState<string>(stakingApy !== 0 && (stakingApy * 100).toFixed(2));
-  const [inputInitialPrice, setInputInitialPrice] = useState<string>(marketPrice !== 0 && marketPrice.toFixed(2));
-  const [inputFinalPrice, setInputFinalPrice] = useState<string>(marketPrice !== 0 && marketPrice.toFixed(2));
+  const [inputInitialShec, setInputInitialShec] = useState<string>(shecBalance.toString());
+  const [inputApy, setInputApy] = useState<string>(stakingApy === 0 ? "0" : (stakingApy * 100).toFixed(2));
+  const [inputInitialPrice, setInputInitialPrice] = useState<string>(marketPrice === 0 ? "0" : marketPrice.toFixed(2));
+  const [inputFinalPrice, setInputFinalPrice] = useState<string>(marketPrice === 0 ? "0" : marketPrice.toFixed(2));
   const [inputDays, setInputDays] = useState(30);
 
   const [hecReturn, setHecReturn] = useState("0");
@@ -34,12 +34,12 @@ function Calculator() {
   const [usdRoi, setUsdRoi] = useState("0");
 
   useEffect(() => {
-    if (shecBalance !== 0 && !inputInitialShec) {
+    if (shecBalance !== 0 && inputInitialShec === "0") {
       setInputInitialShec(shecBalance.toString());
     }
   }, [shecBalance]);
   useEffect(() => {
-    if (stakingApy !== 0 && !inputApy) {
+    if (stakingApy !== 0 && inputApy === "0") {
       setInputApy((stakingApy * 100).toFixed(2));
     }
   }, [stakingApy]);
@@ -47,8 +47,8 @@ function Calculator() {
     if (marketPrice === 0) {
       return;
     }
-    setInputInitialPrice(inputInitialPrice || marketPrice.toFixed(2));
-    setInputFinalPrice(inputFinalPrice || marketPrice.toFixed(2));
+    setInputInitialPrice(inputInitialPrice === "0" ? marketPrice.toFixed(2) : inputInitialPrice);
+    setInputFinalPrice(inputFinalPrice === "0" ? marketPrice.toFixed(2) : inputFinalPrice);
   }, [marketPrice]);
 
   const [initialUsdDisplay, initialUsd] = useMemo(() => {
@@ -63,6 +63,9 @@ function Calculator() {
     const apy = parseFloat(inputApy) / 100;
     const apr = DAYS_PER_YEAR * Math.pow(apy + 1, 1 / DAYS_PER_YEAR) - DAYS_PER_YEAR;
     const startBalance = parseFloat(inputInitialShec);
+    if (startBalance === 0) {
+      return;
+    }
     const endBalance = startBalance * Math.pow(1 + apr / DAYS_PER_YEAR, inputDays);
     setHecReturn(prettyDisplayNumber(new BigNumber(endBalance)));
     const newPotentialReturn = endBalance * (parseFloat(inputFinalPrice) || 0);
