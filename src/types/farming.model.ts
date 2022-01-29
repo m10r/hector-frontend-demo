@@ -49,3 +49,8 @@ export interface StakingInfo {
     _optimalUsdcAmount: BigNumber;
     _earnedRewardAmount: BigNumber;
 }
+
+export interface MintAllowance {
+    usdcAllowance: number;
+    daiAllowance: number;
+}

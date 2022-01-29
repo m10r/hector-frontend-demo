@@ -29,8 +29,11 @@ import {
   getTorInfo,
   getWhitelistAmount,
   mint,
+  getMintAllowance,
   stake,
   withDrawStaked,
+  daiApprove,
+  usdcApprove,
 } from "src/slices/FarmSlice";
 import { ReactComponent as ArrowUp } from "../../assets/icons/arrow-up.svg";
 import AccessAlarmIcon from "@material-ui/icons/AccessAlarm";
@@ -57,9 +60,16 @@ function a11yProps(index: any) {
 }
 
 export default function PoolFarming({ theme }: any) {
-  const { assetPrice, stakingRewardsInfo, hugsPoolInfo, stakingInfo, torInfo, whiteList, isLoading } = useSelector(
-    (state: RootState) => state.farm,
-  );
+  const {
+    assetPrice,
+    stakingRewardsInfo,
+    hugsPoolInfo,
+    stakingInfo,
+    torInfo,
+    whiteList,
+    mintAllowance,
+    isLoading,
+  } = useSelector((state: RootState) => state.farm);
   const [quantity, setQuantity] = useState("");
   const [stakeQuantity, setStakeQuantity] = useState("");
   const [withdrawQuantity, setWtihdrawQuantity] = useState("");
@@ -94,12 +104,12 @@ export default function PoolFarming({ theme }: any) {
   ]);
 
   const hasDaiAllowance = useCallback(() => {
-    return daiBond.allowance > 0;
-  }, [bonds]);
+    return mintAllowance?.daiAllowance > 0;
+  }, [mintAllowance]);
 
   const hasUsdcAllowance = useCallback(() => {
-    return usdcBond.allowance > 0;
-  }, [bonds]);
+    return mintAllowance?.usdcAllowance > 0;
+  }, [mintAllowance]);
 
   const setMax = () => {
     if (view === 0) {
@@ -183,16 +193,10 @@ export default function PoolFarming({ theme }: any) {
         await dispatch(approve({ networkID: chainID, provider, address }));
         break;
       case "daiApprove":
-        {
-          const bond = daiBond as Bond;
-          dispatch(changeApproval({ address, bond, provider, networkID: chainID }));
-        }
+        dispatch(daiApprove({ address, provider, networkID: chainID }));
         break;
       case "usdcApprove":
-        {
-          const bond = usdcBond as Bond;
-          dispatch(changeApproval({ address, bond, provider, networkID: chainID }));
-        }
+        dispatch(usdcApprove({ address, provider, networkID: chainID }));
         break;
       case "mint":
         if (+usdcQuantity > 0) {
@@ -216,7 +220,7 @@ export default function PoolFarming({ theme }: any) {
     await dispatch(getStakingRewardsInfo({ networkID: chainID, provider, address }));
     await dispatch(getHugsPoolInfo({ networkID: chainID, provider, address }));
     await dispatch(getTorInfo({ networkID: chainID, provider, address }));
-
+    await dispatch(getMintAllowance({ networkID: chainID, provider, address }));
     await dispatch(getWhitelistAmount({ networkID: chainID, provider, address }));
   }
 
@@ -386,7 +390,7 @@ export default function PoolFarming({ theme }: any) {
                       className="stake-button"
                       variant="contained"
                       color="primary"
-                      disabled={isLoading || !inWhitelist()}
+                      disabled={isLoading}
                       onClick={() => dispatchClaimEarned()}
                     >
                       Claim Rewards
@@ -398,7 +402,7 @@ export default function PoolFarming({ theme }: any) {
                     className="stake-button"
                     variant="contained"
                     color="primary"
-                    disabled={!hasLpBalance() || isLoading || !inWhitelist()}
+                    disabled={!hasLpBalance() || isLoading}
                     onClick={() => onUserAction("stake")}
                   >
                     Stake
@@ -410,7 +414,7 @@ export default function PoolFarming({ theme }: any) {
                       className="stake-button"
                       variant="contained"
                       color="primary"
-                      disabled={isLoading || !(stakingRewardsInfo?.balance > 0) || !inWhitelist()}
+                      disabled={isLoading || !(stakingRewardsInfo?.balance > 0)}
                       onClick={() => onUserAction("withdraw")}
                     >
                       Withdraw
@@ -422,7 +426,7 @@ export default function PoolFarming({ theme }: any) {
                     className="stake-button"
                     variant="contained"
                     color="primary"
-                    disabled={isLoading || !inWhitelist()}
+                    disabled={isLoading}
                     onClick={() => onUserAction("approve")}
                   >
                     Approve

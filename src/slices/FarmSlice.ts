@@ -8,6 +8,7 @@ import { RootState } from "src/store";
 import {
   HugsPoolContract,
   HugsPoolInfo,
+  MintAllowance,
   StakingInfo,
   StakingRewardsContract,
   StakingRewardsInfo,
@@ -19,6 +20,7 @@ import { abi as hugsPoolAbi } from "../abi/farmingHugsPoolContract.json";
 import { abi as stakingRewardsAbi } from "../abi/farmingStakingRewardsContract.json";
 import { abi as whitelistAbi } from "../abi/WhitelistContract.json";
 import { abi as torAbi } from "../abi/bonds/torContract.json";
+import { abi as IERC20 } from "../abi/IERC20.json";
 import { abi as torMinterAbi } from "../abi/TorMinterContract.json";
 import { IBaseAddressAsyncThunk, IBaseAsyncThunk, IValueAsyncThunk } from "./interfaces";
 import { error, info, success } from "./MessagesSlice";
@@ -46,6 +48,9 @@ const hugsPoolContract = (chainID: number, provider: JsonRpcProvider, address: s
 
 const torContract = (chainID: number, provider: JsonRpcProvider) =>
   new ethers.Contract(NETWORKS.get(chainID).TOR_ADDRESS, torAbi, provider) as unknown as TorContract;
+
+const usdcContract = (chainID: number, provider: JsonRpcProvider, address: string) => new ethers.Contract(NETWORKS.get(chainID).USDC_ADDRESS, IERC20, provider.getSigner(address));
+const daiContract = (chainID: number, provider: JsonRpcProvider, address: string) => new ethers.Contract(NETWORKS.get(chainID).DAI_ADDRESS, IERC20, provider.getSigner(address));
 
 const torMinterContract = (chainID: number, provider: JsonRpcProvider, address: string) =>
   new ethers.Contract(NETWORKS.get(chainID).TOR_MINTER_ADDRESS, torMinterAbi, provider.getSigner(address));
@@ -144,7 +149,7 @@ export const stake = createAsyncThunk("farm/stake", async ({ networkID, provider
 export const approve = createAsyncThunk("farm/approve", async ({ networkID, provider, address }: IBaseAddressAsyncThunk, { dispatch }) => {
   try {
     const approveTrans = await hugsPoolContract(networkID, provider, address).approve(
-      NETWORKS.get(networkID).FARMINNG_STAKING_REWARDS_ADDRESS as string,
+      NETWORKS.get(networkID).FARMINNG_STAKING_REWARDS_ADDRESS,
       "1000000000000000000000000",
     );
     await approveTrans.wait();
@@ -154,7 +159,55 @@ export const approve = createAsyncThunk("farm/approve", async ({ networkID, prov
     await sleep(9);
     dispatch(info(messages.your_balance_updated));
   } catch (e) {
+    console.error(e);
     dispatch(error("Failed to approve"));
+  }
+});
+
+export const daiApprove = createAsyncThunk("farm/daiApprove", async ({ networkID, provider, address }: IBaseAddressAsyncThunk, { dispatch }) => {
+  try {
+    const approveTrans = await daiContract(networkID, provider, address).approve(
+      NETWORKS.get(networkID).TOR_MINTER_ADDRESS,
+      ethers.utils.parseUnits("1000", "ether"),
+    );
+    await approveTrans.wait();
+    dispatch(success(messages.tx_successfully_send));
+    await sleep(7);
+    dispatch(info(messages.your_balance_update_soon));
+    await sleep(9);
+    dispatch(info(messages.your_balance_updated));
+  } catch (e) {
+    console.error(e);
+    dispatch(error("Failed to approve DAI"));
+  }
+});
+export const usdcApprove = createAsyncThunk("farm/usdcApprove", async ({ networkID, provider, address }: IBaseAddressAsyncThunk, { dispatch }) => {
+  try {
+    const approveTrans = await usdcContract(networkID, provider, address).approve(
+      NETWORKS.get(networkID).TOR_MINTER_ADDRESS,
+      ethers.utils.parseUnits("1000", "ether"),
+    );
+    await approveTrans.wait();
+    dispatch(success(messages.tx_successfully_send));
+    await sleep(7);
+    dispatch(info(messages.your_balance_update_soon));
+    await sleep(9);
+    dispatch(info(messages.your_balance_updated));
+  } catch (e) {
+    console.error(e);
+    dispatch(error("Failed to approve USDC"));
+  }
+});
+
+export const getMintAllowance = createAsyncThunk("farm/getMintAllowance", async ({ networkID, provider, address }: IBaseAddressAsyncThunk, { dispatch }) => {
+  try {
+
+    const usdcAllowance = await usdcContract(networkID, provider, address).allowance(address, NETWORKS.get(networkID).TOR_MINTER_ADDRESS);
+    const daiAllowance = await daiContract(networkID, provider, address).allowance(address, NETWORKS.get(networkID).TOR_MINTER_ADDRESS);
+    return { usdcAllowance, daiAllowance };
+  } catch (e) {
+    console.error(e);
+    dispatch(error("Failed to get allowance for minting"));
   }
 });
 
@@ -211,6 +264,7 @@ const initialState: IFarmSlice = {
   hugsPoolInfo: undefined,
   stakingInfo: undefined,
   torInfo: undefined,
+  mintAllowance: undefined,
   whiteList: undefined
 };
 
@@ -221,6 +275,7 @@ interface IFarmSlice {
   hugsPoolInfo: HugsPoolInfo;
   stakingInfo: StakingInfo;
   torInfo: TorInfo;
+  mintAllowance: MintAllowance;
   whiteList: any;
 }
 
@@ -315,6 +370,37 @@ const farmSlice = createSlice({
         state.isLoading = false;
       })
       .addCase(approve.rejected, (state, { error }) => {
+        state.isLoading = false;
+        console.error(error.name, error.message, error.stack);
+      })
+      .addCase(daiApprove.pending, state => {
+        state.isLoading = true;
+      })
+      .addCase(daiApprove.fulfilled, (state, action) => {
+        state.isLoading = false;
+      })
+      .addCase(daiApprove.rejected, (state, { error }) => {
+        state.isLoading = false;
+        console.error(error.name, error.message, error.stack);
+      })
+      .addCase(usdcApprove.pending, state => {
+        state.isLoading = true;
+      })
+      .addCase(usdcApprove.fulfilled, (state, action) => {
+        state.isLoading = false;
+      })
+      .addCase(usdcApprove.rejected, (state, { error }) => {
+        state.isLoading = false;
+        console.error(error.name, error.message, error.stack);
+      })
+      .addCase(getMintAllowance.pending, state => {
+        state.isLoading = true;
+      })
+      .addCase(getMintAllowance.fulfilled, (state, action) => {
+        state.mintAllowance = action.payload;
+        state.isLoading = false;
+      })
+      .addCase(getMintAllowance.rejected, (state, { error }) => {
         state.isLoading = false;
         console.error(error.name, error.message, error.stack);
       })
