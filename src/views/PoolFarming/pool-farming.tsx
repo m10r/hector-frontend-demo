@@ -430,7 +430,7 @@ export default function PoolFarming({ theme }: any) {
                   className="stake-button"
                   variant="contained"
                   color="primary"
-                  disabled={isLoading || !inWhitelist()}
+                  disabled={isLoading}
                   target="_blank"
                   href="https://ftm.curve.fi/factory/62/deposit"
                 >
