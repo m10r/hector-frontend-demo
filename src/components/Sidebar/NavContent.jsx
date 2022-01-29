@@ -180,7 +180,7 @@ function NavContent() {
                   <SvgIcon color="primary" component={FarmIcon} />
                   Farm
                   <Typography variant="caption" style={{ marginLeft: "8px" }}>
-                    (Coming Soon)
+                    (Access Limited)
                   </Typography>
                 </Typography>
               </Link>

@@ -26,6 +26,16 @@ export interface StakingRewardsContract {
     getReward: () => any;
 }
 
+export interface TorContract {
+    balanceOf: (address: string) => BigNumber;
+    allowance: (address1: string, address2: string) => BigNumber;
+}
+export interface TorInfo {
+    balance: number;
+    originalBalance: BigNumber;
+    allowance: number;
+}
+
 export interface StakingInfo {
     _apr: BigNumber;
     _tvl: BigNumber;

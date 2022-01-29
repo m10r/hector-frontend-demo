@@ -406,6 +406,16 @@ const bondingSlice = createSlice({
         state.loading = false;
         console.error(error.message);
       })
+      .addCase(changeApproval.pending, state => {
+        state.loading = true;
+      })
+      .addCase(changeApproval.fulfilled, (state, action) => {
+        state.loading = false;
+      })
+      .addCase(changeApproval.rejected, (state, { error }) => {
+        state.loading = false;
+        console.error(error.message);
+      })
       .addCase(redeemAllBonds.pending, state => {
         state.loading = true;
       })

@@ -22,7 +22,7 @@ export interface IActionAsyncThunk extends IBaseAsyncThunk {
 }
 
 export interface IValueAsyncThunk extends IBaseAsyncThunk {
-  readonly value: string;
+  readonly value?: string;
   readonly address: string;
 }
 

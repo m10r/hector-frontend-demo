@@ -54,6 +54,7 @@ export abstract class Bond {
   readonly bondContractABI: ethers.ContractInterface; // Bond ABI
   readonly networkAddrs: NetworkAddresses;
   readonly bondToken: string;
+  readonly balance?: string;
   readonly isFour?: Boolean;
   readonly isTotal?: Boolean;
   readonly isOld?: Boolean;
@@ -178,7 +179,7 @@ export class LPBond extends Bond {
 
 // Generic BondClass we should be using everywhere
 // Assumes the token being deposited follows the standard ERC20 spec
-export interface StableBondOpts extends BondOpts {}
+export interface StableBondOpts extends BondOpts { }
 export class StableBond extends Bond {
   readonly isLP = false;
   readonly reserveContract: ethers.ContractInterface;

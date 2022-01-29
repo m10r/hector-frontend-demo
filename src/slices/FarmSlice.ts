@@ -11,12 +11,20 @@ import {
   StakingInfo,
   StakingRewardsContract,
   StakingRewardsInfo,
+  TorContract,
+  TorInfo,
 } from "src/types/farming.model";
 import { abi as farmingAggregatorAbi } from "../abi/farmingAggregatorContract.json";
 import { abi as hugsPoolAbi } from "../abi/farmingHugsPoolContract.json";
 import { abi as stakingRewardsAbi } from "../abi/farmingStakingRewardsContract.json";
+import { abi as torAbi } from "../abi/bonds/torContract.json";
+import { abi as torMinterAbi } from "../abi/TorMinterContract.json";
 import { IBaseAddressAsyncThunk, IBaseAsyncThunk, IValueAsyncThunk } from "./interfaces";
 import { error, info, success } from "./MessagesSlice";
+
+interface MintThunk extends IValueAsyncThunk {
+  mint: 'dai' | 'usdc'
+}
 
 const stakingGateway = (chainID: number, provider: JsonRpcProvider) =>
   new ethers.Contract(NETWORKS.get(chainID).FARMING_AGGREGATOR_ADDRESS, farmingAggregatorAbi, provider);
@@ -35,6 +43,11 @@ const hugsPoolContract = (chainID: number, provider: JsonRpcProvider, address: s
     provider.getSigner(address),
   ) as unknown) as HugsPoolContract;
 
+const torContract = (chainID: number, provider: JsonRpcProvider) =>
+  new ethers.Contract(NETWORKS.get(chainID).TOR_ADDRESS, torAbi, provider) as unknown as TorContract;
+
+const torMinterContract = (chainID: number, provider: JsonRpcProvider, address: string) =>
+  new ethers.Contract(NETWORKS.get(chainID).TOR_MINTER_ADDRESS, torMinterAbi, provider.getSigner(address));
 export const getAssetPrice = createAsyncThunk(
   "farm/getAssetPrice",
   async ({ networkID, provider }: IBaseAsyncThunk) =>
@@ -47,6 +60,23 @@ export const getStakingRewardsInfo = createAsyncThunk(
     const originalBalance = await stakingRewardsContract(networkID, provider, address).balanceOf(address);
     const balance = +ethers.utils.formatEther(originalBalance);
     return { balance, originalBalance };
+  },
+);
+
+export const getTorInfo = createAsyncThunk(
+  "farm/getTorBalance",
+  async ({ networkID, provider, address }: IBaseAddressAsyncThunk) => {
+    try {
+      const originalBalance = await torContract(networkID, provider).balanceOf(address);
+      const balance = +ethers.utils.formatEther(originalBalance);
+      const allowance = +(await torContract(networkID, provider).allowance(
+        address,
+        NETWORKS.get(networkID).TOR_MINTER_ADDRESS,
+      ));
+      return { balance, originalBalance, allowance };
+    } catch (e) {
+      console.error(e);
+    }
   },
 );
 
@@ -86,7 +116,7 @@ export const withDrawStaked = createAsyncThunk("farm/withDrawStaked", async ({ n
     await sleep(9);
     dispatch(info(messages.your_balance_updated));
   } catch (e) {
-    console.log(e);
+    console.error(e);
     dispatch(error("Failed to withdraw"));
   }
 },
@@ -122,6 +152,8 @@ export const approve = createAsyncThunk("farm/approve", async ({ networkID, prov
     dispatch(error("Failed to approve"));
   }
 });
+
+
 export const claimRewards = createAsyncThunk("farm/claimRewards", async ({ networkID, provider, address }: IBaseAddressAsyncThunk, { dispatch }) => {
   try {
     const stakeTrans = await stakingRewardsContract(networkID, provider, address).getReward();
@@ -137,12 +169,33 @@ export const claimRewards = createAsyncThunk("farm/claimRewards", async ({ netwo
 },
 );
 
+export const mint = createAsyncThunk("farm/mint", async ({ networkID, provider, address, value, mint }: MintThunk, { dispatch }) => {
+  try {
+    let mintTrans;
+    if (mint === 'dai') {
+      mintTrans = await torMinterContract(networkID, provider, address).mintWithDai(ethers.utils.parseUnits(value, "ether"));
+    } else {
+      mintTrans = await torMinterContract(networkID, provider, address).mintWithUsdc(ethers.utils.parseUnits(value, "mwei"));
+    }
+    await mintTrans.wait();
+    dispatch(success(messages.tx_successfully_send));
+    await sleep(7);
+    dispatch(info(messages.your_balance_update_soon));
+    await sleep(9);
+    dispatch(info(messages.your_balance_updated));
+  } catch (e) {
+    console.error(e);
+    dispatch(error(`Failed to mint ${mint}`));
+  }
+});
+
 const initialState: IFarmSlice = {
   isLoading: false,
   assetPrice: undefined,
   stakingRewardsInfo: undefined,
   hugsPoolInfo: undefined,
   stakingInfo: undefined,
+  torInfo: undefined
 };
 
 interface IFarmSlice {
@@ -151,6 +204,7 @@ interface IFarmSlice {
   stakingRewardsInfo: StakingRewardsInfo;
   hugsPoolInfo: HugsPoolInfo;
   stakingInfo: StakingInfo;
+  torInfo: TorInfo;
 }
 
 const farmSlice = createSlice({
@@ -244,6 +298,27 @@ const farmSlice = createSlice({
         state.isLoading = false;
       })
       .addCase(approve.rejected, (state, { error }) => {
+        state.isLoading = false;
+        console.error(error.name, error.message, error.stack);
+      })
+      .addCase(getTorInfo.pending, state => {
+        state.isLoading = true;
+      })
+      .addCase(getTorInfo.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.torInfo = action.payload;
+      })
+      .addCase(getTorInfo.rejected, (state, { error }) => {
+        state.isLoading = false;
+        console.error(error.name, error.message, error.stack);
+      })
+      .addCase(mint.pending, state => {
+        state.isLoading = true;
+      })
+      .addCase(mint.fulfilled, (state, action) => {
+        state.isLoading = false;
+      })
+      .addCase(mint.rejected, (state, { error }) => {
         state.isLoading = false;
         console.error(error.name, error.message, error.stack);
       });

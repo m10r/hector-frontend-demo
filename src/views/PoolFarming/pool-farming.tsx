@@ -18,7 +18,6 @@ import { useWeb3Context } from "src/hooks/web3Context";
 import { useDispatch, useSelector } from "react-redux";
 
 import ProjectionLineChart from "src/components/pool-farming/line-chart/line-chart";
-import farmingImg from "../../assets/Farming-info.jpg";
 import { RootState } from "src/store";
 import {
   approve,
@@ -27,12 +26,13 @@ import {
   getHugsPoolInfo,
   getStakingInfo,
   getStakingRewardsInfo,
+  getTorInfo,
+  mint,
   stake,
   withDrawStaked,
 } from "src/slices/FarmSlice";
 import { ReactComponent as ArrowUp } from "../../assets/icons/arrow-up.svg";
 import AccessAlarmIcon from "@material-ui/icons/AccessAlarm";
-import HelpOutlineIcon from "@material-ui/icons/HelpOutline";
 import Countdown, { zeroPad } from "react-countdown";
 import { StakingInfo } from "src/types/farming.model";
 import { Skeleton } from "@material-ui/lab";
@@ -40,9 +40,15 @@ import { ReactComponent as TorSVG } from "../../assets/tokens/TOR.svg";
 import InfoTooltip from "src/components/InfoTooltip/InfoTooltip";
 import TabPanel from "src/components/TabPanel";
 import { error } from "src/slices/MessagesSlice";
+import DaiToken from "../../assets/tokens/DAI.svg";
+import UsdcToken from "../../assets/tokens/USDC.svg";
+import useBonds, { IAllBondData } from "src/hooks/Bonds";
+import { changeApproval } from "src/slices/BondSlice";
+import { Bond } from "src/lib/Bond";
+import { whiteListUsers } from "./whitelist";
 
 const TOOLTIP_TEXT = `Farming is a rewards system where you earn FTM rewards in exchange for loaning your liquidity to Hector DAO. To participate you stake your tokens into our farm and while they are staked you earn rewards against what you've loaned.  You can unstake or 'withdraw' your tokens at any time, however if your staked balance reaches 0 you will no longer be earning passive FTM rewards. While your tokens are staked in the Hector DAO farm they are backed by the Hector DAO treasury.`;
-type UserAction = "stake" | "withdraw" | "approve";
+type UserAction = "stake" | "withdraw" | "approve" | "mint" | "daiApprove" | "usdcApprove";
 function a11yProps(index: any) {
   return {
     "id": `simple-tab-${index}`,
@@ -51,14 +57,20 @@ function a11yProps(index: any) {
 }
 
 export default function PoolFarming({ theme }: any) {
-  const { assetPrice, stakingRewardsInfo, hugsPoolInfo, stakingInfo, isLoading } = useSelector(
+  const { assetPrice, stakingRewardsInfo, hugsPoolInfo, stakingInfo, torInfo, isLoading } = useSelector(
     (state: RootState) => state.farm,
   );
   const [quantity, setQuantity] = useState("");
   const [stakeQuantity, setStakeQuantity] = useState("");
   const [withdrawQuantity, setWtihdrawQuantity] = useState("");
+  const [daiQuantity, setDAIQuantity] = useState("");
+  const [usdcQuantity, setUSDCQuantity] = useState("");
   const [calcQuantity, setCalcQuantity] = useState(0);
   const [view, setView] = useState(0);
+  let { bonds } = useBonds();
+
+  const daiBond = bonds.find(bond => bond.displayName === "DAI" && !bond.isOld) as IAllBondData;
+  const usdcBond = bonds.find(bond => bond.displayName === "USDC" && !bond.isOld) as IAllBondData;
 
   const handleChange = (event: React.ChangeEvent<{}>, newValue: number) => {
     setView(newValue);
@@ -71,9 +83,21 @@ export default function PoolFarming({ theme }: any) {
     return hugsPoolInfo?.allowance < hugsPoolInfo?.balance;
   }, [hugsPoolInfo]);
 
+  const inWhitelist = useCallback(() => {
+    return whiteListUsers.includes(address);
+  }, [whiteListUsers]);
+
   const hasLpBalance = useCallback(() => hugsPoolInfo?.balance > 0 && hugsPoolInfo?.allowance > hugsPoolInfo?.balance, [
     hugsPoolInfo,
   ]);
+
+  const hasDaiAllowance = useCallback(() => {
+    return daiBond.allowance > 0;
+  }, [bonds]);
+
+  const hasUsdcAllowance = useCallback(() => {
+    return usdcBond.allowance > 0;
+  }, [bonds]);
 
   const setMax = () => {
     if (view === 0) {
@@ -127,6 +151,19 @@ export default function PoolFarming({ theme }: any) {
     if (value === "0" || value === "0.0") {
       return dispatch(error("Please enter a value greater than 0"));
     }
+    if (
+      (action === "mint" && (usdcQuantity === "0" || usdcQuantity === "0.0")) ||
+      (action === "mint" && daiQuantity === "0") ||
+      daiQuantity === "0.0"
+    ) {
+      return dispatch(error("Please enter a value greater than 0"));
+    }
+    if (
+      (action === "mint" && +usdcQuantity > +usdcBond.balance) ||
+      (action === "mint" && +daiQuantity > +daiBond.balance)
+    ) {
+      return dispatch(error("You cannot stake more than your balance."));
+    }
     if (action === "stake" && +value > +ethers.utils.formatEther(hugsPoolInfo.originalBalance)) {
       return dispatch(error("You cannot stake more than your balance."));
     }
@@ -143,9 +180,31 @@ export default function PoolFarming({ theme }: any) {
       case "approve":
         await dispatch(approve({ networkID: chainID, provider, address }));
         break;
+      case "daiApprove":
+        {
+          const bond = daiBond as Bond;
+          dispatch(changeApproval({ address, bond, provider, networkID: chainID }));
+        }
+        break;
+      case "usdcApprove":
+        {
+          const bond = usdcBond as Bond;
+          dispatch(changeApproval({ address, bond, provider, networkID: chainID }));
+        }
+        break;
+      case "mint":
+        if (+usdcQuantity > 0) {
+          await dispatch(mint({ networkID: chainID, provider, address, value: usdcQuantity, mint: "usdc" }));
+        }
+        if (+daiQuantity > 0) {
+          await dispatch(mint({ networkID: chainID, provider, address, value: daiQuantity, mint: "dai" }));
+        }
+        break;
     }
     getAllData();
     setStakeQuantity("");
+    setDAIQuantity("");
+    setUSDCQuantity("");
     setWtihdrawQuantity("");
   };
 
@@ -154,6 +213,7 @@ export default function PoolFarming({ theme }: any) {
     await dispatch(getStakingInfo({ networkID: chainID, provider, address, value: "0" }));
     await dispatch(getStakingRewardsInfo({ networkID: chainID, provider, address }));
     await dispatch(getHugsPoolInfo({ networkID: chainID, provider, address }));
+    await dispatch(getTorInfo({ networkID: chainID, provider, address }));
   }
 
   useEffect(() => {
@@ -217,7 +277,7 @@ export default function PoolFarming({ theme }: any) {
       </div>
       <div className="MuiPaper-root hec-card farming">
         <div className="header">
-          <div className="title">Rewards</div>
+          <div className="header-title">Rewards</div>
           <Link className="lp-link" target="_blank" href="https://ftm.curve.fi/factory/62/deposit">
             {hugsPoolInfo?.balance || hugsPoolInfo?.balance === 0 ? (
               <div>{hugsPoolInfo?.balance.toFixed(2)}</div>
@@ -321,7 +381,7 @@ export default function PoolFarming({ theme }: any) {
                       className="stake-button"
                       variant="contained"
                       color="primary"
-                      disabled={isLoading}
+                      disabled={isLoading || !inWhitelist()}
                       onClick={() => dispatchClaimEarned()}
                     >
                       Claim Rewards
@@ -333,7 +393,7 @@ export default function PoolFarming({ theme }: any) {
                     className="stake-button"
                     variant="contained"
                     color="primary"
-                    disabled={!hasLpBalance() || isLoading}
+                    disabled={!hasLpBalance() || isLoading || !inWhitelist()}
                     onClick={() => onUserAction("stake")}
                   >
                     Stake
@@ -345,7 +405,7 @@ export default function PoolFarming({ theme }: any) {
                       className="stake-button"
                       variant="contained"
                       color="primary"
-                      disabled={isLoading || !(stakingRewardsInfo?.balance > 0)}
+                      disabled={isLoading || !(stakingRewardsInfo?.balance > 0) || !inWhitelist()}
                       onClick={() => onUserAction("withdraw")}
                     >
                       Withdraw
@@ -357,7 +417,7 @@ export default function PoolFarming({ theme }: any) {
                     className="stake-button"
                     variant="contained"
                     color="primary"
-                    disabled={isLoading}
+                    disabled={isLoading || !inWhitelist()}
                     onClick={() => onUserAction("approve")}
                   >
                     Approve
@@ -370,7 +430,7 @@ export default function PoolFarming({ theme }: any) {
                   className="stake-button"
                   variant="contained"
                   color="primary"
-                  disabled={isLoading}
+                  disabled={isLoading || !inWhitelist()}
                   target="_blank"
                   href="https://ftm.curve.fi/factory/62/deposit"
                 >
@@ -381,66 +441,158 @@ export default function PoolFarming({ theme }: any) {
           </div>
         </div>
       </div>
-      <div className="MuiPaper-root hec-card projection">
-        <div className="investment-plan">
-          <div className="title">Investment Estimation Plan</div>
-          <div className="calculate">
-            <FormControl fullWidth variant="outlined">
-              <InputLabel htmlFor="outlined-adornment-amount">Amount</InputLabel>
-              <OutlinedInput
-                id="outlined-adornment-amount"
-                type="number"
-                value={quantity}
-                onKeyPress={event => {
-                  if (!/[0-9]/.test(event.key)) {
-                    event.preventDefault();
-                  }
-                }}
-                onChange={e => setQuantity(e.target.value)}
-                startAdornment={<InputAdornment position="start">$</InputAdornment>}
-                labelWidth={60}
-              />
-            </FormControl>
+      <div className="row-2">
+        <div className="MuiPaper-root hec-card projection">
+          <div className="investment-plan">
+            <div className="header-title">Investment Estimation Plan</div>
+            <div className="calculate">
+              <FormControl fullWidth variant="outlined">
+                <InputLabel htmlFor="outlined-adornment-amount">Amount</InputLabel>
+                <OutlinedInput
+                  id="outlined-adornment-amount"
+                  type="number"
+                  value={quantity}
+                  onKeyPress={event => {
+                    if (!/[0-9]/.test(event.key)) {
+                      event.preventDefault();
+                    }
+                  }}
+                  onChange={e => setQuantity(e.target.value)}
+                  startAdornment={<InputAdornment position="start">$</InputAdornment>}
+                  labelWidth={60}
+                />
+              </FormControl>
 
+              <Button
+                className="stake-button"
+                variant="contained"
+                color="primary"
+                disabled={isLoading}
+                onClick={() => dispatchStakingInfo()}
+              >
+                Calculate
+              </Button>
+            </div>
+            <div className="optimal-amount">
+              <div className="title">Optimal Amounts</div>
+              <div>
+                TOR:{" "}
+                {stakingInfo ? (
+                  getFormattedStakingInfo("_optimalHugsAmount", "ether").toFixed(2)
+                ) : (
+                  <Skeleton width="40%" />
+                )}
+              </div>
+              <div>
+                DAI:{" "}
+                {stakingInfo ? (
+                  getFormattedStakingInfo("_optimalDaiAmount", "ether").toFixed(2)
+                ) : (
+                  <Skeleton width="40%" />
+                )}
+              </div>
+              <div>
+                USDC:{" "}
+                {stakingInfo ? (
+                  getFormattedStakingInfo("_optimalUsdcAmount", "ether").toFixed(2)
+                ) : (
+                  <Skeleton width="40%" />
+                )}
+              </div>
+            </div>
+          </div>
+          <ProjectionLineChart quantity={calcQuantity} apr={+getFormattedStakingInfo("_apr", "mwei").toFixed(2)} />
+        </div>
+        <div className="MuiPaper-root hec-card mint">
+          <div className="header">
+            <div className="header-title">Mint</div>
+            <div className="max">$500 Max</div>
+          </div>
+          <div className="content">
+            <div className="tor-balance">
+              <div>Balance</div>
+              <div className="balance">
+                <TorSVG style={{ height: "25px", width: "25px", marginRight: "10px" }} />
+                <div className="amount">{torInfo?.balance > 0 ? torInfo?.balance.toFixed(2) : 0.0}</div>
+              </div>
+            </div>
+            <div className="mint-dai">
+              <img src={DaiToken} />
+              {hasDaiAllowance() ? (
+                <FormControl className="input-amount" fullWidth variant="outlined">
+                  <InputLabel htmlFor="outlined-adornment-amount">DAI</InputLabel>
+                  <OutlinedInput
+                    id="outlined-adornment-amount"
+                    type="number"
+                    value={daiQuantity}
+                    onChange={e => setDAIQuantity(e.target.value)}
+                    endAdornment={
+                      <InputAdornment position="end">
+                        {" "}
+                        <Button variant="text" onClick={() => setDAIQuantity(daiBond.balance)} color="inherit">
+                          Max
+                        </Button>
+                      </InputAdornment>
+                    }
+                    labelWidth={25}
+                  />
+                </FormControl>
+              ) : (
+                <Button
+                  className="stake-button"
+                  variant="contained"
+                  color="primary"
+                  disabled={isLoading}
+                  onClick={() => onUserAction("daiApprove")}
+                >
+                  Approve
+                </Button>
+              )}
+            </div>
+            <div className="mint-usdc">
+              <img src={UsdcToken} />
+              {hasUsdcAllowance() ? (
+                <FormControl className="input-amount" fullWidth variant="outlined">
+                  <InputLabel htmlFor="outlined-adornment-amount">USDC</InputLabel>
+                  <OutlinedInput
+                    id="outlined-adornment-amount"
+                    type="number"
+                    value={usdcQuantity}
+                    endAdornment={
+                      <InputAdornment position="end">
+                        {" "}
+                        <Button variant="text" onClick={() => setUSDCQuantity(usdcBond.balance)} color="inherit">
+                          Max
+                        </Button>
+                      </InputAdornment>
+                    }
+                    onChange={e => setUSDCQuantity(e.target.value)}
+                    labelWidth={40}
+                  />
+                </FormControl>
+              ) : (
+                <Button
+                  className="stake-button"
+                  variant="contained"
+                  color="primary"
+                  disabled={isLoading}
+                  onClick={() => onUserAction("usdcApprove")}
+                >
+                  Approve
+                </Button>
+              )}
+            </div>
             <Button
               className="stake-button"
               variant="contained"
               color="primary"
-              disabled={isLoading}
-              onClick={() => dispatchStakingInfo()}
+              disabled={isLoading || !hasDaiAllowance() || !hasUsdcAllowance() || !inWhitelist()}
+              onClick={() => onUserAction("mint")}
             >
-              Calculate
+              Mint
             </Button>
           </div>
-          <div className="optimal-amount">
-            <div className="title">Optimal Amounts</div>
-            <div>
-              TOR:{" "}
-              {stakingInfo ? (
-                getFormattedStakingInfo("_optimalHugsAmount", "ether").toFixed(2)
-              ) : (
-                <Skeleton width="40%" />
-              )}
-            </div>
-            <div>
-              DAI:{" "}
-              {stakingInfo ? (
-                getFormattedStakingInfo("_optimalDaiAmount", "ether").toFixed(2)
-              ) : (
-                <Skeleton width="40%" />
-              )}
-            </div>
-            <div>
-              USDC:{" "}
-              {stakingInfo ? (
-                getFormattedStakingInfo("_optimalUsdcAmount", "ether").toFixed(2)
-              ) : (
-                <Skeleton width="40%" />
-              )}
-            </div>
-          </div>
         </div>
-        <ProjectionLineChart quantity={calcQuantity} apr={+getFormattedStakingInfo("_apr", "mwei").toFixed(2)} />
       </div>
     </div>
   );
