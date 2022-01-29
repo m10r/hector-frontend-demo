@@ -601,7 +601,7 @@ export default function PoolFarming({ theme }: any) {
               className="stake-button"
               variant="contained"
               color="primary"
-              disabled={isLoading || !hasDaiAllowance() || !hasUsdcAllowance() || !inWhitelist()}
+              disabled={isLoading || (hasDaiAllowance() || hasUsdcAllowance() ? false : true) || !inWhitelist()}
               onClick={() => onUserAction("mint")}
             >
               Mint
