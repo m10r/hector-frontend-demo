@@ -48,7 +48,10 @@
       :last-child {
         justify-self: flex-end;
       }
-
+      .help {
+        opacity: 0.7;
+        padding-right: 0;
+      }
       svg {
         width: 17px;
         height: 17px;
@@ -254,7 +257,33 @@
     }
   }
 }
+.modal {
+  max-width: 700px;
+  display: grid;
+  place-items: center;
+  margin: auto;
+  height: 100%;
+  align-content: center;
+  button {
+    svg {
+      height: 25px;
+      width: 25px;
+      overflow: initial;
+      color: #be7c40;
+    }
+    z-index: 2;
+    display: grid;
+    justify-self: flex-end;
+    top: 50px;
+    margin-right: 3px;
+  }
+  img {
+    min-width: 300px;
 
+    width: 100%;
+    border-radius: 26px;
+  }
+}
 @media screen and (max-width: 1450px) {
   .pool-farming {
     grid-template-columns: 1fr;
@@ -270,5 +299,6 @@
 @media screen and (max-width: 1280px) {
   .data {
     text-align: end;
+    justify-content: flex-end;
   }
 }

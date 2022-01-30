@@ -5,14 +5,15 @@ import { BigNumber, ethers } from "ethers";
 import {
   Button,
   FormControl,
+  IconButton,
   InputAdornment,
   InputLabel,
   Link,
+  Modal,
   OutlinedInput,
   SvgIcon,
   Tab,
   Tabs,
-  Tooltip,
 } from "@material-ui/core";
 import { useWeb3Context } from "src/hooks/web3Context";
 import { useDispatch, useSelector } from "react-redux";
@@ -41,12 +42,14 @@ import Countdown, { zeroPad } from "react-countdown";
 import { StakingInfo } from "src/types/farming.model";
 import { Skeleton } from "@material-ui/lab";
 import { ReactComponent as TorSVG } from "../../assets/tokens/TOR.svg";
-import InfoTooltip from "src/components/InfoTooltip/InfoTooltip";
 import TabPanel from "src/components/TabPanel";
 import { error } from "src/slices/MessagesSlice";
 import DaiToken from "../../assets/tokens/DAI.svg";
 import UsdcToken from "../../assets/tokens/USDC.svg";
+import farmingInfo from "../../assets/Farming-info.jpg";
 import useBonds, { IAllBondData } from "src/hooks/Bonds";
+import HelpOutlineIcon from "@material-ui/icons/HelpOutline";
+import CancelIcon from "@material-ui/icons/Cancel";
 
 const TOOLTIP_TEXT = `Farming is a rewards system where you earn FTM rewards in exchange for loaning your liquidity to Hector DAO. To participate you stake your tokens into our farm and while they are staked you earn rewards against what you've loaned.  You can unstake or 'withdraw' your tokens at any time, however if your staked balance reaches 0 you will no longer be earning passive FTM rewards. While your tokens are staked in the Hector DAO farm they are backed by the Hector DAO treasury.`;
 type UserAction = "stake" | "withdraw" | "approve" | "mint" | "daiApprove" | "usdcApprove";
@@ -246,7 +249,7 @@ export default function PoolFarming({ theme }: any) {
         <div className="header">
           <TorSVG style={{ height: "45px", width: "45px", marginRight: "10px" }} />
           <div className="header-title">TOR Farming</div>
-          <InfoTooltip message={TOOLTIP_TEXT} />
+          <HelpModal />
         </div>
         <div className="info">
           <div>
@@ -612,3 +615,37 @@ export default function PoolFarming({ theme }: any) {
     </div>
   );
 }
+
+const HelpModal = () => {
+  // const [modalStyle] = useState(getModalStyle);
+  const [open, setOpen] = useState(false);
+
+  const handleOpen = () => {
+    setOpen(true);
+  };
+
+  const handleClose = () => {
+    setOpen(false);
+  };
+  return (
+    <>
+      <IconButton onClick={handleOpen} className="help">
+        <HelpOutlineIcon />
+      </IconButton>
+
+      <Modal
+        open={open}
+        onClose={handleClose}
+        aria-labelledby="simple-modal-title"
+        aria-describedby="simple-modal-description"
+      >
+        <div className="modal ">
+          <IconButton onClick={handleClose}>
+            <CancelIcon />
+          </IconButton>
+          <img src={farmingInfo} />
+        </div>
+      </Modal>
+    </>
+  );
+};
