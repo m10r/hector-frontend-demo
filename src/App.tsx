@@ -284,11 +284,9 @@ function App() {
               })}
               <ChooseBond />
             </Route>
-            {HECTOR_ENV !== "prod" && (
-              <Route path="/farming">
-                <PoolFarming theme={themeMode} />
-              </Route>
-            )}
+            <Route path="/farming">
+              <PoolFarming theme={themeMode} />
+            </Route>
             {HECTOR_ENV !== "prod" && (
               <Route path="/swap">
                 <Swap />
