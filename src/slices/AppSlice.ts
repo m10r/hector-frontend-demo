@@ -84,7 +84,7 @@ export const loadAppDetails = createAsyncThunk(
     const marketCap = marketPrice * circSupply;
     const marketPriceString = marketPrice ? "$" + marketPrice.toFixed(2) : "";
     const investments = parseFloat(graphData.data.protocolMetrics[0].treasuryInvestments);
-    document.title = `HectorDAO - ${marketPriceString}`;
+    document.title = `Hector Finance - ${marketPriceString}`;
     if (!provider) {
       console.error("failed to connect to provider, please connect your wallet");
       return {

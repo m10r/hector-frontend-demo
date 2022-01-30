@@ -6,6 +6,7 @@ import { ReactComponent as ArrowUpIcon } from "../../assets/icons/arrow-up.svg";
 import { ReactComponent as shecTokenImg } from "../../assets/tokens/SHEC.svg";
 import { ReactComponent as hecTokenImg } from "../../assets/tokens/HEC.svg";
 import { ReactComponent as wshecTokenImg } from "../../assets/tokens/wsHEC.svg";
+import { ReactComponent as TorSVG } from "../../assets/tokens/TOR.svg";
 import { NavLink } from "react-router-dom";
 
 import "./hecmenu.scss";
@@ -15,6 +16,7 @@ import { useWeb3Context } from "../../hooks/web3Context";
 import HecImg from "src/assets/tokens/HEC.png";
 import SHecImg from "src/assets/tokens/SHEC.png";
 import wsHecImg from "src/assets/tokens/wsHEC.png";
+import torImg from "src/assets/tokens/TOR.png";
 
 const addTokenToWallet = (tokenSymbol, tokenAddress) => async () => {
   if (window.ethereum) {
@@ -32,6 +34,10 @@ const addTokenToWallet = (tokenSymbol, tokenAddress) => async () => {
       case "HEC":
         tokenPath = HecImg;
         decimals = 9;
+        break;
+      case "TOR":
+        tokenPath = torImg;
+        decimals = 18;
         break;
       default:
         tokenPath = SHecImg;
@@ -68,6 +74,7 @@ function HecMenu() {
   const WSHEC_ADDRESS = network.WSHEC_ADDRESS;
   const HEC_ADDRESS = network.HEC_ADDRESS;
   const USDC_ADDRESS = network.USDC_ADDRESS;
+  const TOR_ADDRESS = network.TOR_ADDRESS;
 
   const handleClick = event => {
     setAnchorEl(anchorEl ? null : event.currentTarget);
@@ -153,6 +160,11 @@ function HecMenu() {
                           style={{ height: "25px", width: "25px" }}
                         />
                         <Typography variant="body1">wsHEC</Typography>
+                      </Button>
+                      <Button variant="contained" color="secondary" onClick={addTokenToWallet("TOR", TOR_ADDRESS)}>
+                        <TorSVG style={{ height: "25px", width: "25px" }} />
+
+                        <Typography variant="body1">TOR</Typography>
                       </Button>
                     </Box>
                   </Box>
