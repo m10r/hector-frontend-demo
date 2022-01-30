@@ -50,6 +50,7 @@ import farmingInfo from "../../assets/Farming-info.jpg";
 import useBonds, { IAllBondData } from "src/hooks/Bonds";
 import HelpOutlineIcon from "@material-ui/icons/HelpOutline";
 import CancelIcon from "@material-ui/icons/Cancel";
+import { formatCurrency } from "src/helpers";
 
 const TOOLTIP_TEXT = `Farming is a rewards system where you earn FTM rewards in exchange for loaning your liquidity to Hector DAO. To participate you stake your tokens into our farm and while they are staked you earn rewards against what you've loaned.  You can unstake or 'withdraw' your tokens at any time, however if your staked balance reaches 0 you will no longer be earning passive FTM rewards. While your tokens are staked in the Hector DAO farm they are backed by the Hector DAO treasury.`;
 type UserAction = "stake" | "withdraw" | "approve" | "mint" | "daiApprove" | "usdcApprove";
@@ -261,7 +262,7 @@ export default function PoolFarming({ theme }: any) {
           <div>
             <div className="title">TVL:</div>
             <div className="data">
-              ${stakingInfo ? getFormattedStakingInfo("_tvl", "ether").toFixed(2) : <Skeleton width="50%" />}
+              {stakingInfo ? formatCurrency(getFormattedStakingInfo("_tvl", "ether"), 2) : <Skeleton width="50%" />}
             </div>
           </div>
           <div>
@@ -378,7 +379,7 @@ export default function PoolFarming({ theme }: any) {
               ) : (
                 <Skeleton width="40%" />
               )}{" "}
-              (${getEarnedUsd()})
+              ({formatCurrency(+getEarnedUsd(), 2)})
             </div>
           </div>
           <div className="actions">
