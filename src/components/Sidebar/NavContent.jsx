@@ -167,7 +167,7 @@ function NavContent() {
                 id="farm-nav"
                 to="/farming"
                 onClick={event => {
-                  if (HECTOR_ENV === "prod") {
+                  if (false) {
                     event.preventDefault();
                   }
                 }}
@@ -178,7 +178,7 @@ function NavContent() {
               >
                 <Typography variant="h6">
                   <SvgIcon color="primary" component={FarmIcon} />
-                  Farm
+                  TOR Farm
                   <Typography variant="caption" style={{ marginLeft: "8px" }}>
                     (Limited Access)
                   </Typography>
