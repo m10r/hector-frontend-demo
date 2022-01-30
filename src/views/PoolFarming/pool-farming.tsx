@@ -371,7 +371,7 @@ export default function PoolFarming({ theme }: any) {
             </div>
           </div>
           <div>
-            <div className="title">FTM Rewards</div>
+            <div className="title">FTM Rewards:</div>
             <div className="data">
               {stakingInfo ? (
                 getFormattedStakingInfo("_earnedRewardAmount", "ether").toFixed(4)
