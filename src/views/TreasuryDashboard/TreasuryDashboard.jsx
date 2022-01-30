@@ -336,10 +336,6 @@ function TreasuryDashboard() {
                   itemType={""}
                   infoTooltipMessage={tooltipInfoMessages.supply}
                   expandedGraphStrokeColor={theme.palette.graphStrokeColor}
-
-                  // color={theme.palette.text.primary}
-                  // stroke={[theme.palette.text.primary]}
-                  // dataFormat="days"
                 />
               </Paper>
             </Grid>
