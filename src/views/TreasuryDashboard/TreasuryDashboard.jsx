@@ -268,18 +268,17 @@ function TreasuryDashboard() {
               <Paper className="hec-card hec-chart-card">
                 <Chart
                   type="area"
-                  data={data}
-                  dataKey={["treasuryHecDaiPOL"]}
-                  stopColor={[["rgba(128, 204, 131, 1)", "rgba(128, 204, 131, 0)"]]}
-                  headerText="Protocol Owned Liquidity HEC-DAI"
-                  headerSubText={`${data && trim(data[0].treasuryHecDaiPOL, 2)}% `}
-                  dataFormat="percent"
-                  bulletpointColors={bulletpoints.pol}
-                  itemNames={tooltipItems.pol}
-                  itemType={itemType.percentage}
-                  infoTooltipMessage={tooltipInfoMessages.pol}
+                  data={supply}
+                  dataKey={["hecCirculatingSupply"]}
+                  stopColor={[["#ED994C", "#77431E"]]}
+                  headerText="Circulating Supply"
+                  headerSubText={`${data && prettyDisplayNumber(new BigNumber(data[0].hecCirculatingSupply))} HEC`}
+                  dataFormat="hec"
+                  bulletpointColors={bulletpoints.supply}
+                  itemNames={tooltipItems.supply}
+                  itemType={""}
+                  infoTooltipMessage={tooltipInfoMessages.supply}
                   expandedGraphStrokeColor={theme.palette.graphStrokeColor}
-                  isPOL={true}
                 />
               </Paper>
             </Grid>
@@ -321,21 +320,23 @@ function TreasuryDashboard() {
                 />
               </Paper>
             </Grid>
+
             <Grid item lg={6} md={6} sm={12} xs={12}>
               <Paper className="hec-card hec-chart-card">
                 <Chart
                   type="area"
-                  data={supply}
-                  dataKey={["hecCirculatingSupply"]}
-                  stopColor={[["#ED994C", "#77431E"]]}
-                  headerText="Circulating Supply"
-                  headerSubText={`${data && prettyDisplayNumber(new BigNumber(data[0].hecCirculatingSupply))} HEC`}
-                  dataFormat="hec"
-                  bulletpointColors={bulletpoints.supply}
-                  itemNames={tooltipItems.supply}
-                  itemType={""}
-                  infoTooltipMessage={tooltipInfoMessages.supply}
+                  data={data}
+                  dataKey={["treasuryHecDaiPOL"]}
+                  stopColor={[["rgba(128, 204, 131, 1)", "rgba(128, 204, 131, 0)"]]}
+                  headerText="Protocol Owned Liquidity HEC-DAI"
+                  headerSubText={`${data && trim(data[0].treasuryHecDaiPOL, 2)}% `}
+                  dataFormat="percent"
+                  bulletpointColors={bulletpoints.pol}
+                  itemNames={tooltipItems.pol}
+                  itemType={itemType.percentage}
+                  infoTooltipMessage={tooltipInfoMessages.pol}
                   expandedGraphStrokeColor={theme.palette.graphStrokeColor}
+                  isPOL={true}
                 />
               </Paper>
             </Grid>
