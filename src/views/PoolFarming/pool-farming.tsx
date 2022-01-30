@@ -46,7 +46,8 @@ import TabPanel from "src/components/TabPanel";
 import { error } from "src/slices/MessagesSlice";
 import DaiToken from "../../assets/tokens/DAI.svg";
 import UsdcToken from "../../assets/tokens/USDC.svg";
-import farmingInfo from "../../assets/Farming-info.jpg";
+import farmingInfoDark from "../../assets/Farming-info-dark.png";
+import farmingInfoLight from "../../assets/Farming-info-light.png";
 import useBonds, { IAllBondData } from "src/hooks/Bonds";
 import HelpOutlineIcon from "@material-ui/icons/HelpOutline";
 import CancelIcon from "@material-ui/icons/Cancel";
@@ -61,7 +62,7 @@ function a11yProps(index: any) {
   };
 }
 
-export default function PoolFarming({ theme }: any) {
+export default function PoolFarming({ theme, themeMode }: any) {
   const {
     assetPrice,
     stakingRewardsInfo,
@@ -250,12 +251,12 @@ export default function PoolFarming({ theme }: any) {
         <div className="header">
           <TorSVG style={{ height: "45px", width: "45px", marginRight: "10px" }} />
           <div className="header-title">TOR Farming</div>
-          <HelpModal />
+          <HelpModal theme={theme} />
         </div>
         <div className="info">
           <div>
             <div className="title">APR:</div>
-            <div className={theme.palette.text?.gold + " data"}>
+            <div className={themeMode.palette.text?.gold + " data"}>
               {stakingInfo ? getFormattedStakingInfo("_apr", "mwei").toFixed(2) : <Skeleton width="50%" />}%
             </div>
           </div>
@@ -617,7 +618,7 @@ export default function PoolFarming({ theme }: any) {
   );
 }
 
-const HelpModal = () => {
+const HelpModal = ({ theme }: any) => {
   // const [modalStyle] = useState(getModalStyle);
   const [open, setOpen] = useState(false);
 
@@ -644,7 +645,7 @@ const HelpModal = () => {
           <IconButton onClick={handleClose}>
             <CancelIcon />
           </IconButton>
-          <img src={farmingInfo} />
+          <img src={theme === "dark" ? farmingInfoDark : farmingInfoLight} />
         </div>
       </Modal>
     </>
