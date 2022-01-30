@@ -168,7 +168,7 @@ export const daiApprove = createAsyncThunk("farm/daiApprove", async ({ networkID
   try {
     const approveTrans = await daiContract(networkID, provider, address).approve(
       NETWORKS.get(networkID).TOR_MINTER_ADDRESS,
-      ethers.utils.parseUnits("1000", "ether"),
+      ethers.utils.parseUnits("1000000000000", "ether"),
     );
     await approveTrans.wait();
     dispatch(success(messages.tx_successfully_send));
@@ -185,7 +185,7 @@ export const usdcApprove = createAsyncThunk("farm/usdcApprove", async ({ network
   try {
     const approveTrans = await usdcContract(networkID, provider, address).approve(
       NETWORKS.get(networkID).TOR_MINTER_ADDRESS,
-      ethers.utils.parseUnits("1000", "ether"),
+      ethers.utils.parseUnits("1000000000000", "ether"),
     );
     await approveTrans.wait();
     dispatch(success(messages.tx_successfully_send));
