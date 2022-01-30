@@ -226,7 +226,7 @@ function App() {
         clearInterval(updateAccountDetailInterval);
       };
     }
-  }, [walletChecked]);
+  }, [walletChecked, address]);
 
   return (
     <ThemeProvider theme={themeMode}>
