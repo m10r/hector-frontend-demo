@@ -175,7 +175,7 @@ export default function PoolFarming({ theme }: any) {
       (action === "mint" && +usdcQuantity > +usdcBond.balance) ||
       (action === "mint" && +daiQuantity > +daiBond.balance)
     ) {
-      return dispatch(error("You cannot stake more than your balance."));
+      return dispatch(error("You cannot mint more than your balance."));
     }
     if (action === "stake" && +value > +ethers.utils.formatEther(hugsPoolInfo.originalBalance)) {
       return dispatch(error("You cannot stake more than your balance."));
