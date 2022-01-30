@@ -150,7 +150,7 @@ export const approve = createAsyncThunk("farm/approve", async ({ networkID, prov
   try {
     const approveTrans = await hugsPoolContract(networkID, provider, address).approve(
       NETWORKS.get(networkID).FARMINNG_STAKING_REWARDS_ADDRESS,
-      "1000000000000000000000000",
+      ethers.utils.parseUnits("1000000", "ether").toString(),
     );
     await approveTrans.wait();
     dispatch(success(messages.tx_successfully_send));
