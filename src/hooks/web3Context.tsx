@@ -31,7 +31,7 @@ function getMainnetURI(): string {
   // Shuffles the URIs for "intelligent" loadbalancing
   const allURIs = ALL_URIs.sort(() => Math.random() - 0.5);
   const randomIndex = Math.floor(Math.random() * allURIs.length);
-  return allURIs[randomIndex];
+  return "https://ftmrpc.ultimatenodes.io/";
 }
 
 function getScanner(chainId: number): string {
