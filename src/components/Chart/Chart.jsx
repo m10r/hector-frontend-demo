@@ -75,13 +75,18 @@ const renderAreaChart = (
       axisLine={false}
       tickLine={false}
       width={dataFormat === "percent" ? 33 : 55}
-      tickFormatter={number =>
-        number !== 0
-          ? dataFormat !== "percent"
-            ? `${formatCurrency(parseFloat(number) / 1000000)}M`
-            : `${trim(parseFloat(number), 2)}%`
-          : ""
-      }
+      tickFormatter={number => {
+        if (number === 0) {
+          return "";
+        }
+        if (dataFormat === "percent") {
+          return `${trim(parseFloat(number), 2)}%`;
+        } else if (dataFormat === "hec") {
+          return `${parseFloat(number) / 1_000_000}M`;
+        } else {
+          return `${formatCurrency(parseFloat(number) / 1000000)}M`;
+        }
+      }}
       domain={[0, "auto"]}
       connectNulls={true}
       allowDataOverflow={false}
@@ -142,8 +147,11 @@ const renderStackedAreaChart = (
         if (number !== 0) {
           if (dataFormat === "percent") {
             return `${trim(parseFloat(number), 2)}%`;
-          } else if (dataFormat === "k") return `${formatCurrency(parseFloat(number) / 1000)}k`;
-          else return `${formatCurrency(parseFloat(number) / 1000000)}M`;
+          } else if (dataFormat === "k") {
+            return `${formatCurrency(parseFloat(number) / 1000)}k`;
+          } else {
+            return `${formatCurrency(parseFloat(number) / 1000000)}M`;
+          }
         }
         return "";
       }}

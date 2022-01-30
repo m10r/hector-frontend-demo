@@ -168,6 +168,13 @@ export const bulletpoints = {
       border: "1px solid rgba(118, 130, 153, 1)",
     },
   ],
+  supply: [
+    {
+      right: 45,
+      top: -12,
+      background: "#ED994C",
+    },
+  ],
 };
 
 export const tooltipItems = {
@@ -176,6 +183,7 @@ export const tooltipItems = {
   apy: ["APY"],
   runway: ["Days"],
   pol: ["SLP Treasury", "Market SLP"],
+  supply: ["HEC"],
 };
 
 export const tooltipInfoMessages = {
@@ -189,6 +197,7 @@ export const tooltipInfoMessages = {
   apy:
     "Annual Percentage Yield, is the normalized representation of an interest rate, based on a compounding period over one year. Note that APYs provided are rather ballpark level indicators and not so much precise future results.",
   runway: "Runway, is the number of days sHEC emissions can be sustained at a given rate. Lower APY = longer runway",
+  supply: "The number of HEC that are publicly available and circulating in the market.",
 };
 
 export const itemType = {

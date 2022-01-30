@@ -16,11 +16,14 @@ import { useTheme } from "@material-ui/core/styles";
 import "./treasury-dashboard.scss";
 import apollo from "../../lib/apolloClient";
 import InfoTooltip from "src/components/InfoTooltip/InfoTooltip.jsx";
+import { prettyDisplayNumber } from "src/helpers";
+import BigNumber from "bignumber.js";
 
 function TreasuryDashboard() {
   const [data, setData] = useState(null);
   const [apy, setApy] = useState([]);
   const [runway, setRunway] = useState(null);
+  const [supply, setSupply] = useState(null);
   const [staked, setStaked] = useState(null);
   const theme = useTheme();
   const smallerScreen = useMediaQuery("(max-width: 650px)");
@@ -70,6 +73,8 @@ function TreasuryDashboard() {
         setData(metrics);
         const runway = metrics.filter(pm => pm.runwayCurrent > 5);
         setRunway(runway);
+        const supply = metrics.filter(pm => pm.hecCirculatingSupply > 0);
+        setSupply(supply);
       }
     });
 
@@ -313,6 +318,28 @@ function TreasuryDashboard() {
                   itemType={""}
                   infoTooltipMessage={tooltipInfoMessages.runway}
                   expandedGraphStrokeColor={theme.palette.graphStrokeColor}
+                />
+              </Paper>
+            </Grid>
+            <Grid item lg={6} md={6} sm={12} xs={12}>
+              <Paper className="hec-card hec-chart-card">
+                <Chart
+                  type="area"
+                  data={supply}
+                  dataKey={["hecCirculatingSupply"]}
+                  stopColor={[["#ED994C", "#77431E"]]}
+                  headerText="Circulating Supply"
+                  headerSubText={`${data && prettyDisplayNumber(new BigNumber(data[0].hecCirculatingSupply))} HEC`}
+                  dataFormat="hec"
+                  bulletpointColors={bulletpoints.supply}
+                  itemNames={tooltipItems.supply}
+                  itemType={""}
+                  infoTooltipMessage={tooltipInfoMessages.supply}
+                  expandedGraphStrokeColor={theme.palette.graphStrokeColor}
+
+                  // color={theme.palette.text.primary}
+                  // stroke={[theme.palette.text.primary]}
+                  // dataFormat="days"
                 />
               </Paper>
             </Grid>
