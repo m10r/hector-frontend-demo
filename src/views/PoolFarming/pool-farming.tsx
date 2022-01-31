@@ -294,7 +294,9 @@ export default function PoolFarming({ theme, themeMode }: any) {
           <div className="header-title">Rewards</div>
           <Link className="lp-link" target="_blank" href="https://ftm.curve.fi/factory/62/deposit">
             {hugsPoolInfo?.balance || hugsPoolInfo?.balance === 0 ? (
-              <div>{hugsPoolInfo?.balance.toFixed(2)}</div>
+              <div>
+                <b>{hugsPoolInfo?.balance.toFixed(2)}</b>
+              </div>
             ) : (
               <Skeleton width="40%" />
             )}
