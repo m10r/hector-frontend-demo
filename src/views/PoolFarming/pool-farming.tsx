@@ -53,7 +53,6 @@ import HelpOutlineIcon from "@material-ui/icons/HelpOutline";
 import CancelIcon from "@material-ui/icons/Cancel";
 import { formatCurrency } from "src/helpers";
 
-const TOOLTIP_TEXT = `Farming is a rewards system where you earn FTM rewards in exchange for loaning your liquidity to Hector DAO. To participate you stake your tokens into our farm and while they are staked you earn rewards against what you've loaned.  You can unstake or 'withdraw' your tokens at any time, however if your staked balance reaches 0 you will no longer be earning passive FTM rewards. While your tokens are staked in the Hector DAO farm they are backed by the Hector DAO treasury.`;
 type UserAction = "stake" | "withdraw" | "approve" | "mint" | "daiApprove" | "usdcApprove";
 function a11yProps(index: any) {
   return {
@@ -87,6 +86,7 @@ export default function PoolFarming({ theme, themeMode }: any) {
 
   const daiBond = bonds.find(bond => bond.displayName === "DAI" && !bond.isOld) as IAllBondData;
   const usdcBond = bonds.find(bond => bond.displayName === "USDC" && !bond.isOld) as IAllBondData;
+  console.log(daiBond);
 
   const handleChange = (event: React.ChangeEvent<{}>, newValue: number) => {
     setView(newValue);
@@ -544,24 +544,26 @@ export default function PoolFarming({ theme, themeMode }: any) {
             <div className="mint-dai">
               <img src={DaiToken} />
               {hasDaiAllowance() ? (
-                <FormControl className="input-amount" fullWidth variant="outlined">
-                  <InputLabel htmlFor="outlined-adornment-amount">DAI</InputLabel>
-                  <OutlinedInput
-                    id="outlined-adornment-amount"
-                    type="number"
-                    value={daiQuantity}
-                    onChange={e => setDAIQuantity(e.target.value)}
-                    endAdornment={
-                      <InputAdornment position="end">
-                        {" "}
-                        <Button variant="text" onClick={() => setDAIQuantity(daiBond.balance)} color="inherit">
-                          Max
-                        </Button>
-                      </InputAdornment>
-                    }
-                    labelWidth={25}
-                  />
-                </FormControl>
+                <>
+                  <FormControl className="input-amount" fullWidth variant="outlined">
+                    <InputLabel htmlFor="outlined-adornment-amount">DAI</InputLabel>
+                    <OutlinedInput
+                      id="outlined-adornment-amount"
+                      type="number"
+                      value={daiQuantity}
+                      onChange={e => setDAIQuantity(e.target.value)}
+                      endAdornment={
+                        <InputAdornment position="end">
+                          {" "}
+                          <Button variant="text" onClick={() => setDAIQuantity(daiBond.balance)} color="inherit">
+                            Max
+                          </Button>
+                        </InputAdornment>
+                      }
+                      labelWidth={25}
+                    />
+                  </FormControl>
+                </>
               ) : (
                 <Button
                   className="stake-button"
@@ -573,28 +575,31 @@ export default function PoolFarming({ theme, themeMode }: any) {
                   Approve
                 </Button>
               )}
+              {hasDaiAllowance() && <div className="balance">Balance: {(+daiBond?.balance).toFixed(4)}</div>}
             </div>
             <div className="mint-usdc">
               <img src={UsdcToken} />
               {hasUsdcAllowance() ? (
-                <FormControl className="input-amount" fullWidth variant="outlined">
-                  <InputLabel htmlFor="outlined-adornment-amount">USDC</InputLabel>
-                  <OutlinedInput
-                    id="outlined-adornment-amount"
-                    type="number"
-                    value={usdcQuantity}
-                    endAdornment={
-                      <InputAdornment position="end">
-                        {" "}
-                        <Button variant="text" onClick={() => setUSDCQuantity(usdcBond.balance)} color="inherit">
-                          Max
-                        </Button>
-                      </InputAdornment>
-                    }
-                    onChange={e => setUSDCQuantity(e.target.value)}
-                    labelWidth={40}
-                  />
-                </FormControl>
+                <>
+                  <FormControl className="input-amount" fullWidth variant="outlined">
+                    <InputLabel htmlFor="outlined-adornment-amount">USDC</InputLabel>
+                    <OutlinedInput
+                      id="outlined-adornment-amount"
+                      type="number"
+                      value={usdcQuantity}
+                      endAdornment={
+                        <InputAdornment position="end">
+                          {" "}
+                          <Button variant="text" onClick={() => setUSDCQuantity(usdcBond.balance)} color="inherit">
+                            Max
+                          </Button>
+                        </InputAdornment>
+                      }
+                      onChange={e => setUSDCQuantity(e.target.value)}
+                      labelWidth={40}
+                    />
+                  </FormControl>
+                </>
               ) : (
                 <Button
                   className="stake-button"
@@ -606,6 +611,7 @@ export default function PoolFarming({ theme, themeMode }: any) {
                   Approve
                 </Button>
               )}
+              {hasDaiAllowance() && <div className="balance">Balance: {(+usdcBond?.balance).toFixed(4)}</div>}
             </div>
             <Button
               className="stake-button"
