@@ -321,7 +321,7 @@ export default function PoolFarming({ theme, themeMode }: any) {
                   aria-label="simple tabs example"
                 >
                   <Tab label="Stake" {...a11yProps(0)} />
-                  <Tab label="Withdraw" {...a11yProps(1)} />
+                  <Tab label="Unstake" {...a11yProps(1)} />
                 </Tabs>
 
                 <TabPanel value={view} index={0}>
