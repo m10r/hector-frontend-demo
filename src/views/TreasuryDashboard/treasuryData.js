@@ -20,6 +20,8 @@ query {
     treasuryDaiRiskFreeValue
     treasuryUsdcMarketValue
     treasuryUsdcRiskFreeValue
+    treasuryMIMMarketValue
+    treasuryMIMRiskFreeValue
     treasuryWFTMMarketValue
     treasuryWFTMRiskFreeValue
     treasuryFRAXRiskFreeValue
@@ -75,11 +77,11 @@ export const bulletpoints = {
       top: -12,
       background: "linear-gradient(180deg, #768299 -10%, #98B3E9 100%)",
     },
-    // {
-    //   right: 29,
-    //   top: -12,
-    //   background: "linear-gradient(180deg, #8351ff -10%, #b151ff 100%)",
-    // },
+    {
+      right: 29,
+      top: -12,
+      background: "linear-gradient(180deg, #8351ff -10%, #b151ff 100%)",
+    },
     {
       right: 29,
       top: -12,
@@ -179,7 +181,7 @@ export const bulletpoints = {
 
 export const tooltipItems = {
   tvl: ["Total Value Deposited"],
-  coin: ["DAI", "USDC", "FRAX", "WFTM", "BOO", "CRV", "WETH"],
+  coin: ["DAI", "USDC", "MIM", "FRAX", "WFTM", "BOO", "CRV", "WETH"],
   apy: ["APY"],
   runway: ["Days"],
   pol: ["SLP Treasury", "Market SLP"],

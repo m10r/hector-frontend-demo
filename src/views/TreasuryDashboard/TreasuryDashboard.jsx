@@ -203,6 +203,7 @@ function TreasuryDashboard() {
                   dataKey={[
                     "treasuryDaiMarketValue",
                     "treasuryUsdcMarketValue",
+                    "treasuryMIMMarketValue",
                     "treasuryFRAXMarketValue",
                     "treasuryWFTMMarketValue",
                     "treasuryBOOMarketValue",
@@ -212,6 +213,7 @@ function TreasuryDashboard() {
                   stopColor={[
                     ["#F5AC37", "#EA9276"],
                     ["#768299", "#98B3E9"],
+                    ["#8351ff", "#b151ff"],
                     ["#c6c6c6", "#545454"],
                     ["#22d5e7", "#18919d"],
                     ["#DBE722", "#9D9D18"],
@@ -238,6 +240,7 @@ function TreasuryDashboard() {
                   dataKey={[
                     "treasuryDaiRiskFreeValue",
                     "treasuryUsdcRiskFreeValue",
+                    "treasuryMIMRiskFreeValue",
                     "treasuryFRAXRiskFreeValue",
                     "treasuryWFTMRiskFreeValue",
                     "treasuryBOORiskFreeValue",
@@ -247,6 +250,7 @@ function TreasuryDashboard() {
                   stopColor={[
                     ["#F5AC37", "#EA9276"],
                     ["#768299", "#98B3E9"],
+                    ["#8351ff", "#b151ff"],
                     ["#c6c6c6", "#545454"],
                     ["#22d5e7", "#18919d"],
                     ["#DBE722", "#9D9D18"],
