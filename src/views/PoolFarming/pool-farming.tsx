@@ -302,157 +302,162 @@ export default function PoolFarming({ theme, themeMode }: any) {
             <SvgIcon component={ArrowUp} htmlColor="#A3A3A3" />
           </Link>
         </div>
-        <div className="tab-group">
-          <Tabs
-            className="tabs"
-            textColor="primary"
-            indicatorColor="primary"
-            value={view}
-            onChange={handleChange}
-            aria-label="simple tabs example"
-          >
-            <Tab label="Stake" {...a11yProps(0)} />
-            <Tab label="Withdraw" {...a11yProps(1)} />
-          </Tabs>
 
-          <TabPanel value={view} index={0}>
-            <FormControl className="input-amount" fullWidth variant="outlined">
-              <InputLabel htmlFor="outlined-adornment-amount">Amount</InputLabel>
-              <OutlinedInput
-                id="outlined-adornment-amount"
-                type="number"
-                value={stakeQuantity}
-                onChange={e => setStakeQuantity(e.target.value)}
-                endAdornment={
-                  <InputAdornment position="end">
-                    {" "}
-                    {hasLpBalance() && (
-                      <Button variant="text" onClick={setMax} color="inherit">
-                        Max
-                      </Button>
-                    )}
-                  </InputAdornment>
-                }
-                labelWidth={60}
-              />
-            </FormControl>
-          </TabPanel>
-          <TabPanel value={view} index={1}>
-            <FormControl className="input-amount" fullWidth variant="outlined">
-              <InputLabel htmlFor="outlined-adornment-amount">Amount</InputLabel>
-              <OutlinedInput
-                id="outlined-adornment-amount"
-                type="number"
-                value={withdrawQuantity}
-                endAdornment={
-                  <InputAdornment position="end">
-                    {" "}
-                    {stakingRewardsInfo?.balance > 0 && (
-                      <Button variant="text" onClick={setMax} color="inherit">
-                        Max
-                      </Button>
-                    )}
-                  </InputAdornment>
-                }
-                onChange={e => setWtihdrawQuantity(e.target.value)}
-                labelWidth={60}
-              />
-            </FormControl>
-          </TabPanel>
-        </div>
+        <div className="actions">
+          {+getFormattedStakingInfo("_earnedRewardAmount", "ether") > 0 ||
+          hasLpBalance() ||
+          hasAllowance() ||
+          stakingRewardsInfo?.balance > 0 ? (
+            <>
+              <div className="tab-group">
+                <Tabs
+                  className="tabs"
+                  textColor="primary"
+                  indicatorColor="primary"
+                  value={view}
+                  onChange={handleChange}
+                  aria-label="simple tabs example"
+                >
+                  <Tab label="Stake" {...a11yProps(0)} />
+                  <Tab label="Withdraw" {...a11yProps(1)} />
+                </Tabs>
 
-        <div className="info">
-          <div>
-            <div className="title">Staked LP Tokens: </div>
-            <div className="data">
-              {stakingRewardsInfo?.balance || stakingRewardsInfo?.balance == 0 ? (
-                stakingRewardsInfo?.balance.toFixed(2)
-              ) : (
-                <Skeleton width="40%" />
-              )}
-            </div>
-          </div>
-          <div>
-            <div className="title">wFTM Rewards:</div>
-            <div className="data">
-              {stakingInfo ? (
-                getFormattedStakingInfo("_earnedRewardAmount", "ether").toFixed(4)
-              ) : (
-                <Skeleton width="40%" />
-              )}{" "}
-              ({formatCurrency(+getEarnedUsd(), 2)})
-            </div>
-          </div>
-          <div className="actions">
-            {+getFormattedStakingInfo("_earnedRewardAmount", "ether") > 0 ||
-            hasLpBalance() ||
-            hasAllowance() ||
-            stakingRewardsInfo?.balance > 0 ? (
-              <>
-                {+getFormattedStakingInfo("_earnedRewardAmount", "ether") > 0 && (
-                  <>
+                <TabPanel value={view} index={0}>
+                  <FormControl className="input-amount" fullWidth variant="outlined">
+                    <InputLabel htmlFor="outlined-adornment-amount">Amount</InputLabel>
+                    <OutlinedInput
+                      id="outlined-adornment-amount"
+                      type="number"
+                      value={stakeQuantity}
+                      onChange={e => setStakeQuantity(e.target.value)}
+                      endAdornment={
+                        <InputAdornment position="end">
+                          {" "}
+                          {hasLpBalance() && (
+                            <Button variant="text" onClick={setMax} color="inherit">
+                              Max
+                            </Button>
+                          )}
+                        </InputAdornment>
+                      }
+                      labelWidth={60}
+                    />
+                  </FormControl>
+                </TabPanel>
+                <TabPanel value={view} index={1}>
+                  <FormControl className="input-amount" fullWidth variant="outlined">
+                    <InputLabel htmlFor="outlined-adornment-amount">Amount</InputLabel>
+                    <OutlinedInput
+                      id="outlined-adornment-amount"
+                      type="number"
+                      value={withdrawQuantity}
+                      endAdornment={
+                        <InputAdornment position="end">
+                          {" "}
+                          {stakingRewardsInfo?.balance > 0 && (
+                            <Button variant="text" onClick={setMax} color="inherit">
+                              Max
+                            </Button>
+                          )}
+                        </InputAdornment>
+                      }
+                      onChange={e => setWtihdrawQuantity(e.target.value)}
+                      labelWidth={60}
+                    />
+                  </FormControl>
+                </TabPanel>
+              </div>
+              <div className="info">
+                <div>
+                  <div className="title">Staked LP Tokens: </div>
+                  <div className="data">
+                    {stakingRewardsInfo?.balance || stakingRewardsInfo?.balance == 0 ? (
+                      stakingRewardsInfo?.balance.toFixed(2)
+                    ) : (
+                      <Skeleton width="40%" />
+                    )}
+                  </div>
+                </div>
+                <div>
+                  <div className="title">wFTM Rewards:</div>
+                  <div className="data">
+                    {stakingInfo ? (
+                      getFormattedStakingInfo("_earnedRewardAmount", "ether").toFixed(4)
+                    ) : (
+                      <Skeleton width="40%" />
+                    )}{" "}
+                    ({formatCurrency(+getEarnedUsd(), 2)})
+                  </div>
+                </div>
+                <div className="buttons">
+                  {+getFormattedStakingInfo("_earnedRewardAmount", "ether") > 0 && (
+                    <>
+                      <Button
+                        className="stake-button"
+                        variant="contained"
+                        color="primary"
+                        disabled={isLoading}
+                        onClick={() => dispatchClaimEarned()}
+                      >
+                        Claim Rewards
+                      </Button>
+                    </>
+                  )}
+                  {view === 0 && (
+                    <Button
+                      className="stake-button"
+                      variant="contained"
+                      color="primary"
+                      disabled={!hasLpBalance() || isLoading}
+                      onClick={() => onUserAction("stake")}
+                    >
+                      Stake
+                    </Button>
+                  )}
+                  {view === 1 && (
+                    <>
+                      <Button
+                        className="stake-button"
+                        variant="contained"
+                        color="primary"
+                        disabled={isLoading || !(stakingRewardsInfo?.balance > 0)}
+                        onClick={() => onUserAction("withdraw")}
+                      >
+                        Withdraw
+                      </Button>
+                    </>
+                  )}
+                  {hasAllowance() && (
                     <Button
                       className="stake-button"
                       variant="contained"
                       color="primary"
                       disabled={isLoading}
-                      onClick={() => dispatchClaimEarned()}
+                      onClick={() => onUserAction("approve")}
                     >
-                      Claim Rewards
+                      Approve
                     </Button>
-                  </>
-                )}
-                {view === 0 && (
-                  <Button
-                    className="stake-button"
-                    variant="contained"
-                    color="primary"
-                    disabled={!hasLpBalance() || isLoading}
-                    onClick={() => onUserAction("stake")}
-                  >
-                    Stake
-                  </Button>
-                )}
-                {view === 1 && (
-                  <>
-                    <Button
-                      className="stake-button"
-                      variant="contained"
-                      color="primary"
-                      disabled={isLoading || !(stakingRewardsInfo?.balance > 0)}
-                      onClick={() => onUserAction("withdraw")}
-                    >
-                      Withdraw
-                    </Button>
-                  </>
-                )}
-                {hasAllowance() && (
-                  <Button
-                    className="stake-button"
-                    variant="contained"
-                    color="primary"
-                    disabled={isLoading}
-                    onClick={() => onUserAction("approve")}
-                  >
-                    Approve
-                  </Button>
-                )}
-              </>
-            ) : (
-              <>
-                <Button
-                  className="stake-button"
-                  variant="contained"
-                  color="primary"
-                  disabled={isLoading}
-                  target="_blank"
-                  href="https://ftm.curve.fi/factory/62/deposit"
-                >
-                  Get LP
-                </Button>
-              </>
-            )}
-          </div>
+                  )}
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="get-lp-text">
+                <i>Get LP tokens in order to stake and earn rewards on your LP.</i>
+              </div>
+              <Button
+                className="stake-button"
+                variant="contained"
+                color="primary"
+                disabled={isLoading}
+                target="_blank"
+                href="https://ftm.curve.fi/factory/62/deposit"
+              >
+                Get LP
+              </Button>
+            </>
+          )}
         </div>
       </div>
       <div className="row-2">
