@@ -26,12 +26,12 @@ jobs:
       uses: SamKirkland/FTP-Deploy-Action@4.2.0
       with:
         # ftp server
-        server: ${{ secrets.SERVER_ADDRESS }}
-        port: ${{secrets.SERVER_PORT }}
+        server: ${{ secrets.PROD_ADDRESS }}
+        port: ${{secrets.PROD_PORT }}
         # ftp username
-        username: ${{ secrets.SERVER_USERNAME }}
+        username: ${{ secrets.PROD_USERNAME }}
         # ftp password
-        password: ${{ secrets.SERVER_PASSWORD }}
+        password: ${{ secrets.PROD_PASSWORD }}
         # protocol to deploy with - ftp, ftps, or ftps-legacy
         protocol: ftps
         # Folder to upload from, must end with trailing slash /
