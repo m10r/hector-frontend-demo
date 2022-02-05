@@ -55,9 +55,17 @@ function TreasuryDashboard() {
 
   useEffect(() => {
     apollo(treasuryDataQuery).then(r => {
-      let metrics = r?.data?.protocolMetrics.map(entry =>
-        Object.entries(entry).reduce((obj, [key, value]) => ((obj[key] = parseFloat(value)), obj), {}),
-      );
+      let metrics = r?.data?.protocolMetrics.map((entry, i) => {
+        const obj = Object.entries(entry).reduce((obj, [key, value]) => ((obj[key] = parseFloat(value)), obj), {});
+        const bankTotal = obj.bankBorrowed + obj.bankSupplied;
+        const torTimeStamp = 1642857253;
+        return {
+          ...obj,
+          bankTotal,
+          torTVL: +obj.timestamp > torTimeStamp ? r?.data?.tors[i].torTVL : 0,
+        };
+      });
+      console.log(r.data.tors);
       let staked = r?.data?.protocolMetrics.map(entry => ({
         staked: (parseFloat(entry.sHecCirculatingSupply) / parseFloat(entry.hecCirculatingSupply)) * 100,
         timestamp: entry.timestamp,
@@ -200,30 +208,12 @@ function TreasuryDashboard() {
                 <Chart
                   type="stack"
                   data={data}
-                  dataKey={[
-                    "treasuryDaiMarketValue",
-                    "treasuryUsdcMarketValue",
-                    "treasuryMIMMarketValue",
-                    "treasuryFRAXMarketValue",
-                    "treasuryWFTMMarketValue",
-                    "treasuryBOOMarketValue",
-                    "treasuryCRVMarketValue",
-                    "treasuryWETHMarketValue",
-                  ]}
-                  stopColor={[
-                    ["#F5AC37", "#EA9276"],
-                    ["#768299", "#98B3E9"],
-                    ["#8351ff", "#b151ff"],
-                    ["#c6c6c6", "#545454"],
-                    ["#22d5e7", "#18919d"],
-                    ["#DBE722", "#9D9D18"],
-                    ["#E73722", "#9D3018"],
-                    ["#E722D1", "#9D1865"],
-                  ]}
+                  dataKey={bulletpoints.coin.map(coin => coin.marketValue)}
+                  stopColor={bulletpoints.coin.map(coin => coin.stopColor)}
                   headerText="Market Value of Treasury Assets"
                   headerSubText={`${data && formatCurrency(data[0].treasuryMarketValue)}`}
                   bulletpointColors={bulletpoints.coin}
-                  itemNames={tooltipItems.coin}
+                  itemNames={bulletpoints.coin.map(coin => coin.name)}
                   itemType={itemType.dollar}
                   infoTooltipMessage={tooltipInfoMessages.mvt}
                   expandedGraphStrokeColor={theme.palette.graphStrokeColor}
@@ -237,30 +227,12 @@ function TreasuryDashboard() {
                   type="stack"
                   data={data}
                   format="currency"
-                  dataKey={[
-                    "treasuryDaiRiskFreeValue",
-                    "treasuryUsdcRiskFreeValue",
-                    "treasuryMIMRiskFreeValue",
-                    "treasuryFRAXRiskFreeValue",
-                    "treasuryWFTMRiskFreeValue",
-                    "treasuryBOORiskFreeValue",
-                    "treasuryCRVRiskFreeValue",
-                    "treasuryWETHRiskFreeValue",
-                  ]}
-                  stopColor={[
-                    ["#F5AC37", "#EA9276"],
-                    ["#768299", "#98B3E9"],
-                    ["#8351ff", "#b151ff"],
-                    ["#c6c6c6", "#545454"],
-                    ["#22d5e7", "#18919d"],
-                    ["#DBE722", "#9D9D18"],
-                    ["#E73722", "#9D3018"],
-                    ["#E722D1", "#9D1865"],
-                  ]}
+                  dataKey={bulletpoints.coin.filter(coin => coin.riskFree).map(coin => coin.riskFree)}
+                  stopColor={bulletpoints.coin.map(coin => coin.stopColor)}
                   headerText="Risk Free Value of Treasury Assets"
                   headerSubText={`${data && formatCurrency(data[0].treasuryRiskFreeValue)}`}
                   bulletpointColors={bulletpoints.coin}
-                  itemNames={tooltipItems.coin}
+                  itemNames={bulletpoints.coin.filter(coin => coin.riskFree).map(coin => coin.name)}
                   itemType={itemType.dollar}
                   infoTooltipMessage={tooltipInfoMessages.rfv}
                   expandedGraphStrokeColor={theme.palette.graphStrokeColor}

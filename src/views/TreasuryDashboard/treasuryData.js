@@ -35,6 +35,14 @@ query {
     currentAPY
     runwayCurrent
     treasuryHecDaiPOL
+    bankBorrowed
+    bankSupplied
+  }
+  tors(first: 1000, orderBy: timestamp, orderDirection: desc) {
+    id
+    timestamp
+    torTVL
+    supply
   }
 }
 `;
@@ -70,47 +78,93 @@ export const bulletpoints = {
     {
       right: 15,
       top: -12,
-      background: "linear-gradient(180deg, #F5AC37 -10%, #EA9276 100%)",
+      background: "linear-gradient(180deg, #ffd89b -10%, #fbbe5d 100%)",
+      name: "DAI",
+      stopColor: ["#ffd89b", "#fbbe5d"],
+      marketValue: "treasuryDaiMarketValue",
+      riskFree: "treasuryDaiRiskFreeValue",
     },
     {
       right: 25,
       top: -12,
       background: "linear-gradient(180deg, #768299 -10%, #98B3E9 100%)",
+      name: "USDC",
+      stopColor: ["#768299", "#98B3E9"],
+      marketValue: "treasuryUsdcMarketValue",
+      riskFree: "treasuryUsdcRiskFreeValue",
     },
     {
       right: 29,
       top: -12,
       background: "linear-gradient(180deg, #8351ff -10%, #b151ff 100%)",
+      name: "MIM",
+      stopColor: ["#8351ff", "#b151ff"],
+      marketValue: "treasuryMIMMarketValue",
+      riskFree: "treasuryMIMRiskFreeValue",
     },
     {
       right: 29,
       top: -12,
       background: "linear-gradient(180deg, #c6c6c6 -10%, #545454 100%)",
+      name: "FRAX",
+      stopColor: ["#c6c6c6", "#545454"],
+      marketValue: "treasuryFRAXMarketValue",
+      riskFree: "treasuryFRAXRiskFreeValue",
     },
-    // {
-    //   right: 29,
-    //   top: -12,
-    //   background: "linear-gradient(180deg, #ffffff -10%, #d5d5d5 100%)",
-    // },
+
+    {
+      right: 29,
+      top: -12,
+      background: "linear-gradient(180deg, #60a5fa -10%, #2563eb 100%)",
+      name: "Bank",
+      stopColor: ["#60a5fa", "#2563eb"],
+      marketValue: "bankTotal",
+    },
     {
       right: 29,
       top: -12,
       background: "linear-gradient(180deg, #22d5e7 -10%, #18919d 100%)",
+      name: "wFTM",
+      stopColor: ["#22d5e7", "#18919d"],
+      marketValue: "treasuryWFTMMarketValue",
+      riskFree: "treasuryWFTMRiskFreeValue",
     },
+
     {
       right: 29,
       top: -12,
-      background: "linear-gradient(180deg, #DBE722 -10%, #9D9D18 100%)",
-    },
-    {
-      right: 29,
-      top: -12,
-      background: "linear-gradient(180deg, #E73722 -10%, #9D3018 100%)",
+      background: "linear-gradient(180deg, #e89e5a -10%, #be7c40 100%)",
+      name: "Tor",
+      stopColor: ["#e89e5a", "#be7c40"],
+      marketValue: "torTVL",
     },
     {
       right: 29,
       top: -12,
       background: "linear-gradient(180deg, #E722D1 -10%, #9D1865 100%)",
+      name: "wETH",
+      stopColor: ["#E722D1", "#9D1865"],
+      marketValue: "treasuryWETHMarketValue",
+      riskFree: "treasuryWETHRiskFreeValue",
+    },
+    {
+      right: 29,
+      top: -12,
+      background: "linear-gradient(180deg, #c7d2fe -10%, #a5b4fc 100%)",
+      name: "BOO",
+      stopColor: ["#c7d2fe", "#a5b4fc"],
+      marketValue: "treasuryBOOMarketValue",
+      riskFree: "treasuryBOORiskFreeValue",
+    },
+
+    {
+      right: 20,
+      top: -12,
+      background: "linear-gradient(180deg, #E73722 -10%, #9D3018 100%)",
+      name: "CRV",
+      stopColor: ["#E73722", "#9D3018"],
+      marketValue: "treasuryCRVMarketValue",
+      riskFree: "treasuryCRVRiskFreeValue",
     },
   ],
   holder: [
@@ -181,7 +235,6 @@ export const bulletpoints = {
 
 export const tooltipItems = {
   tvl: ["Total Value Deposited"],
-  coin: ["DAI", "USDC", "MIM", "FRAX", "WFTM", "BOO", "CRV", "WETH"],
   apy: ["APY"],
   runway: ["Days"],
   pol: ["SLP Treasury", "Market SLP"],
