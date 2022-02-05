@@ -1,4 +1,4 @@
-# [Hector Frontend](https://app.hectordao.com/)
+# [Hector Frontend](https://app.hector.finance.com/)
 
 This is the front-end repo for Hector that allows users be part of the future of Greece.
 
@@ -50,4 +50,3 @@ The files/folder structure are a **WIP** and may contain some unused files. The 
 ## 🗣 Community
 
 - [Join our Discord](https://discord.me/hector) and ask how you can get involved with the DAO!
-

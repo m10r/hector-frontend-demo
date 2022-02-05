@@ -5,7 +5,7 @@ export default function NotFound() {
   return (
     <div id="not-found">
       <div className="not-found-header">
-        <a href="https://app.hectordao.com" target="_blank">
+        <a href="https://app.hector.finance" target="_blank">
           <img className="branding-header-icon" src={HectorIcon} alt="HectorDAO" />
         </a>
 

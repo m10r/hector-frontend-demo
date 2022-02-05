@@ -159,7 +159,8 @@ function TreasuryDashboard() {
 
               <Box className="metric bpo">
                 <Typography variant="h6" color="textSecondary">
-                  Backing per HEC
+                  RPH
+                  <InfoTooltip message={"RPH is the amount of Reserves per HEC that our Treasury is holding."} />
                 </Typography>
                 <Typography variant="h5">
                   {backingPerHec ? formatCurrency(backingPerHec, 2) : <Skeleton type="text" />}

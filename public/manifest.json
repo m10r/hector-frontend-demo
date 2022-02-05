@@ -1,8 +1,8 @@
 {
-  "short_name": "HectorDAO",
+  "short_name": "Hector.Finance",
   "start_url": ".",
   "homepage": "./",
-  "name": "HectorDAO",
+  "name": "Hector.Finance",
   "launch_path": "/public/index.html",
   "icons": [{
       "src": "favicon.ico",
