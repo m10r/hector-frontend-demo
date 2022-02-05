@@ -65,7 +65,6 @@ function TreasuryDashboard() {
           torTVL: +obj.timestamp > torTimeStamp ? r?.data?.tors[i].torTVL : 0,
         };
       });
-      console.log(r.data.tors);
       let staked = r?.data?.protocolMetrics.map(entry => ({
         staked: (parseFloat(entry.sHecCirculatingSupply) / parseFloat(entry.hecCirculatingSupply)) * 100,
         timestamp: entry.timestamp,
