@@ -26,17 +26,18 @@ jobs:
         uses: SamKirkland/FTP-Deploy-Action@4.2.0
         with:
           # ftp server
-          server: ${{ secrets.SERVER_ADDRESS }}
+          server: ${{ secrets.QA_ADDRESS }}
+          port: ${{secrets.QA_PORT }}
           # ftp username
-          username: ${{ secrets.SERVER_USERNAME }}
+          username: ${{ secrets.QA_USERNAME }}
           # ftp password
-          password: ${{ secrets.SERVER_PASSWORD }}
+          password: ${{ secrets.QA_PASSWORD }}
           # protocol to deploy with - ftp, ftps, or ftps-legacy
           protocol: ftps
           # Folder to upload from, must end with trailing slash /
           local-dir: build/
           # Path to upload to on the server. Must end with trailing slash /
-          server-dir: /app.hector.finance/
+          server-dir: /qowduoqwdoqh129.hectordao.com/
           # Prints which modifications will be made with current config options, but doesnt actually make any changes
           dry-run: false
           # Deletes ALL contents of server-dir, even items in excluded with exclude argument
