@@ -1,4 +1,4 @@
-import { EPOCH_INTERVAL, BLOCK_RATE_SECONDS, NETWORKS } from "../constants";
+import { EPOCH_INTERVAL, BLOCK_RATE_SECONDS, FANTOM } from "../constants";
 import { ethers } from "ethers";
 import BigNumber from "bignumber.js";
 import axios from "axios";
@@ -154,7 +154,7 @@ export function contractForRedeemHelper({
   networkID: number;
   provider: StaticJsonRpcProvider | JsonRpcSigner;
 }) {
-  return new ethers.Contract(NETWORKS.get(networkID).REDEEM_HELPER_ADDRESS, RedeemHelperAbi, provider);
+  return new ethers.Contract(FANTOM.REDEEM_HELPER_ADDRESS, RedeemHelperAbi, provider);
 }
 
 /**

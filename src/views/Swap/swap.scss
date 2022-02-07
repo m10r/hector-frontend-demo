@@ -11,6 +11,8 @@
   --info-text-color: #ffffff;
   --error-background-color: #a83838;
   --error-text-color: #ffffff;
+  --usd-background-color: #3c5e52;
+  --usd-text-color: #cdfee1;
 }
 
 .app.light {
@@ -26,6 +28,8 @@
   --info-text-color: #0147af;
   --error-background-color: #ffcfcf;
   --error-text-color: #cb1029;
+  --usd-background-color: #d4e8d4;
+  --usd-text-color: #177238;
 }
 
 .swap-view {
@@ -34,7 +38,7 @@
   margin-right: auto;
   max-width: 45ch;
   background-color: var(--primary-background-color);
-  border-radius: 10px;
+  border-radius: 12px;
   padding: 20px;
   font-family: "Square", sans-serif;
   color: var(--primary-text-color);
@@ -51,10 +55,22 @@
     margin-top: 20px;
   }
 
+  .trade-detail {
+    > * + * {
+      margin-top: 20px;
+    }
+    .detail {
+      display: flex;
+      > :nth-child(2) {
+        flex-grow: 1;
+        text-align: right;
+      }
+    }
+  }
   .swap {
     position: relative;
     margin-top: 0px;
-    height: 20px;
+    height: 5px;
     pointer-events: none;
     .spinner {
       position: absolute;
@@ -97,7 +113,7 @@
 
   .input {
     background-color: var(--secondary-background-color);
-    border-radius: 4px;
+    border-radius: 8px;
     border: none;
     width: 100%;
     text-align: right;
@@ -129,7 +145,9 @@
       flex-grow: 1;
       background-color: unset;
       display: block;
-      padding: 20px;
+      padding: 28px;
+      padding-bottom: 36px;
+      padding-top: 22px;
       border: unset;
       font: inherit;
       color: inherit;
@@ -143,9 +161,24 @@
       }
     }
 
+    .usd {
+      font-size: 0.75em;
+      line-height: 1;
+      padding: 7px 28px;
+      margin: 0;
+      background-color: var(--usd-background-color);
+      border-radius: 8px 0 8px 0;
+      color: var(--usd-text-color);
+      font-weight: 500;
+      position: absolute;
+      bottom: 0px;
+      right: 0;
+      pointer-events: none;
+    }
+
     .token-select-button {
       padding: 20px;
-      padding-left: 15px;
+      padding-left: 20px;
       border: hidden;
       cursor: pointer;
       font: inherit;
@@ -156,15 +189,29 @@
       align-items: center;
       background-color: transparent;
 
-      img {
-        display: block;
+      .token-and-chain-logo {
         margin: -20px 0;
         margin-right: 5px;
-        // border-radius: 9999px;
-        // box-shadow: 0 0 1.4px 0.8px #253449;
-        // background-color: #253449;
-        object-fit: contain;
-        object-position: center;
+        position: relative;
+
+        .token-logo {
+          display: block;
+          object-fit: contain;
+          object-position: center;
+        }
+        .chain-logo {
+          position: absolute;
+          object-fit: contain;
+          bottom: -2px;
+          right: -2px;
+          padding: 3px;
+          width: 20px;
+          height: 20px;
+          border-radius: 99999px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
       }
     }
   }
@@ -174,7 +221,6 @@
     padding: 15px;
     background-color: var(--action-background-color);
     font: inherit;
-    // font-size: 0.9em;
     font-weight: 500;
     color: white;
     border: none;
@@ -185,6 +231,47 @@
 }
 
 // ---------- TOKEN SELECT -----------
+
+.chain-select {
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  background-color: var(--primary-background-color);
+  position: absolute;
+  top: 0;
+  left: 0;
+  padding: 10px;
+  z-index: 10;
+  transition: all 125ms ease;
+  border-radius: 8px;
+
+  .chains-title {
+    padding: 20px 0 32px 0;
+    font-size: 1.2em;
+    text-align: center;
+    color: var(--primary-text-color);
+  }
+
+  .chains {
+    display: flex;
+    gap: 10px;
+    flex-direction: column;
+    .chain {
+      border-radius: 4px;
+      padding: 10px;
+      padding-right: 14px;
+      gap: 8px;
+      display: flex;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      border: unset;
+      font: inherit;
+      color: white;
+      width: 100%;
+    }
+  }
+}
 
 .token-select-overlay {
   width: 100vw;
@@ -207,28 +294,67 @@
   left: 0;
 }
 
-.token-select {
-  height: 80vh;
+.token-select-modal {
+  height: 95vh;
+  max-height: 768px;
   max-width: 28ch;
   width: 100%;
-  color: var(--primary-text-color);
-  background-color: var(--primary-background-color);
-  border-radius: 8px;
-  font-family: "Square", sans-serif;
-  font-size: 18px;
   position: fixed;
   left: 50%;
   top: 50%;
-  // transform: translate(-50%, -50%);
   overflow: hidden;
+  transition: transform 100ms ease;
+  font-family: "Square", sans-serif;
+  font-size: 18px;
+  border-radius: 8px;
+}
+
+.token-select {
+  width: 100%;
+  height: 100%;
+  color: var(--primary-text-color);
+  background-color: var(--primary-background-color);
   display: flex;
   flex-direction: column;
-  transition: all 100ms ease;
+  transition: all 125ms ease;
+  border-radius: 8px;
+}
 
-  > form {
+.token-select-head {
+  box-shadow: 0 2px 8px #0000001c;
+  padding: 10px;
+
+  form {
+    margin-top: 10px;
+
+    .tokens-filter {
+      border: unset;
+      padding: 10px;
+      color: var(--primary-text-color);
+      background-color: var(--secondary-background-color);
+      display: block;
+      width: 100%;
+      font: inherit;
+      border-radius: 4px;
+      &::placeholder {
+        color: var(--primary-text-color);
+        opacity: 0.5;
+      }
+    }
+  }
+
+  .selected-chain {
+    border-radius: 4px;
+    border: none;
+    font: inherit;
+    color: white;
     padding: 10px;
-    // box-shadow: 0px 2px 8px var(--secondary-background-color);
-    box-shadow: 0 2px 8px #0000001c;
+    padding-right: 14px;
+    display: flex;
+    align-items: center;
+    width: 100%;
+    gap: 8px;
+    cursor: pointer;
   }
 }
 
@@ -250,34 +376,6 @@
     }
     &:hover {
       background-color: var(--secondary-background-color);
-    }
-  }
-}
-
-.tokens-filter {
-  border: unset;
-  padding: 10px;
-  color: var(--primary-text-color);
-  background-color: var(--secondary-background-color);
-  display: block;
-  width: 100%;
-  font: inherit;
-  border-radius: 4px;
-  &::placeholder {
-    color: var(--primary-text-color);
-    opacity: 0.5;
-  }
-}
-
-.trade-detail {
-  > * + * {
-    margin-top: 20px;
-  }
-  .detail {
-    display: flex;
-    > :nth-child(2) {
-      flex-grow: 1;
-      text-align: right;
     }
   }
 }
@@ -325,6 +423,16 @@
 
 .transaction {
   padding: 40px;
+
+  .usd {
+    padding: 5px 8px;
+    margin: -5px -8px;
+    border-radius: 3px;
+    font-size: 0.95em;
+    font-weight: 500;
+    background-color: var(--usd-background-color);
+    color: var(--usd-text-color);
+  }
 
   .transaction-direction {
     position: relative;

@@ -1,4 +1,4 @@
-import { NETWORKS, DEFAULT_NETWORK } from "src/constants";
+import { NETWORKS, DEFAULT_NETWORK, FANTOM } from "src/constants";
 import { StableBond, NetworkID, LPBond } from "src/lib/Bond";
 import { ReactComponent as FraxImg } from "src/assets/tokens/FRAX.svg";
 import { abi as MimBondContract } from "src/abi/bonds/MimContract.json";
@@ -16,7 +16,7 @@ export const frax = new StableBond({
   networkAddrs: {
     [NetworkID.Mainnet]: {
       bondAddress: "0xA4E87A25bC9058e4eC193151558c3c5D02cebE31",
-      reserveAddress: NETWORKS.get(DEFAULT_NETWORK).FRAX_ADDRESS,
+      reserveAddress: FANTOM.FRAX_ADDRESS,
     },
     [NetworkID.Testnet]: {
       bondAddress: "",
@@ -37,7 +37,7 @@ export const frax4 = new StableBond({
   networkAddrs: {
     [NetworkID.Mainnet]: {
       bondAddress: "0xC798e6A22996C554739Df607B7eF1d6d435FDBd9",
-      reserveAddress: NETWORKS.get(DEFAULT_NETWORK).FRAX_ADDRESS,
+      reserveAddress: FANTOM.FRAX_ADDRESS,
     },
     [NetworkID.Testnet]: {
       bondAddress: "",
@@ -58,7 +58,7 @@ export const frax4_v2 = new StableBond({
   networkAddrs: {
     [NetworkID.Mainnet]: {
       bondAddress: "0xa2E8B8513bC380c0d003652Faa510CC4cA69C674",
-      reserveAddress: NETWORKS.get(DEFAULT_NETWORK).FRAX_ADDRESS,
+      reserveAddress: FANTOM.FRAX_ADDRESS,
     },
     [NetworkID.Testnet]: {
       bondAddress: "",
@@ -78,7 +78,7 @@ export const fraxlp = new LPBond({
   networkAddrs: {
     [NetworkID.Mainnet]: {
       bondAddress: "0xde02631d898acd1bb8ff928c0f0ffa0cf29ab374",
-      reserveAddress: NETWORKS.get(DEFAULT_NETWORK).FRAXLP_ADDRESS,
+      reserveAddress: FANTOM.FRAXLP_ADDRESS,
     },
     [NetworkID.Testnet]: {
       bondAddress: "",
@@ -102,7 +102,7 @@ export const fraxlp4 = new LPBond({
   networkAddrs: {
     [NetworkID.Mainnet]: {
       bondAddress: "0x09eb3B10a13DD705C17ced39c35aeEA0D419D0BB",
-      reserveAddress: NETWORKS.get(DEFAULT_NETWORK).FRAXLP_ADDRESS,
+      reserveAddress: FANTOM.FRAXLP_ADDRESS,
     },
     [NetworkID.Testnet]: {
       bondAddress: "",
@@ -126,7 +126,7 @@ export const fraxlp4_v2 = new LPBond({
   networkAddrs: {
     [NetworkID.Mainnet]: {
       bondAddress: "0x8Bcc78704AcD903200937B68CdAbfF72CA2Aedff",
-      reserveAddress: NETWORKS.get(DEFAULT_NETWORK).FRAXLP_ADDRESS,
+      reserveAddress: FANTOM.FRAXLP_ADDRESS,
     },
     [NetworkID.Testnet]: {
       bondAddress: "",

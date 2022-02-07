@@ -4,8 +4,8 @@ import { abi as MimBondContract } from "src/abi/bonds/MimContract.json";
 import { abi as Dai44v3Contract } from "src/abi/bonds/Dai44v3Contract.json";
 import { abi as ierc20Abi } from "src/abi/IERC20.json";
 import { getBondCalculator, getBondCalculator1, getgOHMBondCalculator } from "src/helpers/BondCalculator";
-import { NETWORKS } from "src/constants";
-import React, { ReactNode, useState } from "react";
+import { FANTOM } from "src/constants";
+import React from "react";
 
 export enum NetworkID {
   Mainnet = 250,
@@ -34,9 +34,9 @@ interface BondOpts {
   bondContractABI: ethers.ContractInterface; // ABI for contract
   networkAddrs: NetworkAddresses; // Mapping of network --> Addresses
   bondToken: string; // Unused, but native token to buy the bond.
-  isFour?: Boolean;
-  isTotal?: Boolean;
-  isOld?: Boolean;
+  isFour?: boolean;
+  isTotal?: boolean;
+  isOld?: boolean;
   decimals?: number;
   fourAddress?: string;
   oldfourAddress?: string;
@@ -55,9 +55,9 @@ export abstract class Bond {
   readonly networkAddrs: NetworkAddresses;
   readonly bondToken: string;
   readonly balance?: string;
-  readonly isFour?: Boolean;
-  readonly isTotal?: Boolean;
-  readonly isOld?: Boolean;
+  readonly isFour?: boolean;
+  readonly isTotal?: boolean;
+  readonly isOld?: boolean;
   readonly decimals?: number;
   readonly fourAddress?: string;
   readonly oldfourAddress?: string;
@@ -65,7 +65,7 @@ export abstract class Bond {
   readonly substractionValue?: number;
 
   // The following two fields will differ on how they are set depending on bond type
-  abstract isLP: Boolean;
+  abstract isLP: boolean;
   abstract reserveContract: ethers.ContractInterface; // Token ABI
   abstract displayUnits: string;
 
@@ -107,14 +107,6 @@ export abstract class Bond {
     const bondAddress = this.getAddressForReserve(networkID);
     return new ethers.Contract(bondAddress, this.reserveContract, provider);
   }
-
-  async getBondReservePrice(networkID: NetworkID, provider: StaticJsonRpcProvider | JsonRpcSigner) {
-    const pairContract = this.getContractForReserve(networkID, provider);
-    const reserves = await pairContract.getReserves();
-    const marketPrice = reserves[1] / reserves[0] / Math.pow(10, 9);
-
-    return marketPrice;
-  }
 }
 
 // Keep all LP specific fields/logic within the LPBond class
@@ -152,7 +144,7 @@ export class LPBond extends Bond {
     if (this.decimals) {
       decimals = this.decimals;
     }
-    let tokenAmount = await token.balanceOf(NETWORKS.get(networkID).TREASURY_ADDRESS);
+    let tokenAmount = await token.balanceOf(FANTOM.TREASURY_ADDRESS);
     if (this.isTotal) {
       let bond = this.getContractForBond(networkID, provider);
       tokenAmount = await bond.totalPrinciple();
@@ -179,12 +171,12 @@ export class LPBond extends Bond {
 
 // Generic BondClass we should be using everywhere
 // Assumes the token being deposited follows the standard ERC20 spec
-export interface StableBondOpts extends BondOpts { }
+export interface StableBondOpts extends BondOpts {}
 export class StableBond extends Bond {
   readonly isLP = false;
   readonly reserveContract: ethers.ContractInterface;
   readonly displayUnits: string;
-  readonly isTotal?: Boolean;
+  readonly isTotal?: boolean;
 
   constructor(stableBondOpts: StableBondOpts) {
     super(BondType.StableAsset, stableBondOpts);
@@ -196,7 +188,7 @@ export class StableBond extends Bond {
 
   async getTreasuryBalance(networkID: NetworkID, provider: StaticJsonRpcProvider) {
     let token = this.getContractForReserve(networkID, provider);
-    let tokenAmount = await token.balanceOf(NETWORKS.get(networkID).TREASURY_ADDRESS);
+    let tokenAmount = await token.balanceOf(FANTOM.TREASURY_ADDRESS);
     let decimals = 18;
     if (this.decimals) {
       decimals = this.decimals;
@@ -236,7 +228,7 @@ export interface CustomBondOpts extends BondOpts {
   ) => Promise<number>;
 }
 export class CustomBond extends Bond {
-  readonly isLP: Boolean;
+  readonly isLP: boolean;
   getTreasuryBalance(networkID: NetworkID, provider: StaticJsonRpcProvider): Promise<number> {
     throw new Error("Method not implemented.");
   }

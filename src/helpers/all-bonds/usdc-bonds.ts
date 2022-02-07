@@ -1,4 +1,4 @@
-import { NETWORKS, DEFAULT_NETWORK } from "src/constants";
+import { NETWORKS, DEFAULT_NETWORK, FANTOM } from "src/constants";
 import { LPBond, NetworkID, StableBond } from "src/lib/Bond";
 import { ReactComponent as HecUsdcImg } from "src/assets/tokens/HEC-USDC.svg";
 import { ReactComponent as UsdcImg } from "src/assets/tokens/USDC.svg";
@@ -21,7 +21,7 @@ export const usdc = new StableBond({
   networkAddrs: {
     [NetworkID.Mainnet]: {
       bondAddress: "0x5d05EF2654B9055895F21D7057095e2D7575f5A2",
-      reserveAddress: NETWORKS.get(DEFAULT_NETWORK).USDC_ADDRESS,
+      reserveAddress: FANTOM.USDC_ADDRESS,
     },
     [NetworkID.Testnet]: {
       bondAddress: "",
@@ -43,7 +43,7 @@ export const usdc4_v3 = new StableBond({
   networkAddrs: {
     [NetworkID.Mainnet]: {
       bondAddress: "0x76D03c384977B726bB1f5b261F6779834D8AD036",
-      reserveAddress: NETWORKS.get(DEFAULT_NETWORK).USDC_ADDRESS,
+      reserveAddress: FANTOM.USDC_ADDRESS,
     },
     [NetworkID.Testnet]: {
       bondAddress: "",
@@ -64,7 +64,7 @@ export const usdc4 = new StableBond({
   networkAddrs: {
     [NetworkID.Mainnet]: {
       bondAddress: "0x605c31dD24c71f0b732Ef33aC12CDce77fAC09B6",
-      reserveAddress: NETWORKS.get(DEFAULT_NETWORK).USDC_ADDRESS,
+      reserveAddress: FANTOM.USDC_ADDRESS,
     },
     [NetworkID.Testnet]: {
       bondAddress: "",
@@ -87,7 +87,7 @@ export const usdc4_v2 = new StableBond({
   networkAddrs: {
     [NetworkID.Mainnet]: {
       bondAddress: "0xD0373F236Be04EcF08F51fc4E3AdE7159D7cDe65",
-      reserveAddress: NETWORKS.get(DEFAULT_NETWORK).USDC_ADDRESS,
+      reserveAddress: FANTOM.USDC_ADDRESS,
     },
     [NetworkID.Testnet]: {
       bondAddress: "",
@@ -109,7 +109,7 @@ export const usdclp = new LPBond({
   networkAddrs: {
     [NetworkID.Mainnet]: {
       bondAddress: "0x3C57481f373Be0196A26A7d0a8E29E8CedC63ba1",
-      reserveAddress: NETWORKS.get(DEFAULT_NETWORK).USDCLP_ADDRESS,
+      reserveAddress: FANTOM.USDCLP_ADDRESS,
     },
     [NetworkID.Testnet]: {
       bondAddress: "",
@@ -134,7 +134,7 @@ export const usdclp4 = new LPBond({
   networkAddrs: {
     [NetworkID.Mainnet]: {
       bondAddress: "0xff6508aba1DAd81AACf3894374F291f82Dc024A8",
-      reserveAddress: NETWORKS.get(DEFAULT_NETWORK).USDCLP_ADDRESS,
+      reserveAddress: FANTOM.USDCLP_ADDRESS,
     },
     [NetworkID.Testnet]: {
       bondAddress: "",
@@ -159,7 +159,7 @@ export const usdclp4_v2 = new LPBond({
   networkAddrs: {
     [NetworkID.Mainnet]: {
       bondAddress: "0xb9748C5408891ADE18E4494B178C793fDb485fa0",
-      reserveAddress: NETWORKS.get(DEFAULT_NETWORK).USDCLP_ADDRESS,
+      reserveAddress: FANTOM.USDCLP_ADDRESS,
     },
     [NetworkID.Testnet]: {
       bondAddress: "",

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { NETWORKS } from "../../constants";
+import { FANTOM } from "../../constants";
 import { Link, SvgIcon, Popper, Button, Paper, Typography, Divider, Box, Fade, Slide } from "@material-ui/core";
 import { ReactComponent as InfoIcon } from "../../assets/icons/info-fill.svg";
 import { ReactComponent as ArrowUpIcon } from "../../assets/icons/arrow-up.svg";
@@ -68,8 +68,8 @@ function HecMenu() {
   const isEthereumAPIAvailable = window.ethereum;
 
   const { chainID } = useWeb3Context();
-  const networkID = chainID;
-  const network = NETWORKS.get(networkID);
+  const usingFantom = chainID === 0xfa;
+  const network = FANTOM;
   const SHEC_ADDRESS = network.SHEC_ADDRESS;
   const WSHEC_ADDRESS = network.WSHEC_ADDRESS;
   const HEC_ADDRESS = network.HEC_ADDRESS;
@@ -82,7 +82,7 @@ function HecMenu() {
 
   const open = Boolean(anchorEl);
   const id = "hec-popper";
-  const daiAddress = dai.getAddressForReserve(networkID);
+  const daiAddress = dai.getAddressForReserve(0xfa);
   return (
     <Box
       component="div"
@@ -137,7 +137,12 @@ function HecMenu() {
                     <Divider color="secondary" />
                     <p>ADD TOKEN TO WALLET</p>
                     <Box display="flex" flexDirection="row" justifyContent="space-between">
-                      <Button variant="contained" color="secondary" onClick={addTokenToWallet("HEC", HEC_ADDRESS)}>
+                      <Button
+                        variant="contained"
+                        color="secondary"
+                        disabled={!usingFantom}
+                        onClick={addTokenToWallet("HEC", HEC_ADDRESS)}
+                      >
                         <SvgIcon
                           component={hecTokenImg}
                           viewBox="0 0 32 32"
@@ -145,7 +150,12 @@ function HecMenu() {
                         />
                         <Typography variant="body1">HEC</Typography>
                       </Button>
-                      <Button variant="contained" color="secondary" onClick={addTokenToWallet("sHEC", SHEC_ADDRESS)}>
+                      <Button
+                        variant="contained"
+                        color="secondary"
+                        disabled={!usingFantom}
+                        onClick={addTokenToWallet("sHEC", SHEC_ADDRESS)}
+                      >
                         <SvgIcon
                           component={shecTokenImg}
                           viewBox="0 0 100 100"
@@ -153,7 +163,12 @@ function HecMenu() {
                         />
                         <Typography variant="body1">sHEC</Typography>
                       </Button>
-                      <Button variant="contained" color="secondary" onClick={addTokenToWallet("wsHEC", WSHEC_ADDRESS)}>
+                      <Button
+                        variant="contained"
+                        color="secondary"
+                        disabled={!usingFantom}
+                        onClick={addTokenToWallet("wsHEC", WSHEC_ADDRESS)}
+                      >
                         <SvgIcon
                           component={wshecTokenImg}
                           viewBox="0 0 100 100"
@@ -161,7 +176,12 @@ function HecMenu() {
                         />
                         <Typography variant="body1">wsHEC</Typography>
                       </Button>
-                      <Button variant="contained" color="secondary" onClick={addTokenToWallet("TOR", TOR_ADDRESS)}>
+                      <Button
+                        variant="contained"
+                        color="secondary"
+                        disabled={!usingFantom}
+                        onClick={addTokenToWallet("TOR", TOR_ADDRESS)}
+                      >
                         <TorSVG style={{ height: "25px", width: "25px" }} />
 
                         <Typography variant="body1">TOR</Typography>

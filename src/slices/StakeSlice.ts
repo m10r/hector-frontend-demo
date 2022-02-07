@@ -1,5 +1,5 @@
 import { ethers, BigNumber } from "ethers";
-import { NETWORKS, messages } from "../constants";
+import { messages, FANTOM } from "../constants";
 import { abi as ierc20Abi } from "../abi/IERC20.json";
 import { abi as HectorStaking } from "../abi/HectorStakingv2.json";
 import { abi as StakingHelper } from "../abi/StakingHelper.json";
@@ -47,13 +47,13 @@ export const changeApproval = createAsyncThunk(
     }
 
     const signer = provider.getSigner();
-    const hecContract = new ethers.Contract(NETWORKS.get(networkID).HEC_ADDRESS, ierc20Abi, signer);
-    const shecContract = new ethers.Contract(NETWORKS.get(networkID).SHEC_ADDRESS, ierc20Abi, signer);
-    const oldshecContract = new ethers.Contract(NETWORKS.get(networkID).OLD_SHEC_ADDRESS, ierc20Abi, signer);
+    const hecContract = new ethers.Contract(FANTOM.HEC_ADDRESS, ierc20Abi, signer);
+    const shecContract = new ethers.Contract(FANTOM.SHEC_ADDRESS, ierc20Abi, signer);
+    const oldshecContract = new ethers.Contract(FANTOM.OLD_SHEC_ADDRESS, ierc20Abi, signer);
     let approveTx;
-    let stakeAllowance = await hecContract.allowance(address, NETWORKS.get(networkID).STAKING_HELPER_ADDRESS);
-    let unstakeAllowance = await shecContract.allowance(address, NETWORKS.get(networkID).STAKING_ADDRESS);
-    let oldunstakeAllowance = await oldshecContract.allowance(address, NETWORKS.get(networkID).OLD_STAKING_ADDRESS);
+    let stakeAllowance = await hecContract.allowance(address, FANTOM.STAKING_HELPER_ADDRESS);
+    let unstakeAllowance = await shecContract.allowance(address, FANTOM.STAKING_ADDRESS);
+    let oldunstakeAllowance = await oldshecContract.allowance(address, FANTOM.OLD_STAKING_ADDRESS);
 
     // return early if approval has already happened
     if (alreadyApprovedToken(token, stakeAllowance, unstakeAllowance)) {
@@ -73,17 +73,17 @@ export const changeApproval = createAsyncThunk(
       if (token === "hec") {
         // won't run if stakeAllowance > 0
         approveTx = await hecContract.approve(
-          NETWORKS.get(networkID).STAKING_HELPER_ADDRESS,
+          FANTOM.STAKING_HELPER_ADDRESS,
           ethers.utils.parseUnits("1000000000", "gwei").toString(),
         );
       } else if (token === "shec") {
         approveTx = await shecContract.approve(
-          NETWORKS.get(networkID).STAKING_ADDRESS,
+          FANTOM.STAKING_ADDRESS,
           ethers.utils.parseUnits("1000000000", "gwei").toString(),
         );
       } else if (token === "oldshec") {
         approveTx = await oldshecContract.approve(
-          NETWORKS.get(networkID).OLD_STAKING_ADDRESS,
+          FANTOM.OLD_STAKING_ADDRESS,
           ethers.utils.parseUnits("1000000000", "gwei").toString(),
         );
       }
@@ -104,9 +104,9 @@ export const changeApproval = createAsyncThunk(
         await sleep(10);
 
         // go get fresh allowances
-        stakeAllowance = await hecContract.allowance(address, NETWORKS.get(networkID).STAKING_HELPER_ADDRESS);
-        unstakeAllowance = await shecContract.allowance(address, NETWORKS.get(networkID).STAKING_ADDRESS);
-        oldunstakeAllowance = await shecContract.allowance(address, NETWORKS.get(networkID).OLD_STAKING_ADDRESS);
+        stakeAllowance = await hecContract.allowance(address, FANTOM.STAKING_HELPER_ADDRESS);
+        unstakeAllowance = await shecContract.allowance(address, FANTOM.STAKING_ADDRESS);
+        oldunstakeAllowance = await shecContract.allowance(address, FANTOM.OLD_STAKING_ADDRESS);
 
         dispatch(clearPendingTxn(approveTx.hash));
         return dispatch(
@@ -134,11 +134,11 @@ export const changeStake = createAsyncThunk(
     const signer = provider.getSigner();
     let staking, stakingHelper;
     if (isOld) {
-      staking = new ethers.Contract(NETWORKS.get(networkID).OLD_STAKING_ADDRESS, HectorStaking, signer);
-      stakingHelper = new ethers.Contract(NETWORKS.get(networkID).OLD_STAKING_HELPER_ADDRESS, StakingHelper, signer);
+      staking = new ethers.Contract(FANTOM.OLD_STAKING_ADDRESS, HectorStaking, signer);
+      stakingHelper = new ethers.Contract(FANTOM.OLD_STAKING_HELPER_ADDRESS, StakingHelper, signer);
     } else {
-      staking = new ethers.Contract(NETWORKS.get(networkID).STAKING_ADDRESS, HectorStaking, signer);
-      stakingHelper = new ethers.Contract(NETWORKS.get(networkID).STAKING_HELPER_ADDRESS, StakingHelper, signer);
+      staking = new ethers.Contract(FANTOM.STAKING_ADDRESS, HectorStaking, signer);
+      stakingHelper = new ethers.Contract(FANTOM.STAKING_HELPER_ADDRESS, StakingHelper, signer);
     }
 
     let stakeTx;
@@ -189,7 +189,7 @@ export const changeForfeit = createAsyncThunk(
     }
 
     const signer = provider.getSigner();
-    const staking = new ethers.Contract(NETWORKS.get(networkID).STAKING_ADDRESS, HectorStaking, signer);
+    const staking = new ethers.Contract(FANTOM.STAKING_ADDRESS, HectorStaking, signer);
     let forfeitTx;
 
     try {
@@ -224,7 +224,7 @@ export const changeClaim = createAsyncThunk(
     }
 
     const signer = provider.getSigner();
-    const staking = new ethers.Contract(NETWORKS.get(networkID).STAKING_ADDRESS, HectorStaking, signer);
+    const staking = new ethers.Contract(FANTOM.STAKING_ADDRESS, HectorStaking, signer);
     let claimTx;
 
     try {

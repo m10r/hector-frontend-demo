@@ -5,44 +5,13 @@ import WalletConnectProvider from "@walletconnect/web3-provider";
 import { IFrameEthereumProvider } from "@ledgerhq/iframe-provider";
 import { NodeHelper } from "src/helpers/NodeHelper";
 import { error } from "src/slices/MessagesSlice";
-
-/**
- * kept as function to mimic `getMainnetURI()`
- * @returns string
- */
-function getTestnetURI() {
-  return "";
-}
+import { CHAINS, FANTOM } from "src/helpers/Chains";
 
 /**
  * determine if in IFrame for Ledger Live
  */
 function isIframe() {
   return window.location !== window.parent.location;
-}
-
-const ALL_URIs = NodeHelper.getNodesUris();
-
-/**
- * "intelligently" loadbalances production API Keys
- * @returns string
- */
-function getMainnetURI(): string {
-  // Shuffles the URIs for "intelligent" loadbalancing
-  const allURIs = ALL_URIs.sort(() => Math.random() - 0.5);
-  const randomIndex = Math.floor(Math.random() * allURIs.length);
-  return "https://ftmrpc.ultimatenodes.io/";
-}
-
-function getScanner(chainId: number): string {
-  switch (chainId) {
-    case 250: {
-      return "https://ftmscan.com";
-    }
-    default: {
-      return "https://ftmscan.com";
-    }
-  }
 }
 
 /*
@@ -52,10 +21,10 @@ type onChainProvider = {
   connect: () => Promise<Web3Provider | undefined>;
   disconnect: () => void;
   checkWrongNetwork: () => Promise<boolean>;
-  hasCachedProvider: () => Boolean;
+  hasCachedProvider: () => boolean;
   provider: JsonRpcProvider;
   address: string;
-  connected: Boolean;
+  connected: boolean;
   web3Modal: Web3Modal;
   chainID: number;
   vchainID: number;
@@ -88,13 +57,10 @@ export const useAddress = () => {
 
 export const Web3ContextProvider: React.FC<{ children: ReactElement }> = ({ children }) => {
   const [connected, setConnected] = useState(false);
-  // NOTE (appleseed): if you are testing on rinkeby you need to set chainId === 4 as the default for non-connected wallet testing...
-  // ... you also need to set getTestnetURI() as the default uri state below
   const [chainID, setChainID] = useState(250);
   const [vchainID, setVChain] = useState(250);
   const [address, setAddress] = useState("");
-
-  const [uri, setUri] = useState(getMainnetURI());
+  const [uri, setUri] = useState(FANTOM.rpc[0]);
 
   const [provider, setProvider] = useState<JsonRpcProvider>(new StaticJsonRpcProvider(uri));
 
@@ -105,9 +71,7 @@ export const Web3ContextProvider: React.FC<{ children: ReactElement }> = ({ chil
         walletconnect: {
           package: WalletConnectProvider,
           options: {
-            rpc: {
-              250: getMainnetURI(),
-            },
+            rpc: Object.fromEntries(CHAINS.map(c => [c.chainId, c.rpc[0]])),
             qrcode: true,
             qrcodeModalOptions: {
               mobileLinks: ["metamask", "trust"],
@@ -118,7 +82,7 @@ export const Web3ContextProvider: React.FC<{ children: ReactElement }> = ({ chil
     }),
   );
 
-  const hasCachedProvider = (): Boolean => {
+  const hasCachedProvider = (): boolean => {
     if (!web3Modal) return false;
     if (!web3Modal.cachedProvider) return false;
     return true;
@@ -150,19 +114,18 @@ export const Web3ContextProvider: React.FC<{ children: ReactElement }> = ({ chil
     [provider],
   );
 
-  /**
-   * throws an error if networkID is not 1 (mainnet) or 4 (rinkeby)
-   */
-  const _checkNetwork = (otherChainID: number): Boolean => {
-    if (chainID !== otherChainID) {
-      console.warn("You are switching networks");
-      if (otherChainID === 250) {
-        setChainID(otherChainID);
-        otherChainID === 250 ? setUri(getMainnetURI()) : setUri(getTestnetURI());
-        return true;
-      }
+  const _checkNetwork = (otherChainID: number): boolean => {
+    if (chainID === otherChainID) {
+      return true;
+    }
+
+    console.warn("You are switching networks");
+    const chain = CHAINS.find(c => c.chainId === otherChainID);
+    if (!chain) {
       return false;
     }
+    setChainID(chain.chainId);
+    setUri(chain.rpc[0]);
     return true;
   };
 
@@ -185,7 +148,7 @@ export const Web3ContextProvider: React.FC<{ children: ReactElement }> = ({ chil
     const connectedAddress = await connectedProvider.getSigner().getAddress();
     const validNetwork = _checkNetwork(chainId);
     if (!validNetwork) {
-      console.error("Wrong network, please switch to fantom");
+      console.error("Unsupported network!");
       error("Please connect your wallet!");
       return;
     }

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { useSelector } from "react-redux";
 import { NavLink } from "react-router-dom";
 import Social from "./Social";
@@ -12,9 +12,8 @@ import { ReactComponent as WrapIcon } from "../../assets/icons/wrap.svg";
 import { ReactComponent as HectorIcon } from "../../assets/icons/hector-nav-logo.svg";
 import { ReactComponent as FarmIcon } from "../../assets/icons/farm.svg";
 import { ReactComponent as InvestmentsIcon } from "../../assets/icons/investments.svg";
-import { trim, shorten } from "../../helpers";
-import { useAddress, useWeb3Context } from "src/hooks/web3Context";
-import useBonds from "../../hooks/Bonds";
+import { shorten } from "../../helpers";
+import { useAddress } from "src/hooks/web3Context";
 import { Paper, Link, Box, Typography, SvgIcon } from "@material-ui/core";
 import "./sidebar.scss";
 import { HECTOR_ENV } from "../../helpers/Environment";
@@ -22,12 +21,9 @@ import { HECTOR_ENV } from "../../helpers/Environment";
 function NavContent() {
   const [isActive] = useState();
   const address = useAddress();
-  const { bonds } = useBonds();
-  const { chainID } = useWeb3Context();
   const stakingRebase = useSelector(state => {
     return state.app.stakingRebase;
   });
-  const stakingRebasePercentage = stakingRebase * 1200;
 
   const checkPage = useCallback((match, location, page) => {
     const currentPath = location.pathname.replace("/", "");
@@ -156,7 +152,7 @@ function NavContent() {
               >
                 <Typography variant="h6">
                   <SvgIcon color="primary" component={SwapIcon} viewBox="0 0 24 18" />
-                  Swap
+                  Exchange
                   <Typography variant="caption" style={{ marginLeft: "8px" }}>
                     (Coming Soon)
                   </Typography>

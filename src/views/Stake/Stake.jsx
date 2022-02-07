@@ -7,7 +7,6 @@ import {
   Grid,
   InputAdornment,
   InputLabel,
-  Link,
   OutlinedInput,
   Paper,
   Tab,
@@ -23,13 +22,13 @@ import "./stake.scss";
 import { useWeb3Context } from "src/hooks/web3Context";
 import { isPendingTxn, txnButtonText } from "src/slices/PendingTxnsSlice";
 import { Skeleton } from "@material-ui/lab";
-import { error, info } from "../../slices/MessagesSlice";
+import { error } from "../../slices/MessagesSlice";
 import { ethers } from "ethers";
 import WarmUp from "../../components/warm-up/warm-up";
 
 function a11yProps(index) {
   return {
-    id: `simple-tab-${index}`,
+    "id": `simple-tab-${index}`,
     "aria-controls": `simple-tabpanel-${index}`,
   };
 }
@@ -219,7 +218,7 @@ function Stake() {
 
   return (
     <>
-      <div class="stake">
+      <div className="stake">
         {trimmedWarmUpAmount > 0 && (
           <WarmUp
             depositAmount={depositAmount}

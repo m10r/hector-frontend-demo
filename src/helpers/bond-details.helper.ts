@@ -1,6 +1,6 @@
 import { JsonRpcProvider, StaticJsonRpcProvider } from "@ethersproject/providers";
 import { BigNumber, ethers } from "ethers";
-import { NETWORKS } from "src/constants";
+import { FANTOM } from "src/constants";
 import { abi as aggregatorAbi } from "../abi/aggregatorContract.json";
 
 export interface GlobalBondData {
@@ -47,7 +47,7 @@ export async function getAllBondDetails(
   provider: StaticJsonRpcProvider | JsonRpcProvider,
 ): Promise<GlobalBondData[]> {
   const aggregatorContract = (new ethers.Contract(
-    NETWORKS.get(networkId).AGGREGATOR_ADDRESS,
+    FANTOM.AGGREGATOR_ADDRESS,
     aggregatorAbi,
     provider,
   ) as unknown) as AggregatorContract;
@@ -60,7 +60,7 @@ export async function getUserBondDetails(
   address: string,
 ): Promise<GetUserBondDetails[]> {
   const aggregatorContract = (new ethers.Contract(
-    NETWORKS.get(networkId).AGGREGATOR_ADDRESS,
+    FANTOM.AGGREGATOR_ADDRESS,
     aggregatorAbi,
     provider,
   ) as unknown) as AggregatorContract;

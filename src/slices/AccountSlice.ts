@@ -1,24 +1,24 @@
 import { ethers } from "ethers";
-import { NETWORKS } from "../constants";
+import { FANTOM } from "../constants";
 import { abi as ierc20Abi } from "../abi/IERC20.json";
 import { abi as sHECv2 } from "../abi/sHecv2.json";
 import { abi as wsHEC } from "../abi/wsHec.json";
 import { abi as HectorStakingv2 } from "../abi/HectorStakingv2.json";
 import { setAll } from "../helpers";
-
 import { createAsyncThunk, createSelector, createSlice } from "@reduxjs/toolkit";
 import { RootState } from "src/store";
 import { IBaseAddressAsyncThunk, ICalcUserBondDetailsAsyncThunk } from "./interfaces";
 import { getUserBondDetails, GetUserBondDetails } from "src/helpers/bond-details.helper";
+import { NetworkID } from "src/lib/Bond";
 
 export const getBalances = createAsyncThunk(
   "account/getBalances",
   async ({ address, networkID, provider }: IBaseAddressAsyncThunk) => {
-    const hecContract = new ethers.Contract(NETWORKS.get(networkID).HEC_ADDRESS, ierc20Abi, provider);
+    const hecContract = new ethers.Contract(FANTOM.HEC_ADDRESS, ierc20Abi, provider);
     const hecBalance = await hecContract.balanceOf(address);
-    const shecContract = new ethers.Contract(NETWORKS.get(networkID).SHEC_ADDRESS, ierc20Abi, provider);
+    const shecContract = new ethers.Contract(FANTOM.SHEC_ADDRESS, ierc20Abi, provider);
     const shecBalance = await shecContract.balanceOf(address);
-    const wshecContract = new ethers.Contract(NETWORKS.get(networkID).WSHEC_ADDRESS, wsHEC, provider);
+    const wshecContract = new ethers.Contract(FANTOM.WSHEC_ADDRESS, wsHEC, provider);
     const wshecBalance = await wshecContract.balanceOf(address);
     const wshecAsShec = await wshecContract.wsHECTosHEC(wshecBalance);
     return {
@@ -37,9 +37,8 @@ export const getUserBondData = createAsyncThunk(
   async ({ address, networkID, provider }: IBaseAddressAsyncThunk) => {
     try {
       return await getUserBondDetails(networkID, provider, address);
-
     } catch (e) {
-      console.error(e)
+      console.error(e);
     }
   },
 );
@@ -59,27 +58,27 @@ export const loadAccountDetails = createAsyncThunk(
     let expiry = 0;
 
     try {
-      const daiContract = new ethers.Contract(NETWORKS.get(networkID).DAI_ADDRESS, ierc20Abi, provider);
+      const daiContract = new ethers.Contract(FANTOM.DAI_ADDRESS, ierc20Abi, provider);
       const daiBalance = await daiContract.balanceOf(address);
 
-      const hecContract = new ethers.Contract(NETWORKS.get(networkID).HEC_ADDRESS, ierc20Abi, provider);
+      const hecContract = new ethers.Contract(FANTOM.HEC_ADDRESS, ierc20Abi, provider);
       hecBalance = await hecContract.balanceOf(address);
-      stakeAllowance = await hecContract.allowance(address, NETWORKS.get(networkID).STAKING_HELPER_ADDRESS);
+      stakeAllowance = await hecContract.allowance(address, FANTOM.STAKING_HELPER_ADDRESS);
 
-      const shecContract = new ethers.Contract(NETWORKS.get(networkID).SHEC_ADDRESS, sHECv2, provider);
+      const shecContract = new ethers.Contract(FANTOM.SHEC_ADDRESS, sHECv2, provider);
       shecBalance = await shecContract.balanceOf(address);
-      unstakeAllowance = await shecContract.allowance(address, NETWORKS.get(networkID).STAKING_ADDRESS);
-      const wrapAllowance = await shecContract.allowance(address, NETWORKS.get(networkID).WSHEC_ADDRESS);
+      unstakeAllowance = await shecContract.allowance(address, FANTOM.STAKING_ADDRESS);
+      const wrapAllowance = await shecContract.allowance(address, FANTOM.WSHEC_ADDRESS);
 
-      const oldshecContract = new ethers.Contract(NETWORKS.get(networkID).OLD_SHEC_ADDRESS, sHECv2, provider);
+      const oldshecContract = new ethers.Contract(FANTOM.OLD_SHEC_ADDRESS, sHECv2, provider);
       oldshecBalance = await oldshecContract.balanceOf(address);
-      oldunstakeAllowance = await oldshecContract.allowance(address, NETWORKS.get(networkID).OLD_STAKING_ADDRESS);
+      oldunstakeAllowance = await oldshecContract.allowance(address, FANTOM.OLD_STAKING_ADDRESS);
 
-      const wshecContract = new ethers.Contract(NETWORKS.get(networkID).WSHEC_ADDRESS, wsHEC, provider);
-      const unwrapAllowance = await wshecContract.allowance(address, NETWORKS.get(networkID).WSHEC_ADDRESS);
+      const wshecContract = new ethers.Contract(FANTOM.WSHEC_ADDRESS, wsHEC, provider);
+      const unwrapAllowance = await wshecContract.allowance(address, FANTOM.WSHEC_ADDRESS);
       const wshecBalance = await wshecContract.balanceOf(address);
 
-      const stakingContract = new ethers.Contract(NETWORKS.get(networkID).STAKING_ADDRESS, HectorStakingv2, provider);
+      const stakingContract = new ethers.Contract(FANTOM.STAKING_ADDRESS, HectorStakingv2, provider);
       const warmupInfo = await stakingContract.warmupInfo(address);
       const balance = await shecContract.balanceForGons(warmupInfo.gons);
       depositAmount = warmupInfo.deposit;
@@ -112,11 +111,8 @@ export const loadAccountDetails = createAsyncThunk(
         },
       };
     } catch (e) {
-      console.log(e)
+      console.log(e);
     }
-
-
-
   },
 );
 
@@ -128,7 +124,8 @@ export interface IUserBondDetails {
 }
 export const calculateUserBondDetails = createAsyncThunk(
   "account/calculateUserBondDetails",
-  async ({ address, bond, networkID, provider }: ICalcUserBondDetailsAsyncThunk, { getState }) => {
+  async ({ address, bond, provider }: ICalcUserBondDetailsAsyncThunk, { getState }) => {
+    const networkID = NetworkID.Mainnet;
     const { userBondData } = (getState() as RootState).account;
     if (!address) {
       return {
@@ -149,7 +146,9 @@ export const calculateUserBondDetails = createAsyncThunk(
 
     // Calculate bond details.
     try {
-      const bondData = userBondData!.find(userBond => bond.networkAddrs[networkID].bondAddress.toLowerCase() === userBond.Contract.toLowerCase());
+      const bondData = userBondData!.find(
+        userBond => bond.networkAddrs[networkID].bondAddress.toLowerCase() === userBond.Contract.toLowerCase(),
+      );
       if (!bondData) {
         return;
       }
@@ -190,7 +189,6 @@ export const calculateUserBondDetails = createAsyncThunk(
     } catch (e) {
       console.error(e);
     }
-
   },
 );
 

@@ -1,4 +1,4 @@
-import { NETWORKS, DEFAULT_NETWORK } from "src/constants";
+import { NETWORKS, DEFAULT_NETWORK, FANTOM } from "src/constants";
 import { StableBond, NetworkID, LPBond } from "src/lib/Bond";
 import { ReactComponent as DaiImg } from "src/assets/tokens/DAI.svg";
 import { abi as Dai4V3BondContract } from "src/abi/bonds/Dai44v3Contract.json";
@@ -21,7 +21,7 @@ export const dai = new StableBond({
   networkAddrs: {
     [NetworkID.Mainnet]: {
       bondAddress: "0x4099EB0e82Ffa0048E4BF037a9743ca05Ec561D7",
-      reserveAddress: NETWORKS.get(DEFAULT_NETWORK).DAI_ADDRESS,
+      reserveAddress: FANTOM.DAI_ADDRESS,
     },
     [NetworkID.Testnet]: {
       bondAddress: "",
@@ -41,7 +41,7 @@ export const dai_v2 = new StableBond({
   networkAddrs: {
     [NetworkID.Mainnet]: {
       bondAddress: "0x4FE87D1A4f39d668Fc6B8106cE5100189CBbD3e6",
-      reserveAddress: NETWORKS.get(DEFAULT_NETWORK).DAI_ADDRESS,
+      reserveAddress: FANTOM.DAI_ADDRESS,
     },
     [NetworkID.Testnet]: {
       bondAddress: "",
@@ -62,7 +62,7 @@ export const dai4_v3 = new StableBond({
   networkAddrs: {
     [NetworkID.Mainnet]: {
       bondAddress: "0xE1Cc7FE3E78aEfe6f93D1614A09156fF296Bc81E",
-      reserveAddress: NETWORKS.get(DEFAULT_NETWORK).DAI_ADDRESS,
+      reserveAddress: FANTOM.DAI_ADDRESS,
     },
     [NetworkID.Testnet]: {
       bondAddress: "",
@@ -83,7 +83,7 @@ export const dai4 = new StableBond({
   networkAddrs: {
     [NetworkID.Mainnet]: {
       bondAddress: "0xe8fd4630800bA4335801D1b104B07328Ae415605",
-      reserveAddress: NETWORKS.get(DEFAULT_NETWORK).DAI_ADDRESS,
+      reserveAddress: FANTOM.DAI_ADDRESS,
     },
     [NetworkID.Testnet]: {
       bondAddress: "",
@@ -105,7 +105,7 @@ export const dai4_v2 = new StableBond({
   networkAddrs: {
     [NetworkID.Mainnet]: {
       bondAddress: "0x23337B675375507CE218df5F92f1a71252DAB3E5",
-      reserveAddress: NETWORKS.get(DEFAULT_NETWORK).DAI_ADDRESS,
+      reserveAddress: FANTOM.DAI_ADDRESS,
     },
     [NetworkID.Testnet]: {
       bondAddress: "",
@@ -125,7 +125,7 @@ export const dailp = new LPBond({
   networkAddrs: {
     [NetworkID.Mainnet]: {
       bondAddress: "0xA1224c353cdCB03eB70FbA44dADC137F39E5EF7d",
-      reserveAddress: NETWORKS.get(DEFAULT_NETWORK).DAILP_ADDRESS,
+      reserveAddress: FANTOM.DAILP_ADDRESS,
     },
     [NetworkID.Testnet]: {
       bondAddress: "",
@@ -148,7 +148,7 @@ export const dailp_v2 = new LPBond({
   networkAddrs: {
     [NetworkID.Mainnet]: {
       bondAddress: "0x6c9b3a47a28a39fea65e99d97895e717df1706d0",
-      reserveAddress: NETWORKS.get(DEFAULT_NETWORK).DAILP_ADDRESS,
+      reserveAddress: FANTOM.DAILP_ADDRESS,
     },
     [NetworkID.Testnet]: {
       bondAddress: "",
@@ -172,7 +172,7 @@ export const dailp4 = new LPBond({
   networkAddrs: {
     [NetworkID.Mainnet]: {
       bondAddress: "0xfF40F40E376030394B154dadcB4173277633b405",
-      reserveAddress: NETWORKS.get(DEFAULT_NETWORK).DAILP_ADDRESS,
+      reserveAddress: FANTOM.DAILP_ADDRESS,
     },
     [NetworkID.Testnet]: {
       bondAddress: "",
@@ -196,7 +196,7 @@ export const dailp4_v2 = new LPBond({
   networkAddrs: {
     [NetworkID.Mainnet]: {
       bondAddress: "0x124C23a4119122f05a4C9D2287Ed19fC00f8059a",
-      reserveAddress: NETWORKS.get(DEFAULT_NETWORK).DAILP_ADDRESS,
+      reserveAddress: FANTOM.DAILP_ADDRESS,
     },
     [NetworkID.Testnet]: {
       bondAddress: "",

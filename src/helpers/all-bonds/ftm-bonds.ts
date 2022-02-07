@@ -18,7 +18,7 @@ export const ftm = new CustomBond({
   networkAddrs: {
     [NetworkID.Mainnet]: {
       bondAddress: "0x72De9F0e51cA520379a341318870836FdCaf03B9",
-      reserveAddress: NETWORKS.get(DEFAULT_NETWORK).WFTM_ADDRESS,
+      reserveAddress: FANTOM.WFTM_ADDRESS,
     },
     [NetworkID.Testnet]: {
       bondAddress: "",
@@ -30,7 +30,7 @@ export const ftm = new CustomBond({
     let ethPrice = await ethBondContract.assetPrice();
     ethPrice = ethPrice / Math.pow(10, 8);
     const token = this.getContractForReserve(networkID, provider);
-    let ftmAmount = await token.balanceOf(NETWORKS.get(networkID).TREASURY_ADDRESS);
+    let ftmAmount = await token.balanceOf(FANTOM.TREASURY_ADDRESS);
     ftmAmount = ftmAmount / Math.pow(10, 18);
     return ftmAmount * ethPrice;
   },
@@ -60,7 +60,7 @@ export const ftmv2 = new CustomBond({
     let ethPrice = await ethBondContract.assetPrice();
     ethPrice = ethPrice / Math.pow(10, 8);
     const token = this.getContractForReserve(networkID, provider);
-    let ftmAmount = await token.balanceOf(NETWORKS.get(networkID).TREASURY_ADDRESS);
+    let ftmAmount = await token.balanceOf(FANTOM.TREASURY_ADDRESS);
     ftmAmount = ftmAmount / Math.pow(10, 18);
     return ftmAmount * ethPrice;
   },

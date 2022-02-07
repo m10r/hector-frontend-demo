@@ -12,13 +12,13 @@ interface IBondingStateView {
     };
   };
   bonding: {
-    loading: Boolean;
+    loading: boolean;
     [key: string]: any;
   };
 }
 
 // Smash all the interfaces together to get the BondData Type
-export interface IAllBondData extends Bond, IBondDetails, IUserBondDetails { }
+export interface IAllBondData extends Bond, IBondDetails, IUserBondDetails {}
 
 const initialBondArray = allBonds;
 // Slaps together bond data within the account & bonding states
@@ -43,7 +43,7 @@ function useBonds() {
         }
         return bond;
       });
-    bondDetails = bondDetails.filter(bond => !bond.isOld)
+    bondDetails = bondDetails.filter(bond => !bond.isOld);
     const mostProfitableBonds = bondDetails.concat().sort((a, b) => {
       return a["bondDiscount"] > b["bondDiscount"] ? -1 : b["bondDiscount"] > a["bondDiscount"] ? 1 : 0;
     });

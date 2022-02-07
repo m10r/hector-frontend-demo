@@ -1,5 +1,5 @@
 import { ethers } from "ethers";
-import { NETWORKS } from "../constants";
+import { FANTOM } from "../constants";
 import { abi as HectorStakingv2 } from "../abi/HectorStakingv2.json";
 import { abi as ierc20Abi } from "../abi/IERC20.json";
 import { abi as sHECv2 } from "../abi/sHecv2.json";
@@ -49,12 +49,8 @@ export const loadAppDetails = createAsyncThunk(
       return;
     }
 
-    const stakingContract = new ethers.Contract(NETWORKS.get(networkID).STAKING_ADDRESS, HectorStakingv2, provider);
-    const old_stakingContract = new ethers.Contract(
-      NETWORKS.get(networkID).OLD_STAKING_ADDRESS,
-      HectorStakingv2,
-      provider,
-    );
+    const stakingContract = new ethers.Contract(FANTOM.STAKING_ADDRESS, HectorStakingv2, provider);
+    const old_stakingContract = new ethers.Contract(FANTOM.OLD_STAKING_ADDRESS, HectorStakingv2, provider);
     // NOTE (appleseed): marketPrice from Graph was delayed, so get CoinGecko price
     let marketPrice;
     try {
@@ -67,13 +63,9 @@ export const loadAppDetails = createAsyncThunk(
       console.error("Returned a null response from dispatch(loadMarketPrice)");
       return;
     }
-    const sHecMainContract = new ethers.Contract(NETWORKS.get(networkID).SHEC_ADDRESS, sHECv2, provider);
-    const hecContract = new ethers.Contract(NETWORKS.get(networkID).HEC_ADDRESS, ierc20Abi, provider);
-    const oldsHecContract = new ethers.Contract(
-      NETWORKS.get(networkID).OLD_SHEC_ADDRESS as string,
-      [circulatingSupply],
-      provider,
-    );
+    const sHecMainContract = new ethers.Contract(FANTOM.SHEC_ADDRESS, sHECv2, provider);
+    const hecContract = new ethers.Contract(FANTOM.HEC_ADDRESS, ierc20Abi, provider);
+    const oldsHecContract = new ethers.Contract(FANTOM.OLD_SHEC_ADDRESS as string, [circulatingSupply], provider);
     const old_circ = await oldsHecContract.circulatingSupply();
     const treasuryMarketValue = graphData.data.protocolMetrics[0].treasuryMarketValue;
     const stakingTVL = parseFloat(graphData.data.protocolMetrics[0].totalValueLocked);
