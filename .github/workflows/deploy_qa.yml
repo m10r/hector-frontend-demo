@@ -8,6 +8,9 @@ on:
       ref:
         type: string
         description: Deploy a specific commit by hash (optional)
+  push:
+    branches:    
+      - 'main'
 jobs:
   deploy:
     runs-on: ubuntu-latest
