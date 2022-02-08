@@ -12,6 +12,7 @@ import { ReactComponent as WrapIcon } from "../../assets/icons/wrap.svg";
 import { ReactComponent as HectorIcon } from "../../assets/icons/hector-nav-logo.svg";
 import { ReactComponent as FarmIcon } from "../../assets/icons/farm.svg";
 import { ReactComponent as InvestmentsIcon } from "../../assets/icons/investments.svg";
+import { ReactComponent as TorSVG } from "../../assets/tokens/tor-nav.svg";
 import { shorten } from "../../helpers";
 import { useAddress } from "src/hooks/web3Context";
 import { Paper, Link, Box, Typography, SvgIcon } from "@material-ui/core";
@@ -177,7 +178,7 @@ function NavContent() {
               >
                 <Typography variant="h6">
                   <SvgIcon color="primary" component={FarmIcon} />
-                  TOR Farm
+                  Farm
                 </Typography>
               </Link>
               <Link
@@ -195,8 +196,8 @@ function NavContent() {
                 className={`button-dapp-menu ${isActive ? "active" : ""}`}
               >
                 <Typography variant="h6">
-                  <SvgIcon color="primary" component={FarmIcon} />
-                  Mint
+                  <TorSVG />
+                  TOR Mint
                   <Typography variant="caption" style={{ marginLeft: "8px" }}>
                     (Limited Access)
                   </Typography>
