@@ -73,6 +73,7 @@ export const fraxlp = new LPBond({
   bondToken: "FRAX",
   bondIconSvg: HecFraxImg,
   isTotal: true,
+  isOld: true,
   bondContractABI: MimBondContract,
   reserveContract: ReserveHecDaiContract,
   networkAddrs: {
@@ -120,6 +121,7 @@ export const fraxlp4_v2 = new LPBond({
   bondIconSvg: HecFraxImg,
   isTotal: true,
   isFour: true,
+  isOld: true,
   bondContractABI: Dai4V3BondContract,
   reserveContract: ReserveHecDaiContract,
   additionValue: 3985611879256544134,
