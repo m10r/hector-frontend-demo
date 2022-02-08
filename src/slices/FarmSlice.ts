@@ -1,7 +1,7 @@
 import { JsonRpcProvider } from "@ethersproject/providers";
 import { createAsyncThunk, createSelector, createSlice } from "@reduxjs/toolkit";
 import { BigNumber, ethers } from "ethers";
-import { NETWORKS, FANTOM, messages } from "src/constants";
+import { FANTOM, messages } from "src/constants";
 import { setAll } from "src/helpers";
 import { sleep } from "src/helpers/Sleep";
 import { RootState } from "src/store";

@@ -1,4 +1,4 @@
-import { NETWORKS, DEFAULT_NETWORK, FANTOM } from "src/constants";
+import { DEFAULT_NETWORK, FANTOM } from "src/constants";
 import { LPBond, NetworkID, StableBond } from "src/lib/Bond";
 import { ReactComponent as HecUsdcImg } from "src/assets/tokens/HEC-USDC.svg";
 import { ReactComponent as UsdcImg } from "src/assets/tokens/USDC.svg";

@@ -1,4 +1,4 @@
-import { NETWORKS, DEFAULT_NETWORK, FANTOM } from "src/constants";
+import { FANTOM } from "src/constants";
 import { StableBond, NetworkID, LPBond } from "src/lib/Bond";
 import { ReactComponent as FraxImg } from "src/assets/tokens/FRAX.svg";
 import { abi as MimBondContract } from "src/abi/bonds/MimContract.json";

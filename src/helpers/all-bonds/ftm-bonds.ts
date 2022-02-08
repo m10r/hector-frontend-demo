@@ -1,5 +1,5 @@
 import { NetworkID, CustomBond, BondType } from "src/lib/Bond";
-import { DEFAULT_NETWORK, FANTOM, NETWORKS } from "src/constants";
+import { FANTOM } from "src/constants";
 import { ReactComponent as wFTMImg } from "src/assets/tokens/wFTM.svg";
 import { abi as FtmBondContract } from "src/abi/bonds/FtmContract.json";
 import { abi as FtmBondContractV2 } from "src/abi/bonds/FtmContractV2.json";

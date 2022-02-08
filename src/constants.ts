@@ -51,9 +51,6 @@ export const FANTOM = {
   TOR_WHITELIST: '0x44FC4DB9793969019800B5FdeD3b3CF40CF85E75'
 };
 
-type Network = typeof FANTOM;
-export const NETWORKS: Map<number, Network> = new Map([[FANTOM_NETWORK_ID, FANTOM]]);
-
 export const messages = {
   please_connect: "Please connect your wallet to the Fantom network to use Wonderland.",
   please_connect_wallet: "Please connect your wallet.",

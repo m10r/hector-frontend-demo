@@ -1,4 +1,4 @@
-import { NETWORKS, DEFAULT_NETWORK, FANTOM } from "src/constants";
+import { FANTOM } from "src/constants";
 import { StableBond, NetworkID } from "src/lib/Bond";
 import { abi as MimBondContract } from "src/abi/bonds/MimContract.json";
 import { abi as Dai4V3BondContract } from "src/abi/bonds/Dai44v3Contract.json";

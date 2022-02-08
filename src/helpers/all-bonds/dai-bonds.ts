@@ -1,4 +1,4 @@
-import { NETWORKS, DEFAULT_NETWORK, FANTOM } from "src/constants";
+import { DEFAULT_NETWORK, FANTOM } from "src/constants";
 import { StableBond, NetworkID, LPBond } from "src/lib/Bond";
 import { ReactComponent as DaiImg } from "src/assets/tokens/DAI.svg";
 import { abi as Dai4V3BondContract } from "src/abi/bonds/Dai44v3Contract.json";
