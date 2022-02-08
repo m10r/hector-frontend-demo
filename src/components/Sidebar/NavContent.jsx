@@ -46,7 +46,7 @@ function NavContent() {
     if (currentPath.indexOf("mint") >= 0 && page === "mint") {
       return true;
     }
-    if (currentPath.indexOf("swap") >= 0 && page === "swap") {
+    if (currentPath.indexOf("exchange") >= 0 && page === "exchange") {
       return true;
     }
     if ((currentPath.indexOf("bonds") >= 0 || currentPath.indexOf("choose_bond") >= 0) && page === "bonds") {
@@ -142,15 +142,15 @@ function NavContent() {
               </Link>
               <Link
                 component={NavLink}
-                id="swap-nav"
-                to="/swap"
+                id="exchange-nav"
+                to="/exchange"
                 onClick={event => {
                   if (HECTOR_ENV === "prod") {
                     event.preventDefault();
                   }
                 }}
                 isActive={(match, location) => {
-                  return checkPage(match, location, "swap");
+                  return checkPage(match, location, "exchange");
                 }}
                 className={`button-dapp-menu ${isActive ? "active" : ""}`}
               >

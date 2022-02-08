@@ -1,4 +1,4 @@
-import "./swap.scss";
+import "./exchange.scss";
 import React, { useEffect, useMemo, useRef, useState, VFC } from "react";
 import SDK, {
   BLOCKCHAIN_NAME,
@@ -84,7 +84,7 @@ const rubicConfiguration: Configuration = {
   },
 };
 
-function Swap() {
+export default function Exchange() {
   const [configuration, setConfiguration] = useState(rubicConfiguration);
   const [rubic, setRubic] = useState<SDK>(null);
   useEffect(() => {
@@ -317,7 +317,7 @@ function Swap() {
           setToChain(t.chain);
         }}
       />
-      <div className="swap-view">
+      <div className="exchange-view">
         <div className="input">
           <button className="token-select-button" onClick={() => setShowSelectFrom(true)}>
             <div className="token-and-chain-logo">
@@ -671,5 +671,3 @@ const Confirmation: React.VFC<ConfirmationProps> = ({ show, onClose, from, to, f
     </div>
   );
 };
-
-export default Swap;

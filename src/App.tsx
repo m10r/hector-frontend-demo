@@ -31,7 +31,7 @@ import { girth as gTheme } from "./themes/girth.js";
 import "./style.scss";
 import Wrap from "./views/Wrap/Wrap";
 import Calculator from "./views/Calculator/Calculator";
-import Swap from "./views/Swap/Swap";
+import Exchange from "./views/Exchange/Exchange";
 import { RootState } from "./store";
 import { Banner } from "./components/banner/banner";
 import PoolFarming from "./views/PoolFarming/pool-farming";
@@ -292,8 +292,8 @@ function App() {
               <Mint />
             </Route>
             {HECTOR_ENV !== "prod" && (
-              <Route path="/swap">
-                <Swap />
+              <Route path="/exchange">
+                <Exchange />
               </Route>
             )}
             {HECTOR_ENV !== "prod" && (
