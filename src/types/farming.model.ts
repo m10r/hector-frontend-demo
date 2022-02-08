@@ -5,14 +5,14 @@ export interface StakingRewardsInfo {
     originalBalance: BigNumber;
 }
 
-export interface HugsPoolInfo {
+export interface TorPoolInfo {
     balance: number;
     allowance: number;
     virtualPrice: number;
     originalBalance: BigNumber;
 }
 
-export interface HugsPoolContract {
+export interface TorPoolContract {
     balanceOf: (address: string) => BigNumber;
     allowance: (address1: string, address2: string) => BigNumber;
     approve: (spender: string, value: string) => any;
@@ -29,8 +29,9 @@ export interface StakingRewardsContract {
 export interface TorContract {
     balanceOf: (address: string) => BigNumber;
     allowance: (address1: string, address2: string) => BigNumber;
+    approve: (spender: string, value: string) => any;
 }
-export interface TorInfo {
+export interface TorBalance {
     balance: number;
     originalBalance: BigNumber;
     allowance: number;
@@ -53,4 +54,17 @@ export interface StakingInfo {
 export interface MintAllowance {
     usdcAllowance: number;
     daiAllowance: number;
+}
+export interface CurveAllowance {
+    usdcAllowance: BigNumber;
+    torAllowance: BigNumber;
+    torPoolAllowance: BigNumber;
+    daiAllowance: BigNumber;
+}
+
+
+export interface CurveProportions {
+    dai: number;
+    usdc: number;
+    tor: number;
 }

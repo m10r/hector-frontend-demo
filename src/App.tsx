@@ -37,6 +37,7 @@ import { Banner } from "./components/banner/banner";
 import PoolFarming from "./views/PoolFarming/pool-farming";
 import Investments from "./views/Investments/investments";
 import { HECTOR_ENV } from "./helpers/Environment";
+import Mint from "./views/Mint/Mint";
 
 const drawerWidth = 300;
 const transitionDuration = 969;
@@ -286,6 +287,9 @@ function App() {
             </Route>
             <Route path="/farming">
               <PoolFarming theme={theme} themeMode={themeMode} />
+            </Route>
+            <Route path="/mint">
+              <Mint />
             </Route>
             {HECTOR_ENV !== "prod" && (
               <Route path="/swap">

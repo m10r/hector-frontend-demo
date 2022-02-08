@@ -11,6 +11,7 @@ import {
   tooltipItems,
   tooltipInfoMessages,
   itemType,
+  torQuery,
 } from "./treasuryData.js";
 import { useTheme } from "@material-ui/core/styles";
 import "./treasury-dashboard.scss";
@@ -23,7 +24,7 @@ function TreasuryDashboard() {
   const [data, setData] = useState(null);
   const [apy, setApy] = useState([]);
   const [runway, setRunway] = useState(null);
-  const [supply, setSupply] = useState(null);
+  const [hecSupply, setHecSupply] = useState(null);
   const [staked, setStaked] = useState(null);
   const theme = useTheme();
   const smallerScreen = useMediaQuery("(max-width: 650px)");
@@ -81,7 +82,7 @@ function TreasuryDashboard() {
         const runway = metrics.filter(pm => pm.runwayCurrent > 5);
         setRunway(runway);
         const supply = metrics.filter(pm => pm.hecCirculatingSupply > 0);
-        setSupply(supply);
+        setHecSupply(supply);
       }
     });
 
@@ -244,10 +245,10 @@ function TreasuryDashboard() {
               <Paper className="hec-card hec-chart-card">
                 <Chart
                   type="area"
-                  data={supply}
+                  data={hecSupply}
                   dataKey={["hecCirculatingSupply"]}
                   stopColor={[["#ED994C", "#77431E"]]}
-                  headerText="Circulating Supply"
+                  headerText="HEC Circulating Supply"
                   headerSubText={`${data && prettyDisplayNumber(new BigNumber(data[0].hecCirculatingSupply))} HEC`}
                   dataFormat="hec"
                   bulletpointColors={bulletpoints.supply}
@@ -320,6 +321,43 @@ function TreasuryDashboard() {
         </Zoom>
       </Container>
     </div>
+  );
+}
+
+export function TorSupplyChart() {
+  const [torHistory, setTorHistory] = useState(null);
+  const [torSupply, setTorSupply] = useState(null);
+  const theme = useTheme();
+  useEffect(() => {
+    apollo(torQuery).then(r => {
+      if (!r?.data?.tors) {
+        return;
+      }
+      const tors = r?.data?.tors.map(({ timestamp, supply }) => ({
+        timestamp: parseFloat(timestamp),
+        supply: parseFloat(supply),
+      }));
+      setTorHistory(tors);
+      setTorSupply(tors);
+    });
+  }, []);
+
+  return (
+    <Chart
+      type="area"
+      data={torSupply}
+      dataKey={["supply"]}
+      stopColor={[["#F9F9F9", "#C1C1C1"]]}
+      headerText="TOR Circulating Supply"
+      headerSubText={`${torHistory && prettyDisplayNumber(new BigNumber(torHistory[0].supply))} TOR`}
+      dataFormat="hec"
+      bulletpointColors={bulletpoints.torSupply}
+      itemNames={tooltipItems.torSupply}
+      itemType={""}
+      infoTooltipMessage={tooltipInfoMessages.torSupply}
+      expandedGraphStrokeColor={theme.palette.graphStrokeColor}
+      stroke="#C1C1C1"
+    />
   );
 }
 

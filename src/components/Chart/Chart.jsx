@@ -62,7 +62,7 @@ const renderAreaChart = (
     </defs>
     <XAxis
       dataKey="timestamp"
-      interval={30}
+      interval={200}
       axisLine={false}
       tickLine={false}
       tickFormatter={str => format(new Date(str * 1000), "MMM dd")}
@@ -102,7 +102,7 @@ const renderAreaChart = (
         />
       }
     />
-    <Area dataKey={dataKey[0]} stroke="none" fill={`url(#color-${dataKey[0]})`} fillOpacity={1} />
+    <Area dataKey={dataKey[0]} stroke={stroke || "none"} fill={`url(#color-${dataKey[0]})`} fillOpacity={1} />
     {renderExpandedChartStroke(isExpanded, expandedGraphStrokeColor)}
   </AreaChart>
 );
@@ -130,7 +130,7 @@ const renderStackedAreaChart = (
     </defs>
     <XAxis
       dataKey="timestamp"
-      interval={30}
+      interval={150}
       axisLine={false}
       tickLine={false}
       tickFormatter={str => format(new Date(str * 1000), "MMM dd")}
@@ -433,7 +433,7 @@ function Chart({
       <CircularProgress />
     </Box>
   ) : (
-    <Box style={{ width: "100%", height: "100%", paddingRight: "10px" }}>
+    <Box style={{ width: "100%", height: "100%", paddingRight: "10px", maxWidth: "100%", overflow: "hidden" }}>
       <div className="chart-card-header">
         <Box
           display="flex"
@@ -441,7 +441,7 @@ function Chart({
           alignItems="center"
           style={{ width: "100%", overflow: "hidden" }}
         >
-          <Box display="flex" width="90%" alignItems="center">
+          <Box id="title" display="flex" width="90%" alignItems="center">
             <Typography
               variant="h6"
               color="textSecondary"
@@ -455,6 +455,7 @@ function Chart({
           {/* could make this svgbutton */}
 
           <SvgIcon
+            id="fullscreen"
             component={Fullscreen}
             color="primary"
             onClick={handleOpen}
@@ -475,7 +476,7 @@ function Chart({
         {loading ? (
           <Skeleton variant="text" width={100} />
         ) : (
-          <Box display="flex">
+          <Box id="amount" display="flex">
             <Typography variant="h4" style={{ fontWeight: 600, marginRight: 5 }}>
               {headerSubText}
             </Typography>

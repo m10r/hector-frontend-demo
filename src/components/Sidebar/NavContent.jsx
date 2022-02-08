@@ -42,6 +42,9 @@ function NavContent() {
     if (currentPath.indexOf("farming") >= 0 && page === "farming") {
       return true;
     }
+    if (currentPath.indexOf("mint") >= 0 && page === "mint") {
+      return true;
+    }
     if (currentPath.indexOf("swap") >= 0 && page === "swap") {
       return true;
     }
@@ -175,6 +178,25 @@ function NavContent() {
                 <Typography variant="h6">
                   <SvgIcon color="primary" component={FarmIcon} />
                   TOR Farm
+                </Typography>
+              </Link>
+              <Link
+                component={NavLink}
+                id="mint"
+                to="/mint"
+                onClick={event => {
+                  if (false) {
+                    event.preventDefault();
+                  }
+                }}
+                isActive={(match, location) => {
+                  return checkPage(match, location, "mint");
+                }}
+                className={`button-dapp-menu ${isActive ? "active" : ""}`}
+              >
+                <Typography variant="h6">
+                  <SvgIcon color="primary" component={FarmIcon} />
+                  Mint
                   <Typography variant="caption" style={{ marginLeft: "8px" }}>
                     (Limited Access)
                   </Typography>

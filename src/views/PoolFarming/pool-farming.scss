@@ -7,8 +7,6 @@
 
 .pool-farming {
   display: grid;
-  margin-top: 20px;
-  grid-template-columns: 35% 35%;
   box-sizing: border-box;
   gap: 20px;
   align-content: center;
@@ -26,6 +24,10 @@
 
   .hec-card {
     width: 100% !important;
+    padding: 30px !important;
+  }
+  .stake-button {
+    max-width: none !important;
   }
 
   svg {
@@ -38,19 +40,101 @@
     align-items: center;
   }
 
+  .tab-group {
+    height: fit-content;
+    width: 100%;
+    .tabs {
+      display: grid;
+      justify-content: center;
+    }
+    [id^="simple-tabpanel-"] {
+      > div {
+        padding-bottom: 0;
+        padding-right: 0;
+        padding-left: 0;
+        text-align: center;
+      }
+    }
+  }
+
+  .stats {
+    display: grid;
+    grid-auto-flow: column;
+    grid-template-columns: max-content 1fr 1fr;
+    grid-column: span 2;
+    text-align: center;
+    align-items: center;
+    .tor-title {
+      font-size: 25px;
+    }
+    .hec-card {
+      padding: 20px 30px;
+    }
+    > div {
+      .title {
+        opacity: 0.7;
+        font-size: 17px;
+      }
+      .data {
+        font-weight: 500;
+        display: flex;
+      }
+      display: grid;
+      row-gap: 5px;
+      justify-items: center;
+    }
+  }
+
+  .wallet {
+    min-width: 250px;
+    hr {
+      opacity: 0.2;
+      width: 100%;
+    }
+    .header {
+      display: grid;
+      margin-bottom: 10px;
+      column-gap: 10px;
+      svg {
+        width: 30px;
+        height: 30px;
+        color: #7fa886;
+      }
+    }
+    .token {
+      display: grid;
+      grid-template-columns: max-content 1fr;
+      column-gap: 10px;
+      align-items: center;
+      div:first-child {
+        opacity: 0.5;
+      }
+      .details {
+        display: grid;
+        row-gap: 5px;
+        .balance {
+          font-weight: bold;
+        }
+      }
+      img {
+        width: 30px;
+        height: 30px;
+      }
+    }
+  }
+
   .farming {
     display: grid;
     box-sizing: border-box;
     grid-template-rows: max-content;
     .header {
-      grid: 50px / max-content 1fr max-content;
+      grid: max-content / max-content 1fr max-content;
       height: fit-content;
       :last-child {
         justify-self: flex-end;
       }
       .help {
-        opacity: 0.7;
-        padding-right: 0;
+        padding: 0;
       }
       svg {
         width: 17px;
@@ -64,49 +148,13 @@
       }
     }
 
-    .tab-group {
-      height: fit-content;
-      width: 100%;
-      .tabs {
-        display: grid;
-        justify-content: center;
-      }
-      [id^="simple-tabpanel-"] {
-        > div {
-          padding-bottom: 0;
-          padding-right: 0;
-          padding-left: 0;
-        }
-      }
-    }
     .info {
       display: grid;
       grid-auto-rows: minmax(40px, 1fr);
       width: 100%;
       @include info-row;
-    }
-
-    .cycle-end {
-      display: grid;
-      grid-template-columns: 1fr 0.5fr;
-      align-items: center;
-
-      .timer {
-        display: flex;
-        align-items: center;
-        svg {
-          margin-right: 10px;
-        }
-      }
-
-      @media screen and (max-width: 750px) {
-        .timer {
-          justify-content: end;
-        }
-      }
-      svg {
-        height: 20px;
-        width: 20px;
+      .data {
+        text-align: center;
       }
     }
 
@@ -124,7 +172,7 @@
       }
 
       .buttons {
-        grid-template-columns: 1fr 1fr;
+        grid-auto-flow: column;
         column-gap: 10px;
       }
       @media screen and (max-width: 410px) {
@@ -138,142 +186,99 @@
     }
   }
 
-  .row-2 {
+  @media screen and (max-width: 670px) {
+    .farming,
+    .wallet {
+      grid-column: span 2;
+    }
+  }
+
+  .curve-pool {
     display: grid;
-    grid-template-columns: 3fr 1.2fr;
+    grid-template-columns: 1fr;
     grid-column: span 2;
     column-gap: 20px;
-    .projection {
-      display: grid;
-      grid: 1fr / 1fr 2fr;
-      box-sizing: border-box;
-      padding-top: 30px !important;
-      .investment-plan {
-        display: grid;
-        grid: max-content max-content 1fr / 1fr;
-        row-gap: 20px;
-        .optimal-amount {
-          display: grid;
-          align-content: stretch;
-          font-size: 16px;
-          row-gap: 10px;
-          text-align: left !important;
-        }
-        @media screen and (max-width: 750px) {
-          .optimal-amount {
-            grid: max-content 1fr / repeat(3, max-content);
-            row-gap: 10px;
-            justify-content: space-between;
-            .title {
-              grid-column: 1 / span 3;
-            }
-          }
-        }
-        .calculate {
-          display: grid;
-          row-gap: 10px;
-          column-gap: 20px;
-        }
-        @media screen and (max-width: 750px) {
-          button {
-            justify-self: center;
-          }
-        }
-      }
 
-      @media screen and (max-width: 1111px) {
-        .investment-plan {
-          grid-template-rows: max-content max-content 0.5fr;
-          row-gap: 10px;
-        }
-      }
-      @media screen and (max-width: 750px) {
-        .investment-plan {
-          grid-template-columns: 1fr;
-        }
+    @media screen and (max-width: 1111px) {
+      .investment-plan {
+        grid-template-rows: max-content max-content 0.5fr;
+        row-gap: 10px;
       }
     }
     @media screen and (max-width: 750px) {
-      .projection {
-        grid-column-start: initial;
-        grid: 1fr/1fr;
-        row-gap: 20px;
-      }
-    }
-    @media screen and (max-width: 400px) {
-      .projection {
-        grid-column-start: initial;
-        grid: initial;
-        row-gap: 20px;
+      .investment-plan {
+        grid-template-columns: 1fr;
       }
     }
 
-    .mint {
-      padding-top: 30px !important;
+    .curve {
       display: grid;
-      grid-auto-rows: max-content 1fr;
-      row-gap: 15px;
-      .max {
-        display: flex;
-        justify-content: flex-end;
-      }
-      .content {
-        display: grid;
-        grid-auto-rows: max-content minmax(0, 100px) minmax(0, 85px) auto;
-        .tor-balance {
-          display: grid;
-          justify-items: center;
-          row-gap: 5px;
-          div:first-child {
-            opacity: 0.6;
-          }
-          .balance {
-            font-size: 25px;
-            display: flex;
-            justify-content: center;
-          }
-        }
-        img {
-          width: 25px;
-          height: 25px;
-        }
-        .mint-dai,
-        .mint-usdc {
-          display: grid;
-          grid-template-columns: max-content 1fr;
-          grid-template-rows: max-content max-content;
-          align-content: center;
-          row-gap: 5px;
-          column-gap: 10px;
-          align-items: center;
-
-          .balance {
-            opacity: 0.7;
-            grid-column-start: 2;
-          }
-          span {
-            font-size: 15px;
-          }
-        }
-      }
-      @media screen and (max-width: 750px) {
-        .content {
-          row-gap: 10px;
-          button {
-            justify-self: center;
-          }
-        }
-      }
-    }
-  }
-  @media screen and (max-width: 750px) {
-    .row-2 {
+      grid-template-rows: [header] max-content [tabs]1fr;
       grid-template-columns: 1fr;
-      grid-template-rows: repeat(2, max-content);
-      row-gap: 20px;
-      grid-column: initial;
-      .projection {
-        order: 2;
+
+      .header {
+        display: grid;
+        grid-row: header;
+        grid-template-columns: [title] max-content [link] 1fr [slider] max-content;
+        .header-title {
+          grid-row: title;
+          margin-right: 10px;
+        }
+        .link {
+          grid-row: link;
+        }
+        .slider {
+          grid-row: slider;
+        }
+        .slider-off {
+          .MuiFormControlLabel-label {
+            opacity: 0.5;
+          }
+        }
+      }
+      .tab-group {
+        display: grid;
+        grid-row: tabs;
+        .token-inputs {
+          display: grid;
+          align-items: center;
+          margin-top: 10px;
+          row-gap: 10px;
+          img {
+            width: 30px;
+            height: 30px;
+          }
+
+          .token {
+            display: grid;
+            grid-template-columns: max-content 1fr;
+            grid-template-rows: max-content max-content;
+            align-content: center;
+            row-gap: 5px;
+            column-gap: 10px;
+            align-items: center;
+
+            .balance {
+              opacity: 0.7;
+              grid-column-start: 2;
+            }
+            span {
+              font-size: 15px;
+            }
+          }
+        }
+        [id^="simple-tabpanel-"] {
+          > div {
+            padding: 0;
+            margin-top: 10px;
+          }
+        }
+
+        .radio-group {
+          display: grid;
+          grid-auto-flow: column;
+          justify-items: center;
+        }
       }
     }
   }
@@ -307,7 +312,7 @@
 }
 @media screen and (max-width: 1450px) {
   .pool-farming {
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: auto 1fr;
   }
 }
 @media screen and (max-width: 750px) {

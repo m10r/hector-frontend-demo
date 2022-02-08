@@ -47,6 +47,15 @@ query {
 }
 `;
 
+export const torQuery = `
+query {
+  tors(first: 1000, orderBy: timestamp, orderDirection: desc) {
+    supply
+    timestamp
+  }
+}
+`;
+
 export const rebasesV1DataQuery = `
 query {
   rebases(where: {contract: "0x9ae7972BA46933B3B20aaE7Acbf6C311847aCA40"}, orderBy: timestamp, first: 1000, orderDirection: desc) {
@@ -231,6 +240,13 @@ export const bulletpoints = {
       background: "#ED994C",
     },
   ],
+  torSupply: [
+    {
+      right: 45,
+      top: -12,
+      background: "#C1C1C1",
+    },
+  ],
 };
 
 export const tooltipItems = {
@@ -239,6 +255,7 @@ export const tooltipItems = {
   runway: ["Days"],
   pol: ["SLP Treasury", "Market SLP"],
   supply: ["HEC"],
+  torSupply: ["TOR"],
 };
 
 export const tooltipInfoMessages = {
@@ -253,6 +270,7 @@ export const tooltipInfoMessages = {
     "Annual Percentage Yield, is the normalized representation of an interest rate, based on a compounding period over one year. Note that APYs provided are rather ballpark level indicators and not so much precise future results.",
   runway: "Runway, is the number of days sHEC emissions can be sustained at a given rate. Lower APY = longer runway",
   supply: "The number of HEC that are publicly available and circulating in the market.",
+  torSupply: "The number of TOR that currently exist.",
 };
 
 export const itemType = {
