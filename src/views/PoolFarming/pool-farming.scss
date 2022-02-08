@@ -58,14 +58,13 @@
   }
 
   .stats {
-    display: grid;
-    grid-auto-flow: column;
-    grid-template-columns: max-content 1fr 1fr;
+    justify-content: space-between;
+    display: flex;
     grid-column: span 2;
-    text-align: center;
     align-items: center;
     .tor-title {
       font-size: 25px;
+      justify-self: start;
     }
     .hec-card {
       padding: 20px 30px;
@@ -229,6 +228,7 @@
         }
         .slider {
           grid-row: slider;
+          margin-right: 0;
         }
         .slider-off {
           .MuiFormControlLabel-label {

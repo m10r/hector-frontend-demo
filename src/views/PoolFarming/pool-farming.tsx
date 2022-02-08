@@ -769,7 +769,7 @@ const Curve = ({ daiUsdcBalance, torBalance, curveProportions, torPoolInfo }: To
                       {<div className="balance">Balance: {trim(daiUsdcBalance?.daiBalance, 2)}</div>}
                     </InputAdornment>
                   }
-                  labelWidth={30}
+                  labelWidth={27}
                 />
                 {isDaiFormInvalid() && <FormHelperText error>Must be less than or equal to balance!</FormHelperText>}
               </FormControl>
@@ -802,7 +802,7 @@ const Curve = ({ daiUsdcBalance, torBalance, curveProportions, torPoolInfo }: To
                       {<div className="balance">Balance: {trim(daiUsdcBalance?.usdcBalance, 2)}</div>}
                     </InputAdornment>
                   }
-                  labelWidth={30}
+                  labelWidth={40}
                 />
                 {isUsdcFormInvalid() && <FormHelperText error>Must be less than or equal to balance!</FormHelperText>}
               </FormControl>
@@ -845,7 +845,7 @@ const Curve = ({ daiUsdcBalance, torBalance, curveProportions, torPoolInfo }: To
                 color="primary"
                 onClick={() => onDeposit()}
               >
-                Depost
+                Deposit
               </Button>
             </span>
           </Tooltip>
