@@ -39,7 +39,7 @@ const useStyles = makeStyles(theme => ({
 
 function TopBar({ theme, isAppLoading, toggleTheme, handleDrawerToggle }) {
   const classes = useStyles();
-  const isVerySmallScreen = useMediaQuery("(max-width: 355px)");
+  const isVerySmallScreen = useMediaQuery("(max-width: 425px)");
 
   return (
     <AppBar position="sticky" className={classes.appBar + " header"} elevation={0}>
