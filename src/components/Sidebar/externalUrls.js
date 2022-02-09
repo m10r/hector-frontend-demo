@@ -36,7 +36,7 @@ const externalUrls = [
   },
   {
     title: "Docs",
-    url: "https://docs.hectordao.com",
+    url: "https://docs.hector.finance",
     icon: <SvgIcon color="primary" component={DocsIcon} />,
   },
 ];

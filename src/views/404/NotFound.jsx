@@ -6,7 +6,7 @@ export default function NotFound() {
     <div id="not-found">
       <div className="not-found-header">
         <a href="https://app.hector.finance" target="_blank">
-          <img className="branding-header-icon" src={HectorIcon} alt="HectorDAO" />
+          <img className="branding-header-icon" src={HectorIcon} alt="HectorFinance" />
         </a>
 
         <h2 style={{ textAlign: "center" }}>Page not found</h2>
