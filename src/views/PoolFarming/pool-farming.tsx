@@ -415,7 +415,7 @@ const FarmStats = ({ stakingInfo }: FarmStats) => {
     <div className="MuiPaper-root hec-card stats">
       <div className="header">
         <TorSVG style={{ height: "45px", width: "45px", marginRight: "10px" }} />
-        <div className="tor-title">TOR</div>
+        <div className="tor-title">TOR LP</div>
       </div>
       <div>
         <div className="title">APY</div>
