@@ -63,7 +63,8 @@ import farmingInfoLight from "../../assets/Farming-info-light.png";
 import HelpOutlineIcon from "@material-ui/icons/HelpOutline";
 import CancelIcon from "@material-ui/icons/Cancel";
 import { formatCurrency, trim } from "src/helpers";
-import MonetizationOnOutlinedIcon from "@material-ui/icons/MonetizationOnOutlined";
+import apollo from "src/lib/apolloClient";
+import { THE_ALT_GRAPH_URL } from "src/constants";
 
 type UserAction = "stake" | "unstake" | "approve" | "mint" | "deposit" | "withdraw";
 function a11yProps(index: any) {
@@ -100,6 +101,7 @@ export default function PoolFarming({ theme, themeMode }: any) {
 
   const [calcQuantity, setCalcQuantity] = useState(0);
   const [view, setView] = useState(0);
+  const [torStats, setTorStats] = useState({ apy: "", torTVL: "" });
   const { provider, chainID, address } = useWeb3Context();
 
   const handleChange = (event: React.ChangeEvent<{}>, newValue: number) => {
@@ -179,6 +181,21 @@ export default function PoolFarming({ theme, themeMode }: any) {
   }
 
   useEffect(() => {
+    const query = `query {
+      tors(first: 1, orderBy: timestamp, orderDirection: desc) {
+        apy
+        torTVL
+      }
+    }`;
+    apollo(query, THE_ALT_GRAPH_URL).then((r: any) => {
+      if (!r?.data?.tors) {
+        return;
+      }
+      setTorStats({ apy: r.data.tors[0].apy, torTVL: r.data.tors[0].torTVL });
+    });
+  }, []);
+
+  useEffect(() => {
     if (chainID && provider && address) {
       getAllData();
     }
@@ -198,7 +215,7 @@ export default function PoolFarming({ theme, themeMode }: any) {
 
   return (
     <div className="pool-farming">
-      <FarmStats stakingInfo={stakingInfo} />
+      <FarmStats torStats={torStats} stakingInfo={stakingInfo} />
       <div className="MuiPaper-root hec-card wallet">
         <div className="header">
           <div className="header-title">Balances</div>
@@ -379,18 +396,8 @@ export default function PoolFarming({ theme, themeMode }: any) {
           ) : (
             <>
               <div className="get-lp-text">
-                <i>Get LP tokens in order to stake and earn rewards on your LP.</i>
+                <i>Deposit tokens into Curve in order to stake and earn rewards on your LP tokens.</i>
               </div>
-              <Button
-                className="stake-button"
-                variant="contained"
-                color="primary"
-                disabled={isLoading}
-                target="_blank"
-                href="https://ftm.curve.fi/factory/62/deposit"
-              >
-                Get LP
-              </Button>
             </>
           )}
         </div>
@@ -409,8 +416,9 @@ export default function PoolFarming({ theme, themeMode }: any) {
 
 interface FarmStats {
   stakingInfo: StakingInfo;
+  torStats: { apy: string; torTVL: string };
 }
-const FarmStats = ({ stakingInfo }: FarmStats) => {
+const FarmStats = ({ torStats, stakingInfo }: FarmStats) => {
   return (
     <div className="MuiPaper-root hec-card stats">
       <div className="header">
@@ -420,17 +428,13 @@ const FarmStats = ({ stakingInfo }: FarmStats) => {
       <div>
         <div className="title">APY</div>
         <div className="data">
-          {stakingInfo ? getFormattedStakingInfo("_apr", stakingInfo, "mwei").toFixed(2) : <Skeleton width="50%" />}%
+          {torStats.apy !== "" ? (+torStats.apy * 1e12).toFixed(2) : <Skeleton width="50%" />}%
         </div>
       </div>
       <div>
         <div className="title">TVL</div>
         <div className="data">
-          {stakingInfo ? (
-            formatCurrency(getFormattedStakingInfo("_tvl", stakingInfo, "ether"), 2)
-          ) : (
-            <Skeleton width="50%" />
-          )}
+          {torStats.torTVL !== "" ? formatCurrency(+torStats.torTVL, 2) : <Skeleton width="50%" />}
         </div>
       </div>
     </div>
