@@ -7,19 +7,16 @@ import {
   Grid,
   InputAdornment,
   InputLabel,
-  Link,
   OutlinedInput,
   Paper,
   Tab,
   Tabs,
   Typography,
   Zoom,
-  SvgIcon,
   makeStyles,
 } from "@material-ui/core";
 import TabPanel from "../../components/TabPanel";
 import InfoTooltip from "../../components/InfoTooltip/InfoTooltip.jsx";
-import { ReactComponent as InfoIcon } from "../../assets/icons/info-fill.svg";
 import { trim, formatCurrency } from "../../helpers";
 import { changeApproval, changeWrap } from "../../slices/WrapThunk";
 import "../Stake/stake.scss";
@@ -29,10 +26,12 @@ import { Skeleton } from "@material-ui/lab";
 import { error } from "../../slices/MessagesSlice";
 import { ethers } from "ethers";
 import "./wrap.scss";
+import { switchNetwork } from "src/helpers/SwitchNetwork";
+import { FANTOM } from "src/helpers/Chains";
 
 function a11yProps(index) {
   return {
-    id: `simple-tab-${index}`,
+    "id": `simple-tab-${index}`,
     "aria-controls": `simple-tabpanel-${index}`,
   };
 }
@@ -133,13 +132,29 @@ function Wrap() {
   const isUnwrap = view === 1;
   const convertedQuantity = isUnwrap ? (quantity * wsHECPrice) / sHECPrice : (quantity * sHECPrice) / wsHECPrice;
 
+  const isUsingFantom = chainID === FANTOM.chainId;
+
   let modalButton = [];
 
-  modalButton.push(
-    <Button variant="contained" color="primary" className="connect-button" onClick={connect} key={1}>
-      Connect Wallet
-    </Button>,
-  );
+  if (!address) {
+    modalButton.push(
+      <Button variant="contained" color="primary" className="connect-button" onClick={connect} key={1}>
+        Connect Wallet
+      </Button>,
+    );
+  } else if (!isUsingFantom) {
+    modalButton.push(
+      <Button
+        variant="contained"
+        color="primary"
+        className="connect-button"
+        onClick={() => switchNetwork(FANTOM)}
+        key={1}
+      >
+        Switch to Fantom
+      </Button>,
+    );
+  }
 
   const changeView = (event, newView) => {
     setView(newView);
@@ -209,7 +224,7 @@ function Wrap() {
             </Grid>
 
             <div className="staking-area">
-              {!address ? (
+              {modalButton.length > 0 ? (
                 <div className="stake-wallet-notification">
                   <div className="wallet-menu" id="wallet-menu">
                     {modalButton}

@@ -119,7 +119,6 @@ export const Web3ContextProvider: React.FC<{ children: ReactElement }> = ({ chil
       return true;
     }
 
-    console.warn("You are switching networks");
     const chain = CHAINS.find(c => c.chainId === otherChainID);
     if (!chain) {
       return false;

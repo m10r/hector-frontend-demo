@@ -25,6 +25,8 @@ import { Skeleton } from "@material-ui/lab";
 import { error } from "../../slices/MessagesSlice";
 import { ethers } from "ethers";
 import WarmUp from "../../components/warm-up/warm-up";
+import { switchNetwork } from "src/helpers/SwitchNetwork";
+import { FANTOM } from "src/helpers/Chains";
 
 function a11yProps(index) {
   return {
@@ -183,14 +185,29 @@ function Stake() {
   );
 
   const isAllowanceDataLoading = (stakeAllowance == null && view === 0) || (unstakeAllowance == null && view === 1);
+  const isUsingFantom = chainID === FANTOM.chainId;
 
   let modalButton = [];
 
-  modalButton.push(
-    <Button variant="contained" color="primary" className="connect-button" onClick={connect} key={1}>
-      Connect Wallet
-    </Button>,
-  );
+  if (!address) {
+    modalButton.push(
+      <Button variant="contained" color="primary" className="connect-button" onClick={connect} key={1}>
+        Connect Wallet
+      </Button>,
+    );
+  } else if (!isUsingFantom) {
+    modalButton.push(
+      <Button
+        variant="contained"
+        color="primary"
+        className="connect-button"
+        onClick={() => switchNetwork(FANTOM)}
+        key={1}
+      >
+        Switch to Fantom
+      </Button>,
+    );
+  }
 
   const changeView = (event, newView) => {
     setView(newView);
@@ -293,7 +310,7 @@ function Stake() {
                 </Grid>
 
                 <div className="staking-area">
-                  {!address ? (
+                  {modalButton.length > 0 ? (
                     <div className="stake-wallet-notification">
                       <div className="wallet-menu" id="wallet-menu">
                         {modalButton}
