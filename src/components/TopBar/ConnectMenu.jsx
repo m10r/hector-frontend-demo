@@ -4,7 +4,8 @@ import { Box, Button, SvgIcon, Typography, Popper, Paper, Divider, Link, Slide, 
 import { ReactComponent as ArrowUpIcon } from "../../assets/icons/arrow-up.svg";
 import { ReactComponent as CaretDownIcon } from "../../assets/icons/caret-down.svg";
 import { useWeb3Context } from "src/hooks/web3Context";
-import { swithNetwork } from "src/helpers/SwitchNetwork";
+import { switchNetwork } from "src/helpers/SwitchNetwork";
+import { FANTOM } from "src/helpers/Chains";
 
 function ConnectMenu({ theme }) {
   const { connect, disconnect, connected, web3, chainID, vchainID } = useWeb3Context();
@@ -31,9 +32,9 @@ function ConnectMenu({ theme }) {
 
   if (chainId !== 250) {
     buttonText = "Switch to Fantom";
-    clickFunc = swithNetwork;
+    clickFunc = () => switchNetwork(FANTOM);
   }
-  
+
   if (pendingTransactions && pendingTransactions.length > 0) {
     buttonText = "In progress";
     clickFunc = handleClick;

@@ -30,7 +30,7 @@ const addChainRequest = (chain: Chain) => {
   });
 };
 
-export const swithNetwork = async (chain: Chain) => {
+export const switchNetwork = async (chain: Chain) => {
   if (window.ethereum) {
     try {
       await switchRequest(chain.chainId);

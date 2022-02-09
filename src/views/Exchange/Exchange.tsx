@@ -21,7 +21,7 @@ import { abi as ierc20Abi } from "src/abi/IERC20.json";
 import { abi as erc20Abi } from "src/abi/ERC20.json";
 import { FANTOM, AVALANCHE, BINANCE, Chain, CHAINS, ETHEREUM, MOONRIVER, POLYGON, Token } from "../../helpers/Chains";
 import { prettyDisplayNumber } from "src/helpers";
-import { swithNetwork } from "src/helpers/SwitchNetwork";
+import { switchNetwork } from "src/helpers/SwitchNetwork";
 
 const FTM = FANTOM.tokens.find(t => t.id === "fantom");
 const HEC = FANTOM.tokens.find(t => t.id === "hector-dao");
@@ -130,7 +130,7 @@ export default function Exchange() {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    swithNetwork(fromChain);
+    switchNetwork(fromChain);
   }, [fromChain]);
 
   const [decimals, setDecimals] = useState<number>(18);
