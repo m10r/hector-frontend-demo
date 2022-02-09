@@ -84,9 +84,19 @@
     }
   }
 
+  @media screen and (max-width: 400px) {
+    .stats {
+      display: grid;
+      justify-content: center;
+      row-gap: 20px;
+    }
+  }
+
   .wallet {
     min-width: 250px;
+    display: grid;
     hr {
+      height: fit-content;
       opacity: 0.2;
       width: 100%;
     }

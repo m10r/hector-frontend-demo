@@ -230,17 +230,6 @@ export default function PoolFarming({ theme, themeMode }: any) {
         <hr />
 
         <div className="token">
-          <img src={wFTMToken} />
-          <div className="details">
-            <div>wFTM Balance</div>
-            <div className="balance">
-              {trim(getFormattedStakingInfo("_earnedRewardAmount", stakingInfo, "ether"), 4)}
-            </div>
-          </div>
-        </div>
-        <hr />
-
-        <div className="token">
           <img src={curveToken} />
           <div className="details">
             <div>LP Balance</div>
@@ -327,6 +316,12 @@ export default function PoolFarming({ theme, themeMode }: any) {
                     ) : (
                       <Skeleton width="40%" />
                     )}
+                  </div>
+                </div>
+                <div>
+                  <div className="title">wFTM Rewards: </div>
+                  <div className="data">
+                    {trim(getFormattedStakingInfo("_earnedRewardAmount", stakingInfo, "ether"), 4)}
                   </div>
                 </div>
                 <div className="buttons">
