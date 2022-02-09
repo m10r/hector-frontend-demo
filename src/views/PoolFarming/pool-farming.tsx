@@ -617,7 +617,7 @@ const Curve = ({ daiUsdcBalance, torBalance, curveProportions, torPoolInfo }: To
   };
 
   const setTokenAmount = (token: "DAI" | "TOR" | "USDC", amount: string) => {
-    if (view === 0) {
+    if (view === 0 && !sliderState) {
       if (token === "DAI") {
         setDAIAmount(trim(+amount, 2));
         const usdcDaiRatio = (curveProportions.usdc / curveProportions.dai) * +amount;
@@ -640,16 +640,10 @@ const Curve = ({ daiUsdcBalance, torBalance, curveProportions, torPoolInfo }: To
     } else {
       if (token === "DAI") {
         setDAIAmount(trim(+amount, 2));
-        setUSDCAmount("0");
-        setTORAmount("0");
       } else if (token === "USDC") {
         setUSDCAmount(trim(+amount, 2));
-        setDAIAmount("0");
-        setTORAmount("0");
       } else if (token === "TOR") {
         setTORAmount(trim(+amount, 2));
-        setDAIAmount("0");
-        setUSDCAmount("0");
       }
     }
   };
@@ -726,12 +720,12 @@ const Curve = ({ daiUsdcBalance, torBalance, curveProportions, torPoolInfo }: To
                 <OutlinedInput
                   error={isTorFormInvalid()}
                   type="number"
-                  disabled={sliderState || view === 1}
+                  disabled={view === 1}
                   value={torAmount}
                   onChange={e => setTokenAmount("TOR", e.target.value)}
                   endAdornment={
                     <InputAdornment position="end">
-                      {<div className="balance">Balance: {trim(torBalance?.balance, 2)}</div>}
+                      {/* {<div className="balance">Balance: {trim(torBalance?.balance, 2)}</div>} */}
                     </InputAdornment>
                   }
                   labelWidth={30}
@@ -759,13 +753,13 @@ const Curve = ({ daiUsdcBalance, torBalance, curveProportions, torPoolInfo }: To
                 <OutlinedInput
                   error={isDaiFormInvalid()}
                   type="number"
-                  disabled={sliderState || view === 1}
+                  disabled={view === 1}
                   value={daiAmount}
                   onChange={e => setTokenAmount("DAI", e.target.value)}
                   endAdornment={
                     <InputAdornment position="end">
                       {" "}
-                      {<div className="balance">Balance: {trim(daiUsdcBalance?.daiBalance, 2)}</div>}
+                      {/* {<div className="balance">Balance: {trim(daiUsdcBalance?.daiBalance, 2)}</div>} */}
                     </InputAdornment>
                   }
                   labelWidth={27}
@@ -793,12 +787,12 @@ const Curve = ({ daiUsdcBalance, torBalance, curveProportions, torPoolInfo }: To
                 <OutlinedInput
                   error={isUsdcFormInvalid()}
                   type="number"
-                  disabled={sliderState || view === 1}
+                  disabled={view === 1}
                   value={usdcAmount}
                   onChange={e => setTokenAmount("USDC", e.target.value)}
                   endAdornment={
                     <InputAdornment position="end">
-                      {<div className="balance">Balance: {trim(daiUsdcBalance?.usdcBalance, 2)}</div>}
+                      {/* {<div className="balance">Balance: {trim(daiUsdcBalance?.usdcBalance, 2)}</div>} */}
                     </InputAdornment>
                   }
                   labelWidth={40}
