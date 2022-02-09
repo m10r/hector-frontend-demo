@@ -176,7 +176,7 @@ const loadMarketPrice = createAsyncThunk("app/loadMarketPrice", async ({ network
     marketPrice = await getMarketPrice({ networkID, provider });
     marketPrice = marketPrice / Math.pow(10, 9);
   } catch (e) {
-    marketPrice = await getTokenPrice("hector");
+    marketPrice = await getTokenPrice("hector-dao");
   }
   return { marketPrice };
 });
