@@ -27,7 +27,7 @@ import { useDispatch, useSelector } from "react-redux";
 
 import { RootState } from "src/store";
 import {
-  approve,
+  torPoolApprove,
   claimRewards,
   depositCurveTokens,
   getAssetPrice,
@@ -38,7 +38,7 @@ import {
   getTorBalance,
   stake,
   withdrawCurveTokens,
-  withDrawStaked,
+  unstake,
   getDaiUsdcBalance,
   DaiUsdcBalance,
   withdrawOneCurveTokens,
@@ -157,10 +157,10 @@ export default function PoolFarming({ theme, themeMode }: any) {
         await dispatch(stake({ networkID: chainID, provider, address, value: stakeQuantity }));
         break;
       case "unstake":
-        await dispatch(withDrawStaked({ networkID: chainID, provider, address, value: withdrawQuantity }));
+        await dispatch(unstake({ networkID: chainID, provider, address, value: withdrawQuantity }));
         break;
       case "approve":
-        await dispatch(approve({ networkID: chainID, provider, address }));
+        await dispatch(torPoolApprove({ networkID: chainID, provider, address }));
         break;
     }
     getAllData();

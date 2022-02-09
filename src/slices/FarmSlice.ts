@@ -155,10 +155,11 @@ export const getStakingInfo = createAsyncThunk(
   },
 );
 
-export const withDrawStaked = createAsyncThunk("farm/withDrawStaked", async ({ networkID, provider, address, value }: IValueAsyncThunk, { dispatch }) => {
+export const unstake = createAsyncThunk("farm/unstake", async ({ networkID, provider, address, value }: IValueAsyncThunk, { dispatch }) => {
+  let unstakeTx;
   try {
-    const withdrawTrans = await stakingRewardsContract(networkID, provider, address).withdraw(ethers.utils.parseUnits(value, 'ether'));
-    await withdrawTrans.wait();
+    unstakeTx = await stakingRewardsContract(networkID, provider, address).withdraw(ethers.utils.parseUnits(value, 'ether'));
+    await unstakeTx.wait();
     dispatch(success(messages.tx_successfully_send));
     await sleep(7);
     dispatch(info(messages.your_balance_update_soon));
@@ -167,14 +168,19 @@ export const withDrawStaked = createAsyncThunk("farm/withDrawStaked", async ({ n
   } catch (e) {
     console.error(e);
     dispatch(error("Failed to withdraw"));
+  } finally {
+    await dispatch(getStakingRewardsInfo({ networkID, provider, address }));
+    await dispatch(getTorPoolInfo({ networkID, provider, address }));
+
   }
 },
 );
 
 export const stake = createAsyncThunk("farm/stake", async ({ networkID, provider, address, value }: IValueAsyncThunk, { dispatch }) => {
+  let stakeTx;
   try {
-    const stakeTrans = await stakingRewardsContract(networkID, provider, address).stake(ethers.utils.parseUnits(value, "ether"));
-    await stakeTrans.wait();
+    stakeTx = await stakingRewardsContract(networkID, provider, address).stake(ethers.utils.parseUnits(value, "ether"));
+    await stakeTx.wait();
     dispatch(success(messages.tx_successfully_send));
     await sleep(7);
     dispatch(info(messages.your_balance_update_soon));
@@ -182,10 +188,16 @@ export const stake = createAsyncThunk("farm/stake", async ({ networkID, provider
     dispatch(info(messages.your_balance_updated));
   } catch (e) {
     dispatch(error("Failed to stake"));
+  } finally {
+    if (stakeTx) {
+      await dispatch(getStakingRewardsInfo({ networkID, provider, address }));
+      await dispatch(getTorPoolInfo({ networkID, provider, address }));
+
+    }
   }
 });
 
-export const approve = createAsyncThunk("farm/approve", async ({ networkID, provider, address }: IBaseAddressAsyncThunk, { dispatch }) => {
+export const torPoolApprove = createAsyncThunk("farm/torPoolApprove", async ({ networkID, provider, address }: IBaseAddressAsyncThunk, { dispatch }) => {
   try {
     const approveTrans = await torPoolContract(networkID, provider, address).approve(
       FANTOM.FARMINNG_STAKING_REWARDS_ADDRESS,
@@ -251,19 +263,6 @@ export const getDaiUsdcBalance = createAsyncThunk("farm/getDaiUsdcBalance", asyn
     dispatch(error("Failed to get balances for dai and usdc"));
   }
 });
-
-export const getMintAllowance = createAsyncThunk("farm/getMintAllowance", async ({ networkID, provider, address }: IBaseAddressAsyncThunk, { dispatch }) => {
-  try {
-
-    const usdcAllowance = await usdcContract(networkID, provider, address).allowance(address, FANTOM.TOR_MINTER_ADDRESS);
-    const daiAllowance = await daiContract(networkID, provider, address).allowance(address, FANTOM.TOR_MINTER_ADDRESS);
-    return { usdcAllowance, daiAllowance };
-  } catch (e) {
-    console.error(e);
-    dispatch(error("Failed to get allowance for minting"));
-  }
-});
-
 
 export const claimRewards = createAsyncThunk("farm/claimRewards", async ({ networkID, provider, address }: IBaseAddressAsyncThunk, { dispatch }) => {
   try {
@@ -473,6 +472,18 @@ export const mint = createAsyncThunk("farm/mint", async ({ networkID, provider, 
   }
 });
 
+export const getMintAllowance = createAsyncThunk("farm/getMintAllowance", async ({ networkID, provider, address }: IBaseAddressAsyncThunk, { dispatch }) => {
+  try {
+    const usdcAllowance = await usdcContract(networkID, provider, address).allowance(address, FANTOM.TOR_MINTER_ADDRESS);
+    const daiAllowance = await daiContract(networkID, provider, address).allowance(address, FANTOM.TOR_MINTER_ADDRESS);
+    return { usdcAllowance, daiAllowance };
+  } catch (e) {
+    console.error(e);
+    dispatch(error("Failed to get allowance for minting"));
+  }
+});
+
+
 export const getWhitelistAmount = createAsyncThunk(
   "farm/getWhitelistAmount",
   async ({ networkID, provider, address }: IBaseAddressAsyncThunk) => {
@@ -576,13 +587,13 @@ const farmSlice = createSlice({
         state.isLoading = false;
         console.error(error.name, error.message, error.stack);
       })
-      .addCase(withDrawStaked.pending, state => {
+      .addCase(unstake.pending, state => {
         state.isLoading = true;
       })
-      .addCase(withDrawStaked.fulfilled, (state, action) => {
+      .addCase(unstake.fulfilled, (state, action) => {
         state.isLoading = false;
       })
-      .addCase(withDrawStaked.rejected, (state, { error }) => {
+      .addCase(unstake.rejected, (state, { error }) => {
         state.isLoading = false;
         console.error(error.name, error.message, error.stack);
       })
@@ -606,13 +617,13 @@ const farmSlice = createSlice({
         state.isLoading = false;
         console.error(error.name, error.message, error.stack);
       })
-      .addCase(approve.pending, state => {
+      .addCase(torPoolApprove.pending, state => {
         state.isLoading = true;
       })
-      .addCase(approve.fulfilled, (state, action) => {
+      .addCase(torPoolApprove.fulfilled, (state, action) => {
         state.isLoading = false;
       })
-      .addCase(approve.rejected, (state, { error }) => {
+      .addCase(torPoolApprove.rejected, (state, { error }) => {
         state.isLoading = false;
         console.error(error.name, error.message, error.stack);
       })
