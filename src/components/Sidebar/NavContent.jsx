@@ -5,12 +5,13 @@ import Social from "./Social";
 import externalUrls from "./externalUrls";
 import { ReactComponent as StakeIcon } from "../../assets/icons/stake.svg";
 import { ReactComponent as BondIcon } from "../../assets/icons/bond.svg";
-import { ReactComponent as GlobeIcon } from "../../assets/icons/globe.svg";
+import { ReactComponent as CalcIcon } from "../../assets/icons/calculator.svg";
+import { ReactComponent as SeedlingIcon } from "../../assets/icons/seedling.svg";
+import { ReactComponent as ExchangeIcon } from "../../assets/icons/exchange.svg";
 import { ReactComponent as SwapIcon } from "../../assets/icons/swap.svg";
 import { ReactComponent as DashboardIcon } from "../../assets/icons/dashboard.svg";
 import { ReactComponent as WrapIcon } from "../../assets/icons/wrap.svg";
 import { ReactComponent as HectorIcon } from "../../assets/icons/hector-nav-logo.svg";
-import { ReactComponent as FarmIcon } from "../../assets/icons/farm.svg";
 import { ReactComponent as InvestmentsIcon } from "../../assets/icons/investments.svg";
 import { ReactComponent as TorSVG } from "../../assets/tokens/tor-nav.svg";
 import { shorten } from "../../helpers";
@@ -106,7 +107,7 @@ function NavContent() {
                 className={`button-dapp-menu ${isActive ? "active" : ""}`}
               >
                 <Typography variant="h6">
-                  <SvgIcon color="primary" component={StakeIcon} />
+                  <StakeIcon />
                   Stake
                 </Typography>
               </Link>
@@ -121,7 +122,7 @@ function NavContent() {
                 className={`button-dapp-menu ${isActive ? "active" : ""}`}
               >
                 <Typography variant="h6">
-                  <SvgIcon color="primary" component={WrapIcon} />
+                  <WrapIcon />
                   Wrap
                 </Typography>
               </Link>
@@ -155,7 +156,7 @@ function NavContent() {
                 className={`button-dapp-menu ${isActive ? "active" : ""}`}
               >
                 <Typography variant="h6">
-                  <SvgIcon color="primary" component={SwapIcon} viewBox="0 0 24 18" />
+                  <ExchangeIcon />
                   Exchange
                   <Typography variant="caption" style={{ marginLeft: "8px" }}>
                     (Coming Soon)
@@ -177,7 +178,7 @@ function NavContent() {
                 className={`button-dapp-menu ${isActive ? "active" : ""}`}
               >
                 <Typography variant="h6">
-                  <SvgIcon color="primary" component={FarmIcon} />
+                  <SeedlingIcon />
                   Farm
                 </Typography>
               </Link>
@@ -215,7 +216,7 @@ function NavContent() {
                 className={`button-dapp-menu ${isActive ? "active" : ""}`}
               >
                 <Typography variant="h6">
-                  <SvgIcon color="primary" component={InvestmentsIcon} />
+                  <InvestmentsIcon />
                   Investments
                   <Typography variant="caption" style={{ marginLeft: "8px" }}>
                     (Coming Soon)
@@ -233,13 +234,14 @@ function NavContent() {
                 className={`button-dapp-menu ${isActive ? "active" : ""}`}
               >
                 <Typography variant="h6">
-                  <SvgIcon color="primary" component={GlobeIcon} viewBox="0 0 24 24" />
+                  <CalcIcon />
                   Calculator
                 </Typography>
               </Link>
             </div>
           </div>
         </div>
+        <hr />
         <Box className="dapp-menu-bottom" display="flex" justifyContent="space-between" flexDirection="column">
           <div className="dapp-menu-external-links">
             {externalUrls.map(({ url, icon, title, label }, i) => {

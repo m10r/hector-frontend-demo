@@ -53,12 +53,17 @@
   display: flex;
   justify-content: flex-start;
   flex-direction: column;
-  margin-bottom: 33px;
   min-height: max-content;
   .dapp-nav {
     display: flex;
     flex-flow: column;
   }
+}
+
+hr {
+  width: 80%;
+  margin-top: 25px;
+  margin-bottom: 25px;
 }
 
 .dapp-menu-bottom {

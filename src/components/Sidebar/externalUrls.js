@@ -22,12 +22,12 @@ const externalUrls = [
   {
     title: "Hector Bank",
     url: "https://hectorbank.com/",
-    icon: <MonetizationOnOutlined viewBox="0 0 20 24" />,
+    icon: <AccountBalanceOutlined viewBox="0 0 20 24" />,
   },
   {
     title: "Hector Launch",
     label: "(Coming soon)",
-    icon: <AccountBalanceOutlined viewBox="0 0 20 24" />,
+    icon: <MonetizationOnOutlined viewBox="0 0 20 24" />,
   },
   {
     title: "Governance",
