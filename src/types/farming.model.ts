@@ -55,6 +55,17 @@ export interface MintAllowance {
     usdcAllowance: number;
     daiAllowance: number;
 }
+
+export interface MintInfo {
+    isLowerThanReserveCeiling: boolean;
+    isCurvePercentageBelowCeiling: boolean;
+    mintLimit: BigNumber;
+}
+export interface RedeemInfo {
+    ishigherThanReserveFloor: boolean;
+    isCurvePercentageAboveFloor: boolean;
+    redeemLimit: BigNumber;
+}
 export interface CurveAllowance {
     usdcAllowance: BigNumber;
     torAllowance: BigNumber;

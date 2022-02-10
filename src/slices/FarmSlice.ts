@@ -15,7 +15,9 @@ import {
   StakingRewardsInfo,
   TorContract,
   TorBalance,
-  CurveAllowance
+  CurveAllowance,
+  MintInfo,
+  RedeemInfo
 } from "src/types/farming.model";
 import { abi as farmingAggregatorAbi } from "../abi/farmingAggregatorContract.json";
 import { abi as torPoolAbi } from "../abi/farmingTorPoolContract.json";
@@ -25,6 +27,7 @@ import { abi as curveFiAbi } from "../abi/CurveFiContract.json";
 import { abi as torAbi } from "../abi/bonds/torContract.json";
 import { abi as IERC20 } from "../abi/IERC20.json";
 import { abi as torMinterAbi } from "../abi/TorMinterContract.json";
+import { abi as torRedeemAbi } from "../abi/TorRedeemContract.json";
 import { abi as torPoolAmountAbi } from "../abi/TorPoolAmountContract.json";
 import { IBaseAddressAsyncThunk, IBaseAsyncThunk, IValueAsyncThunk } from "./interfaces";
 import { error, info, success } from "./MessagesSlice";
@@ -452,23 +455,86 @@ export const withdrawOneCurveTokens = createAsyncThunk("farm/withdrawOneCurveTok
 },
 );
 
-export const mint = createAsyncThunk("farm/mint", async ({ networkID, provider, address, value, mint }: MintThunk, { dispatch }) => {
+const torRedeemContract = (provider: JsonRpcProvider, address: string) =>
+  new ethers.Contract(FANTOM.TOR_REDEEM_ADDRESS, torRedeemAbi, provider.getSigner(address));
+
+export const getMintInfo = createAsyncThunk("farm/getMintInfo", async ({ networkID, provider, address, value }: IValueAsyncThunk, { dispatch }) => {
   try {
-    let mintTrans;
+    const redeemContract = torRedeemContract(provider, address);
+    const isLowerThanReserveCeiling = await redeemContract.lowerThanReserveCeilingAfterMint(ethers.utils.parseEther(value));
+    const isCurvePercentageBelowCeiling = await redeemContract.curvePercentageBelowCeiling(ethers.utils.parseEther(value));
+    const mintLimit = await redeemContract.getCurrentMintBuffer();
+    return { isLowerThanReserveCeiling, isCurvePercentageBelowCeiling, mintLimit };
+  } catch (e) {
+    console.error(e);
+    dispatch(error(`Failed to get mint info`));
+  }
+});
+
+export const getRedeemInfo = createAsyncThunk("farm/getRedeemInfo", async ({ networkID, provider, address, value }: IValueAsyncThunk, { dispatch }) => {
+  try {
+    const redeemContract = torRedeemContract(provider, address);
+    const ishigherThanReserveFloor = await redeemContract.higherThanReserveFloorAfterRedeem(ethers.utils.parseEther(value));
+    console.log(ishigherThanReserveFloor);
+    const isCurvePercentageAboveFloor = await redeemContract.curvePercentageAboveFloor(ethers.utils.parseEther(value));
+    console.log(isCurvePercentageAboveFloor);
+    const redeemLimit = await redeemContract.getCurrentMintBuffer();
+    console.log(redeemLimit);
+    return { ishigherThanReserveFloor, isCurvePercentageAboveFloor, redeemLimit };
+  } catch (e) {
+    console.error(e);
+    dispatch(error(`Failed to get redeem info`));
+  }
+});
+
+export const mint = createAsyncThunk("farm/mint", async ({ networkID, provider, address, value, mint }: MintThunk, { dispatch }) => {
+  let mintTx;
+  try {
     if (mint === 'dai') {
-      mintTrans = await torMinterContract(networkID, provider, address).mintWithDai(ethers.utils.parseUnits(value, "ether"));
+      mintTx = await torMinterContract(networkID, provider, address).mintWithDai(ethers.utils.parseUnits(value, "ether"));
     } else {
-      mintTrans = await torMinterContract(networkID, provider, address).mintWithUsdc(ethers.utils.parseUnits(value, "mwei"));
+      mintTx = await torMinterContract(networkID, provider, address).mintWithUsdc(ethers.utils.parseUnits(value, "mwei"));
     }
-    await mintTrans.wait();
+    await mintTx.wait();
     dispatch(success(messages.tx_successfully_send));
     await sleep(7);
     dispatch(info(messages.your_balance_update_soon));
     await sleep(9);
-    dispatch(info(messages.your_balance_updated));
   } catch (e) {
     console.error(e);
     dispatch(error(`Failed to mint ${mint}`));
+  } finally {
+    if (mintTx) {
+      await dispatch(getDaiUsdcBalance({ networkID, provider, address }));
+      await dispatch(getTorBalance({ networkID, provider, address }));
+      dispatch(info(messages.your_balance_updated));
+
+    }
+  }
+});
+export const redeem = createAsyncThunk("farm/redeem", async ({ networkID, provider, address, value, mint }: MintThunk, { dispatch }) => {
+  let redeemTx;
+  try {
+    if (mint === 'dai') {
+      redeemTx = await torMinterContract(networkID, provider, address).redeemToDai(ethers.utils.parseUnits(value, "ether"));
+    } else {
+      redeemTx = await torMinterContract(networkID, provider, address).redeemToUsdc(ethers.utils.parseUnits(value, "mwei"));
+    }
+    await redeemTx.wait();
+    dispatch(success(messages.tx_successfully_send));
+    await sleep(7);
+    dispatch(info(messages.your_balance_update_soon));
+    await sleep(9);
+  } catch (e) {
+    console.error(e);
+    dispatch(error(`Failed to redeem ${mint}`));
+  } finally {
+    if (redeemTx) {
+      await dispatch(getDaiUsdcBalance({ networkID, provider, address }));
+      await dispatch(getTorBalance({ networkID, provider, address }));
+      dispatch(info(messages.your_balance_updated));
+
+    }
   }
 });
 
@@ -504,6 +570,8 @@ const initialState: IFarmSlice = {
   daiUsdcBalance: undefined,
   torBalance: undefined,
   mintAllowance: undefined,
+  mintInfo: undefined,
+  redeemInfo: undefined,
   curveAllowance: undefined,
   whiteList: undefined
 };
@@ -518,6 +586,8 @@ interface IFarmSlice {
   daiUsdcBalance: DaiUsdcBalance;
   torBalance: TorBalance;
   mintAllowance: MintAllowance;
+  mintInfo: MintInfo;
+  redeemInfo: RedeemInfo;
   curveAllowance: CurveAllowance;
   whiteList: any;
 }
@@ -738,6 +808,38 @@ const farmSlice = createSlice({
         state.isLoading = false;
       })
       .addCase(mint.rejected, (state, { error }) => {
+        state.isLoading = false;
+        console.error(error.name, error.message, error.stack);
+      })
+      .addCase(redeem.pending, state => {
+        state.isLoading = true;
+      })
+      .addCase(redeem.fulfilled, (state, action) => {
+        state.isLoading = false;
+      })
+      .addCase(redeem.rejected, (state, { error }) => {
+        state.isLoading = false;
+        console.error(error.name, error.message, error.stack);
+      })
+      .addCase(getMintInfo.pending, state => {
+        state.isLoading = true;
+      })
+      .addCase(getMintInfo.fulfilled, (state, action) => {
+        state.mintInfo = action.payload;
+        state.isLoading = false;
+      })
+      .addCase(getMintInfo.rejected, (state, { error }) => {
+        state.isLoading = false;
+        console.error(error.name, error.message, error.stack);
+      })
+      .addCase(getRedeemInfo.pending, state => {
+        state.isLoading = true;
+      })
+      .addCase(getRedeemInfo.fulfilled, (state, action) => {
+        state.redeemInfo = action.payload;
+        state.isLoading = false;
+      })
+      .addCase(getRedeemInfo.rejected, (state, { error }) => {
         state.isLoading = false;
         console.error(error.name, error.message, error.stack);
       })

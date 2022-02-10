@@ -116,7 +116,11 @@
             "type": "uint256"
         }],
         "name": "mintWithDai",
-        "outputs": [],
+        "outputs": [{
+            "internalType": "uint256",
+            "name": "_torAmount",
+            "type": "uint256"
+        }],
         "stateMutability": "nonpayable",
         "type": "function"
     }, {
@@ -126,7 +130,11 @@
             "type": "uint256"
         }],
         "name": "mintWithUsdc",
-        "outputs": [],
+        "outputs": [{
+            "internalType": "uint256",
+            "name": "_torAmount",
+            "type": "uint256"
+        }],
         "stateMutability": "nonpayable",
         "type": "function"
     }, {
@@ -172,7 +180,11 @@
             "type": "uint256"
         }],
         "name": "redeemToDai",
-        "outputs": [],
+        "outputs": [{
+            "internalType": "uint256",
+            "name": "_daiAmount",
+            "type": "uint256"
+        }],
         "stateMutability": "nonpayable",
         "type": "function"
     }, {
@@ -182,7 +194,11 @@
             "type": "uint256"
         }],
         "name": "redeemToUsdc",
-        "outputs": [],
+        "outputs": [{
+            "internalType": "uint256",
+            "name": "_usdcAmount",
+            "type": "uint256"
+        }],
         "stateMutability": "nonpayable",
         "type": "function"
     }, {
@@ -297,16 +313,6 @@
         "type": "function"
     }, {
         "inputs": [],
-        "name": "totalBurnt",
-        "outputs": [{
-            "internalType": "uint256",
-            "name": "",
-            "type": "uint256"
-        }],
-        "stateMutability": "view",
-        "type": "function"
-    }, {
-        "inputs": [],
         "name": "totalHecBurnt",
         "outputs": [{
             "internalType": "uint256",
@@ -337,7 +343,17 @@
         "type": "function"
     }, {
         "inputs": [],
-        "name": "totalMinted",
+        "name": "totalTorBurnt",
+        "outputs": [{
+            "internalType": "uint256",
+            "name": "",
+            "type": "uint256"
+        }],
+        "stateMutability": "view",
+        "type": "function"
+    }, {
+        "inputs": [],
+        "name": "totalTorMinted",
         "outputs": [{
             "internalType": "uint256",
             "name": "",
@@ -350,6 +366,10 @@
             "internalType": "address",
             "name": "oldTorMinter",
             "type": "address"
+        }, {
+            "internalType": "bool",
+            "name": "isOldVersion",
+            "type": "bool"
         }],
         "name": "upgradeFrom",
         "outputs": [],
