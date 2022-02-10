@@ -178,7 +178,7 @@ export default function Mint() {
           <div>Balance</div>
           <div className="details">
             <TorSVG style={{ height: "35px", width: "35px" }} />
-            <div className="balance">{trim(torBalance?.balance, 4)}</div>
+            <div className="balance">{trim(torBalance?.balance, 2)}</div>
           </div>
         </div>
         <hr />
@@ -187,7 +187,7 @@ export default function Mint() {
           <div className="details">
             <img src={DaiToken} />
 
-            <div className="balance">{trim(daiUsdcBalance?.daiBalance, 4)}</div>
+            <div className="balance">{trim(daiUsdcBalance?.daiBalance, 2)}</div>
           </div>
         </div>
         <hr />
@@ -196,7 +196,7 @@ export default function Mint() {
           <div className="details">
             <img src={UsdcToken} />
 
-            <div className="balance">{trim(daiUsdcBalance?.usdcBalance, 4)}</div>
+            <div className="balance">{trim(daiUsdcBalance?.usdcBalance, 2)}</div>
           </div>
         </div>
       </div>
