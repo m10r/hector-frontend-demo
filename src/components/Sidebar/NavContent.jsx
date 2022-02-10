@@ -198,9 +198,6 @@ function NavContent() {
                 <Typography variant="h6">
                   <TorSVG />
                   TOR Mint
-                  <Typography variant="caption" style={{ marginLeft: "8px" }}>
-                    (Limited Access)
-                  </Typography>
                 </Typography>
               </Link>
               <Link
