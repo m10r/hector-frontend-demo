@@ -15,7 +15,7 @@ import { shouldTriggerSafetyCheck } from "./helpers";
 import { calcBondDetails, getGlobalBondData } from "./slices/BondSlice";
 import { loadAppDetails } from "./slices/AppSlice";
 import { loadAccountDetails, calculateUserBondDetails, getUserBondData } from "./slices/AccountSlice";
-import { info } from "./slices/MessagesSlice";
+import { error, info } from "./slices/MessagesSlice";
 
 import { Stake, ChooseBond, Bond, TreasuryDashboard } from "./views";
 import Sidebar from "./components/Sidebar/Sidebar.jsx";
@@ -166,9 +166,14 @@ function App() {
   useEffect(() => {
     if (hasCachedProvider()) {
       // then user DOES have a wallet
-      connect().then(() => {
-        setWalletChecked(true);
-      });
+      connect()
+        .then(() => {
+          setWalletChecked(true);
+        })
+        .catch(() => {
+          setWalletChecked(true);
+          dispatch(error("Unlock your Metamask wallet to connect!"));
+        });
     } else {
       // then user DOES NOT have a wallet
       setWalletChecked(true);
