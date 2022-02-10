@@ -9,7 +9,6 @@ import {
   CurveProportions,
   TorPoolContract,
   TorPoolInfo,
-  MintAllowance,
   StakingInfo,
   StakingRewardsContract,
   StakingRewardsInfo,
@@ -17,12 +16,12 @@ import {
   TorBalance,
   CurveAllowance,
   MintInfo,
-  RedeemInfo
+  RedeemInfo,
+  MintAllowance
 } from "src/types/farming.model";
 import { abi as farmingAggregatorAbi } from "../abi/farmingAggregatorContract.json";
 import { abi as torPoolAbi } from "../abi/farmingTorPoolContract.json";
 import { abi as stakingRewardsAbi } from "../abi/farmingStakingRewardsContract.json";
-import { abi as whitelistAbi } from "../abi/WhitelistContract.json";
 import { abi as curveFiAbi } from "../abi/CurveFiContract.json";
 import { abi as torAbi } from "../abi/bonds/torContract.json";
 import { abi as IERC20 } from "../abi/IERC20.json";
@@ -218,41 +217,6 @@ export const torPoolApprove = createAsyncThunk("farm/torPoolApprove", async ({ n
   }
 });
 
-export const daiApprove = createAsyncThunk("farm/daiApprove", async ({ networkID, provider, address }: IBaseAddressAsyncThunk, { dispatch }) => {
-  try {
-    const approveTrans = await daiContract(networkID, provider, address).approve(
-      FANTOM.TOR_MINTER_ADDRESS,
-      ethers.utils.parseUnits("1000000", "ether"),
-    );
-    await approveTrans.wait();
-    dispatch(success(messages.tx_successfully_send));
-    await sleep(7);
-    dispatch(info(messages.your_balance_update_soon));
-    await sleep(9);
-    dispatch(info(messages.your_balance_updated));
-  } catch (e) {
-    console.error(e);
-    dispatch(error("Failed to approve DAI"));
-  }
-});
-export const usdcApprove = createAsyncThunk("farm/usdcApprove", async ({ networkID, provider, address }: IBaseAddressAsyncThunk, { dispatch }) => {
-  try {
-    const approveTrans = await usdcContract(networkID, provider, address).approve(
-      FANTOM.TOR_MINTER_ADDRESS,
-      ethers.utils.parseUnits("1000000", "ether"),
-    );
-    await approveTrans.wait();
-    dispatch(success(messages.tx_successfully_send));
-    await sleep(7);
-    dispatch(info(messages.your_balance_update_soon));
-    await sleep(9);
-    dispatch(info(messages.your_balance_updated));
-  } catch (e) {
-    console.error(e);
-    dispatch(error("Failed to approve USDC"));
-  }
-});
-
 export const getDaiUsdcBalance = createAsyncThunk("farm/getDaiUsdcBalance", async ({ networkID, provider, address }: IBaseAddressAsyncThunk, { dispatch }) => {
   try {
     const usdcHexBalance = await usdcContract(networkID, provider, address).balanceOf(address);
@@ -307,13 +271,14 @@ export const curveDaiApprove = createAsyncThunk("farm/curveDaiApprove", async ({
     await sleep(7);
     dispatch(info(messages.your_balance_update_soon));
     await sleep(9);
-    dispatch(info(messages.your_balance_updated));
   } catch (e) {
     console.error(e);
     dispatch(error("Failed to approve DAI"));
   } finally {
     if (approveTx) {
-      dispatch(getCurveAllowance({ networkID, provider, address }))
+      await dispatch(getCurveAllowance({ networkID, provider, address }))
+      dispatch(info(messages.your_balance_updated));
+
     }
   }
 });
@@ -330,13 +295,14 @@ export const curveUsdcApprove = createAsyncThunk("farm/curveUsdcApprove", async 
     await sleep(7);
     dispatch(info(messages.your_balance_update_soon));
     await sleep(9);
-    dispatch(info(messages.your_balance_updated));
   } catch (e) {
     console.error(e);
     dispatch(error("Failed to approve USDC"));
   } finally {
     if (approveTx) {
-      dispatch(getCurveAllowance({ networkID, provider, address }));
+      await dispatch(getCurveAllowance({ networkID, provider, address }));
+      dispatch(info(messages.your_balance_updated));
+
     }
   }
 });
@@ -352,13 +318,14 @@ export const curveTorApprove = createAsyncThunk("farm/curveTorApprove", async ({
     await sleep(7);
     dispatch(info(messages.your_balance_update_soon));
     await sleep(9);
-    dispatch(info(messages.your_balance_updated));
   } catch (e) {
     console.error(e);
     dispatch(error("Failed to approve TOR"));
   } finally {
     if (approveTx) {
-      dispatch(getCurveAllowance({ networkID, provider, address }));
+      await dispatch(getCurveAllowance({ networkID, provider, address }));
+      dispatch(info(messages.your_balance_updated));
+
     }
   }
 });
@@ -475,11 +442,8 @@ export const getRedeemInfo = createAsyncThunk("farm/getRedeemInfo", async ({ net
   try {
     const redeemContract = torRedeemContract(provider, address);
     const ishigherThanReserveFloor = await redeemContract.higherThanReserveFloorAfterRedeem(ethers.utils.parseEther(value));
-    console.log(ishigherThanReserveFloor);
     const isCurvePercentageAboveFloor = await redeemContract.curvePercentageAboveFloor(ethers.utils.parseEther(value));
-    console.log(isCurvePercentageAboveFloor);
     const redeemLimit = await redeemContract.getCurrentMintBuffer();
-    console.log(redeemLimit);
     return { ishigherThanReserveFloor, isCurvePercentageAboveFloor, redeemLimit };
   } catch (e) {
     console.error(e);
@@ -508,17 +472,17 @@ export const mint = createAsyncThunk("farm/mint", async ({ networkID, provider, 
       await dispatch(getDaiUsdcBalance({ networkID, provider, address }));
       await dispatch(getTorBalance({ networkID, provider, address }));
       dispatch(info(messages.your_balance_updated));
-
     }
   }
 });
+
 export const redeem = createAsyncThunk("farm/redeem", async ({ networkID, provider, address, value, mint }: MintThunk, { dispatch }) => {
   let redeemTx;
   try {
     if (mint === 'dai') {
       redeemTx = await torMinterContract(networkID, provider, address).redeemToDai(ethers.utils.parseUnits(value, "ether"));
     } else {
-      redeemTx = await torMinterContract(networkID, provider, address).redeemToUsdc(ethers.utils.parseUnits(value, "mwei"));
+      redeemTx = await torMinterContract(networkID, provider, address).redeemToUsdc(ethers.utils.parseUnits(value, "ether"));
     }
     await redeemTx.wait();
     dispatch(success(messages.tx_successfully_send));
@@ -542,7 +506,8 @@ export const getMintAllowance = createAsyncThunk("farm/getMintAllowance", async 
   try {
     const usdcAllowance = await usdcContract(networkID, provider, address).allowance(address, FANTOM.TOR_MINTER_ADDRESS);
     const daiAllowance = await daiContract(networkID, provider, address).allowance(address, FANTOM.TOR_MINTER_ADDRESS);
-    return { usdcAllowance, daiAllowance };
+    const torAllowance = await torContract(networkID, provider, address).allowance(address, FANTOM.TOR_MINTER_ADDRESS)
+    return { usdcAllowance, daiAllowance, torAllowance };
   } catch (e) {
     console.error(e);
     dispatch(error("Failed to get allowance for minting"));
@@ -550,15 +515,75 @@ export const getMintAllowance = createAsyncThunk("farm/getMintAllowance", async 
 });
 
 
-export const getWhitelistAmount = createAsyncThunk(
-  "farm/getWhitelistAmount",
-  async ({ networkID, provider, address }: IBaseAddressAsyncThunk) => {
-    const whiteListContract = new ethers.Contract(FANTOM.TOR_WHITELIST, whitelistAbi, provider);
-    const minted = await whiteListContract.minted(address);
-    const limitPerAccount = await whiteListContract.limitPerAccount();
-    return { minted, limitPerAccount };
-  },
-);
+export const daiMintApprove = createAsyncThunk("farm/daiMintApprove", async ({ networkID, provider, address }: IBaseAddressAsyncThunk, { dispatch }) => {
+  let daiMintTx;
+  try {
+    daiMintTx = await daiContract(networkID, provider, address).approve(
+      FANTOM.TOR_MINTER_ADDRESS,
+      ethers.utils.parseUnits("1000000", "ether"),
+    );
+    await daiMintTx.wait();
+    dispatch(success(messages.tx_successfully_send));
+    await sleep(7);
+    dispatch(info(messages.your_balance_update_soon));
+    await sleep(9);
+  } catch (e) {
+    console.error(e);
+    dispatch(error("Failed to approve DAI"));
+  } finally {
+    if (daiMintTx) {
+      await dispatch(getMintAllowance({ networkID, provider, address }));
+      dispatch(info(messages.your_balance_updated));
+
+    }
+  }
+});
+
+export const usdcMintApprove = createAsyncThunk("farm/usdcMintApprove", async ({ networkID, provider, address }: IBaseAddressAsyncThunk, { dispatch }) => {
+  let usdcMintTx;
+  try {
+    usdcMintTx = await usdcContract(networkID, provider, address).approve(
+      FANTOM.TOR_MINTER_ADDRESS,
+      ethers.utils.parseUnits("1000000", "ether"),
+    );
+    await usdcMintTx.wait();
+    dispatch(success(messages.tx_successfully_send));
+    await sleep(7);
+    dispatch(info(messages.your_balance_update_soon));
+    await sleep(9);
+  } catch (e) {
+    console.error(e);
+    dispatch(error("Failed to approve USDC"));
+  } finally {
+    if (usdcMintTx) {
+      await dispatch(getMintAllowance({ networkID, provider, address }));
+      dispatch(info(messages.your_balance_updated));
+    }
+  }
+});
+
+export const redeemApprove = createAsyncThunk("farm/redeemApprove", async ({ networkID, provider, address }: IBaseAddressAsyncThunk, { dispatch }) => {
+  let redeemTx;
+  try {
+    redeemTx = await torContract(networkID, provider, address).approve(
+      FANTOM.TOR_MINTER_ADDRESS,
+      ethers.utils.parseUnits("1000000", "ether").toString(),
+    );
+    await redeemTx.wait();
+    dispatch(success(messages.tx_successfully_send));
+    await sleep(7);
+    dispatch(info(messages.your_balance_update_soon));
+    await sleep(9);
+  } catch (e) {
+    console.error(e);
+    dispatch(error("Failed to approve DAI"));
+  } finally {
+    if (redeemTx) {
+      await dispatch(getMintAllowance({ networkID, provider, address }));
+      dispatch(info(messages.your_balance_updated));
+    }
+  }
+});
 
 const initialState: IFarmSlice = {
   isLoading: false,
@@ -573,7 +598,6 @@ const initialState: IFarmSlice = {
   mintInfo: undefined,
   redeemInfo: undefined,
   curveAllowance: undefined,
-  whiteList: undefined
 };
 
 interface IFarmSlice {
@@ -589,7 +613,6 @@ interface IFarmSlice {
   mintInfo: MintInfo;
   redeemInfo: RedeemInfo;
   curveAllowance: CurveAllowance;
-  whiteList: any;
 }
 
 const farmSlice = createSlice({
@@ -697,23 +720,33 @@ const farmSlice = createSlice({
         state.isLoading = false;
         console.error(error.name, error.message, error.stack);
       })
-      .addCase(daiApprove.pending, state => {
+      .addCase(daiMintApprove.pending, state => {
         state.isLoading = true;
       })
-      .addCase(daiApprove.fulfilled, (state, action) => {
+      .addCase(daiMintApprove.fulfilled, (state, action) => {
         state.isLoading = false;
       })
-      .addCase(daiApprove.rejected, (state, { error }) => {
+      .addCase(daiMintApprove.rejected, (state, { error }) => {
         state.isLoading = false;
         console.error(error.name, error.message, error.stack);
       })
-      .addCase(usdcApprove.pending, state => {
+      .addCase(redeemApprove.pending, state => {
         state.isLoading = true;
       })
-      .addCase(usdcApprove.fulfilled, (state, action) => {
+      .addCase(redeemApprove.fulfilled, (state, action) => {
         state.isLoading = false;
       })
-      .addCase(usdcApprove.rejected, (state, { error }) => {
+      .addCase(redeemApprove.rejected, (state, { error }) => {
+        state.isLoading = false;
+        console.error(error.name, error.message, error.stack);
+      })
+      .addCase(usdcMintApprove.pending, state => {
+        state.isLoading = true;
+      })
+      .addCase(usdcMintApprove.fulfilled, (state, action) => {
+        state.isLoading = false;
+      })
+      .addCase(usdcMintApprove.rejected, (state, { error }) => {
         state.isLoading = false;
         console.error(error.name, error.message, error.stack);
       })
@@ -873,17 +906,7 @@ const farmSlice = createSlice({
         state.isLoading = false;
         console.error(error.name, error.message, error.stack);
       })
-      .addCase(getWhitelistAmount.pending, state => {
-        state.isLoading = true;
-      })
-      .addCase(getWhitelistAmount.fulfilled, (state, action) => {
-        state.whiteList = action.payload;
-        state.isLoading = false;
-      })
-      .addCase(getWhitelistAmount.rejected, (state, { error }) => {
-        state.isLoading = false;
-        console.error(error.name, error.message, error.stack);
-      });
+
   },
 });
 

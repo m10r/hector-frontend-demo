@@ -1,4 +1,4 @@
-import { ethers } from "ethers";
+import { BigNumber, ethers } from "ethers";
 import { useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { ReactComponent as TorSVG } from "../../assets/tokens/TOR.svg";
@@ -8,20 +8,18 @@ import UsdcToken from "../../assets/tokens/USDC.svg";
 import FormControl from "@material-ui/core/FormControl";
 import InputLabel from "@material-ui/core/InputLabel";
 import OutlinedInput from "@material-ui/core/OutlinedInput";
-import { error } from "src/slices/MessagesSlice";
 import {
-  daiApprove,
+  daiMintApprove,
   getDaiUsdcBalance,
   getMintAllowance,
   getMintInfo,
   getRedeemInfo,
   getTorBalance,
-  getWhitelistAmount,
   mint,
   redeem,
-  usdcApprove,
+  redeemApprove,
+  usdcMintApprove,
 } from "src/slices/FarmSlice";
-import useBonds, { IAllBondData } from "src/hooks/Bonds";
 import { useWeb3Context } from "src/hooks/web3Context";
 import InputAdornment from "@material-ui/core/InputAdornment";
 import Button from "@material-ui/core/Button";
@@ -29,6 +27,7 @@ import { TorSupplyChart } from "../TreasuryDashboard/TreasuryDashboard";
 import "./Mint.scss";
 import { FormHelperText, Tab, Tabs, Tooltip } from "@material-ui/core";
 import TabPanel from "src/components/TabPanel";
+import { trim } from "src/helpers";
 
 function InputProps(index: any) {
   return {
@@ -39,8 +38,7 @@ function InputProps(index: any) {
 
 export default function Mint() {
   const dispatch = useDispatch();
-  let { bonds } = useBonds();
-  const { torBalance, redeemInfo, whiteList, mintAllowance, daiUsdcBalance, mintInfo, isLoading } = useSelector(
+  const { torBalance, redeemInfo, mintAllowance, daiUsdcBalance, mintInfo, isLoading } = useSelector(
     (state: RootState) => state.farm,
   );
   const [daiQuantity, setDAIQuantity] = useState("");
@@ -53,25 +51,26 @@ export default function Mint() {
     setView(newValue);
   };
 
-  const inWhitelist = useCallback(() => {
-    if (whiteList) {
-      return +ethers.utils.formatUnits(whiteList?.minted) > 0;
-    }
-  }, [whiteList]);
-
-  const hasDaiAllowance = useCallback(() => {
-    return mintAllowance?.daiAllowance > 0;
+  const hasDaiMintAllowance = useCallback(() => {
+    return mintAllowance?.daiAllowance > BigNumber.from("0");
   }, [mintAllowance]);
 
-  const hasUsdcAllowance = useCallback(() => {
-    return mintAllowance?.usdcAllowance > 0;
+  const hasUsdcMintAllowance = useCallback(() => {
+    return mintAllowance?.usdcAllowance > BigNumber.from("0");
+  }, [mintAllowance]);
+  const hasRedeemAllowance = useCallback(() => {
+    return mintAllowance?.torAllowance > BigNumber.from("0");
   }, [mintAllowance]);
 
   const approveDai = () => {
-    dispatch(daiApprove({ address, provider, networkID: chainID }));
+    dispatch(daiMintApprove({ address, provider, networkID: chainID }));
   };
   const approveUsdc = () => {
-    dispatch(usdcApprove({ address, provider, networkID: chainID }));
+    dispatch(usdcMintApprove({ address, provider, networkID: chainID }));
+  };
+
+  const approveRedeem = () => {
+    dispatch(redeemApprove({ address, provider, networkID: chainID }));
   };
 
   const isDaiFormInvalid = () => {
@@ -107,6 +106,8 @@ export default function Mint() {
     if (+usdcQuantity > 0) {
       await dispatch(redeem({ networkID: chainID, provider, address, value: usdcQuantity, mint: "usdc" }));
     }
+    setDAIQuantity("");
+    setUSDCQuantity("");
   };
 
   async function getMintData() {
@@ -139,9 +140,11 @@ export default function Mint() {
   }, [usdcQuantity, daiQuantity, provider, address]);
 
   const tooltipDepositText = (): string => {
-    if (!mintInfo.isCurvePercentageBelowCeiling || !mintInfo.isLowerThanReserveCeiling) {
-      return "Minting temporarily disabled.";
-    } else if (!hasDaiAllowance() && !hasUsdcAllowance()) {
+    if (!mintInfo.isCurvePercentageBelowCeiling) {
+      return "Minting is not available because curve offers a better price";
+    } else if (!mintInfo.isLowerThanReserveCeiling) {
+      return "Minting is not available because TOR supply is too high";
+    } else if (!hasDaiMintAllowance() && !hasUsdcMintAllowance()) {
       return "Please approve one or both of the tokens above to mint tor.";
     } else if (Math.trunc(+ethers.utils.formatEther(mintInfo.mintLimit)) === 0) {
       return "You have hit your mint limit.";
@@ -152,8 +155,14 @@ export default function Mint() {
   const tooltipRedeemText = (): string => {
     if (+daiQuantity + +usdcQuantity > torBalance?.balance) {
       return "Must have redeem quantity below TOR balance.";
+    } else if (!hasRedeemAllowance()) {
+      return "Please approve to redeem.";
     } else if (+daiQuantity + +usdcQuantity === 0) {
-      return "Must have a redeem balance above 0";
+      return "Must have a redeem amount above 0";
+    } else if (!redeemInfo.isCurvePercentageAboveFloor) {
+      return "Redeeming is not availabe because curve offers a better price";
+    } else if (!redeemInfo.ishigherThanReserveFloor) {
+      return "Redeeming is not available because TOR supply is too low";
     } else {
       return "";
     }
@@ -163,11 +172,30 @@ export default function Mint() {
     <div className="mint">
       <TorGraph />
       <div className="MuiPaper-root hec-card balances">
-        <div className="tor-balance">
+        <div className="header-title">Balances</div>
+        <div className="token">
           <div>Balance</div>
-          <div className="balance">
-            <TorSVG style={{ height: "35px", width: "35px", marginRight: "10px" }} />
-            <div className="amount">{torBalance?.balance > 0 ? torBalance?.balance.toFixed(2) : 0.0}</div>
+          <div className="details">
+            <TorSVG style={{ height: "35px", width: "35px" }} />
+            <div className="balance">{trim(torBalance?.balance, 4)}</div>
+          </div>
+        </div>
+        <hr />
+        <div className="token">
+          <div>Balance</div>
+          <div className="details">
+            <img src={DaiToken} />
+
+            <div className="balance">{trim(daiUsdcBalance?.daiBalance, 4)}</div>
+          </div>
+        </div>
+        <hr />
+        <div className="token">
+          <div>Balance</div>
+          <div className="details">
+            <img src={UsdcToken} />
+
+            <div className="balance">{trim(daiUsdcBalance?.usdcBalance, 4)}</div>
           </div>
         </div>
       </div>
@@ -188,10 +216,9 @@ export default function Mint() {
             <Tab label="Mint" {...InputProps(0)} />
             <Tab label="Redeem" {...InputProps(1)} />
           </Tabs>
-
           <div className="mint-dai">
             <img src={DaiToken} />
-            {hasDaiAllowance() ? (
+            {hasDaiMintAllowance() && (
               <>
                 <FormControl className="input-amount" fullWidth variant="outlined">
                   <InputLabel htmlFor="outlined-adornment-amount">DAI</InputLabel>
@@ -222,7 +249,9 @@ export default function Mint() {
                   {isDaiFormInvalid() && <FormHelperText error>Must be less than or equal to balance!</FormHelperText>}
                 </FormControl>
               </>
-            ) : (
+            )}
+
+            {!hasDaiMintAllowance() && (
               <Button
                 className="stake-button"
                 variant="contained"
@@ -236,7 +265,7 @@ export default function Mint() {
           </div>
           <div className="mint-usdc">
             <img src={UsdcToken} />
-            {hasUsdcAllowance() ? (
+            {hasUsdcMintAllowance() && (
               <>
                 <FormControl className="input-amount" fullWidth variant="outlined">
                   <InputLabel htmlFor="outlined-adornment-amount">USDC</InputLabel>
@@ -267,7 +296,9 @@ export default function Mint() {
                   {isUsdcFormInvalid() && <FormHelperText error>Must be less than or equal to balance!</FormHelperText>}
                 </FormControl>
               </>
-            ) : (
+            )}
+
+            {!hasUsdcMintAllowance() && (
               <Button
                 className="stake-button"
                 variant="contained"
@@ -279,7 +310,6 @@ export default function Mint() {
               </Button>
             )}
           </div>
-
           <TabPanel value={view} index={0}>
             {mintInfo && (
               <Tooltip title={tooltipDepositText()}>
@@ -293,9 +323,10 @@ export default function Mint() {
                       Math.trunc(+ethers.utils.formatEther(mintInfo.mintLimit)) === 0 ||
                       !mintInfo.isCurvePercentageBelowCeiling ||
                       !mintInfo.isLowerThanReserveCeiling ||
-                      (hasDaiAllowance() || hasUsdcAllowance() ? false : true) ||
+                      (hasDaiMintAllowance() || hasUsdcMintAllowance() ? false : true) ||
                       isUsdcFormInvalid() ||
-                      isDaiFormInvalid()
+                      isDaiFormInvalid() ||
+                      +daiQuantity + +usdcQuantity === 0
                     }
                     onClick={() => mintTokens()}
                   >
@@ -306,7 +337,7 @@ export default function Mint() {
             )}
           </TabPanel>
           <TabPanel value={view} index={1}>
-            {redeemInfo && (
+            {redeemInfo && hasRedeemAllowance() && (
               <Tooltip title={tooltipRedeemText()}>
                 <span>
                   <Button
@@ -316,11 +347,9 @@ export default function Mint() {
                     disabled={
                       isLoading ||
                       Math.trunc(+ethers.utils.formatEther(redeemInfo.redeemLimit)) === 0 ||
-                      redeemInfo.isCurvePercentageAboveFloor ||
+                      !redeemInfo.isCurvePercentageAboveFloor ||
                       !redeemInfo.ishigherThanReserveFloor ||
-                      (hasDaiAllowance() || hasUsdcAllowance() ? false : true) ||
-                      isUsdcFormInvalid() ||
-                      isDaiFormInvalid() ||
+                      !hasRedeemAllowance() ||
                       +daiQuantity + +usdcQuantity > torBalance?.balance ||
                       +daiQuantity + +usdcQuantity === 0
                     }
@@ -330,6 +359,17 @@ export default function Mint() {
                   </Button>
                 </span>
               </Tooltip>
+            )}
+            {!hasRedeemAllowance() && (
+              <Button
+                className="stake-button"
+                variant="contained"
+                color="primary"
+                disabled={isLoading}
+                onClick={() => approveRedeem()}
+              >
+                Approve
+              </Button>
             )}
           </TabPanel>
         </div>

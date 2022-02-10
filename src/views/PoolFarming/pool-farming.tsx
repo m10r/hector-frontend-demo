@@ -723,11 +723,6 @@ const Curve = ({ daiUsdcBalance, torBalance, curveProportions, torPoolInfo }: To
                   disabled={view === 1}
                   value={torAmount}
                   onChange={e => setTokenAmount("TOR", e.target.value)}
-                  endAdornment={
-                    <InputAdornment position="end">
-                      {/* {<div className="balance">Balance: {trim(torBalance?.balance, 2)}</div>} */}
-                    </InputAdornment>
-                  }
                   labelWidth={30}
                 />
                 {isTorFormInvalid() && <FormHelperText error>Must be less than or equal to balance!</FormHelperText>}
@@ -756,12 +751,6 @@ const Curve = ({ daiUsdcBalance, torBalance, curveProportions, torPoolInfo }: To
                   disabled={view === 1}
                   value={daiAmount}
                   onChange={e => setTokenAmount("DAI", e.target.value)}
-                  endAdornment={
-                    <InputAdornment position="end">
-                      {" "}
-                      {/* {<div className="balance">Balance: {trim(daiUsdcBalance?.daiBalance, 2)}</div>} */}
-                    </InputAdornment>
-                  }
                   labelWidth={27}
                 />
                 {isDaiFormInvalid() && <FormHelperText error>Must be less than or equal to balance!</FormHelperText>}
@@ -790,11 +779,6 @@ const Curve = ({ daiUsdcBalance, torBalance, curveProportions, torPoolInfo }: To
                   disabled={view === 1}
                   value={usdcAmount}
                   onChange={e => setTokenAmount("USDC", e.target.value)}
-                  endAdornment={
-                    <InputAdornment position="end">
-                      {/* {<div className="balance">Balance: {trim(daiUsdcBalance?.usdcBalance, 2)}</div>} */}
-                    </InputAdornment>
-                  }
                   labelWidth={40}
                 />
                 {isUsdcFormInvalid() && <FormHelperText error>Must be less than or equal to balance!</FormHelperText>}

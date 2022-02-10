@@ -52,8 +52,9 @@ export interface StakingInfo {
 }
 
 export interface MintAllowance {
-    usdcAllowance: number;
-    daiAllowance: number;
+    usdcAllowance: BigNumber;
+    daiAllowance: BigNumber;
+    torAllowance: BigNumber;
 }
 
 export interface MintInfo {
