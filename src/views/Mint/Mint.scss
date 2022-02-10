@@ -80,7 +80,9 @@
       grid: 1fr / max-content 1fr;
       align-items: center;
       .max {
+        font-size: 15px;
         display: flex;
+        align-self: flex-end;
         justify-content: flex-end;
       }
     }

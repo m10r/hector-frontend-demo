@@ -28,6 +28,7 @@ import "./Mint.scss";
 import { FormHelperText, Tab, Tabs, Tooltip } from "@material-ui/core";
 import TabPanel from "src/components/TabPanel";
 import { trim } from "src/helpers";
+import InfoTooltip from "src/components/InfoTooltip/InfoTooltip";
 
 function InputProps(index: any) {
   return {
@@ -202,7 +203,20 @@ export default function Mint() {
       <div className="MuiPaper-root hec-card mint-tokens">
         <div className="header">
           <div className="header-title">Mint</div>
-          {mintInfo && <div className="max">{Math.trunc(+ethers.utils.formatEther(mintInfo?.mintLimit))} Limit</div>}
+
+          {mintInfo && (
+            <div className="max">
+              {view === 0
+                ? Math.trunc(+ethers.utils.formatEther(mintInfo?.mintLimit))
+                : Math.trunc(+ethers.utils.formatEther(redeemInfo?.redeemLimit))}{" "}
+              Limit{" "}
+              <InfoTooltip
+                message={`The limit amount is used to control the amount of TOR that is ${
+                  view === 0 ? "minted" : "redeemed"
+                }`}
+              />
+            </div>
+          )}
         </div>
         <div className="tab-group">
           <Tabs

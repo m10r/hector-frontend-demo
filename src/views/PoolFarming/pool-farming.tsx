@@ -426,7 +426,7 @@ const FarmStats = ({ torStats, stakingInfo }: FarmStats) => {
         <div className="tor-title">TOR LP</div>
       </div>
       <div>
-        <div className="title">APY</div>
+        <div className="title">APR</div>
         <div className="data">
           {torStats.apy !== "" ? (+torStats.apy * 1e12).toFixed(2) : <Skeleton width="50%" />}%
         </div>

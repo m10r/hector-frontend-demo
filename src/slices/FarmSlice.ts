@@ -443,7 +443,7 @@ export const getRedeemInfo = createAsyncThunk("farm/getRedeemInfo", async ({ net
     const redeemContract = torRedeemContract(provider, address);
     const ishigherThanReserveFloor = await redeemContract.higherThanReserveFloorAfterRedeem(ethers.utils.parseEther(value));
     const isCurvePercentageAboveFloor = await redeemContract.curvePercentageAboveFloor(ethers.utils.parseEther(value));
-    const redeemLimit = await redeemContract.getCurrentMintBuffer();
+    const redeemLimit = await redeemContract.getCurrentRedeemBuffer();
     return { ishigherThanReserveFloor, isCurvePercentageAboveFloor, redeemLimit };
   } catch (e) {
     console.error(e);
