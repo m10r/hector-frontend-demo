@@ -148,7 +148,7 @@ export default function Exchange() {
     if (web3.connection !== Web3Connection.Connected) {
       return EthersBigNumber.from(0);
     }
-    if (from.address === NATIVE_ADDRESS) {
+    if (from.isNative) {
       return await web3.provider.getBalance(web3.address);
     }
     const ierc20 = new ethers.Contract(from.address, ierc20Abi, provider);
@@ -166,7 +166,7 @@ export default function Exchange() {
 
     let disposed = false;
     async function run() {
-      if (from.address === NATIVE_ADDRESS) {
+      if (from.isNative) {
         setDecimals(18);
         return;
       }
