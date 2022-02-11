@@ -319,6 +319,8 @@ export default function PoolFarming({ theme, themeMode }: any) {
                 </Tabs>
 
                 <TabPanel value={view} index={0}>
+                  <img src={curveToken} />
+
                   <FormControl className="input-amount" fullWidth variant="outlined">
                     <InputLabel htmlFor="outlined-adornment-amount">Amount</InputLabel>
                     <OutlinedInput
@@ -341,6 +343,8 @@ export default function PoolFarming({ theme, themeMode }: any) {
                   </FormControl>
                 </TabPanel>
                 <TabPanel value={view} index={1}>
+                  <img src={curveToken} />
+
                   <FormControl className="input-amount" fullWidth variant="outlined">
                     <InputLabel htmlFor="outlined-adornment-amount">Amount</InputLabel>
                     <OutlinedInput

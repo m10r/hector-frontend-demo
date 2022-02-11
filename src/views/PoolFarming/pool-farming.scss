@@ -59,6 +59,7 @@
         padding-right: 0;
         padding-left: 0;
         text-align: center;
+        margin-bottom: 5px;
       }
     }
   }
@@ -214,10 +215,23 @@
         align-self: center;
         margin: 10px;
       }
+      [id^="simple-tabpanel-"] {
+        > div {
+          display: grid;
+          grid-template-columns: max-content 1fr;
+          align-items: center;
+          column-gap: 10px;
+          img {
+            width: 30px;
+            height: 30px;
+          }
+        }
+      }
 
       .buttons {
         grid-auto-flow: column;
         column-gap: 10px;
+        margin-top: 5px;
       }
       @media screen and (max-width: 410px) {
         .buttons {
