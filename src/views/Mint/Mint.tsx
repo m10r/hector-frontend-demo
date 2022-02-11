@@ -240,7 +240,7 @@ export default function Mint() {
                       type="number"
                       error={isDaiFormInvalid()}
                       value={daiQuantity}
-                      onChange={e => setDAIQuantity(e.target.value)}
+                      onChange={e => setDAIQuantity(trim(+e.target.value, 2))}
                       endAdornment={
                         <InputAdornment position="end">
                           {" "}
@@ -248,8 +248,8 @@ export default function Mint() {
                             variant="text"
                             onClick={() =>
                               view === 0
-                                ? setDAIQuantity(daiUsdcBalance?.daiBalance.toString())
-                                : setDAIQuantity(torBalance?.balance.toString())
+                                ? setDAIQuantity(trim(daiUsdcBalance?.daiBalance, 2))
+                                : setDAIQuantity(trim(torBalance?.balance, 2))
                             }
                             color="inherit"
                           >
@@ -296,8 +296,8 @@ export default function Mint() {
                             variant="text"
                             onClick={() =>
                               view === 0
-                                ? setUSDCQuantity(daiUsdcBalance?.usdcBalance.toString())
-                                : setUSDCQuantity(torBalance?.balance.toString())
+                                ? setUSDCQuantity(trim(+daiUsdcBalance?.usdcBalance, 2))
+                                : setUSDCQuantity(trim(torBalance?.balance, 2))
                             }
                             color="inherit"
                           >
@@ -305,7 +305,7 @@ export default function Mint() {
                           </Button>
                         </InputAdornment>
                       }
-                      onChange={e => setUSDCQuantity(e.target.value)}
+                      onChange={e => setUSDCQuantity(trim(+e.target.value, 2))}
                       labelWidth={40}
                     />
                     {isUsdcFormInvalid() && (
@@ -362,13 +362,13 @@ export default function Mint() {
                     id="outlined-adornment-amount"
                     type="number"
                     value={redeemAmount}
-                    onChange={e => setRedeemAmount(e.target.value)}
+                    onChange={e => setRedeemAmount(trim(+e.target.value, 2))}
                     endAdornment={
                       <InputAdornment position="end">
                         {" "}
                         <Button
                           variant="text"
-                          onClick={() => setRedeemAmount(torBalance?.balance.toString())}
+                          onClick={() => setRedeemAmount(trim(torBalance?.balance, 2))}
                           color="inherit"
                         >
                           Max
