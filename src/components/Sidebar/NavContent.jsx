@@ -8,7 +8,6 @@ import { ReactComponent as BondIcon } from "../../assets/icons/bond.svg";
 import { ReactComponent as CalcIcon } from "../../assets/icons/calculator.svg";
 import { ReactComponent as SeedlingIcon } from "../../assets/icons/seedling.svg";
 import { ReactComponent as ExchangeIcon } from "../../assets/icons/exchange.svg";
-import { ReactComponent as SwapIcon } from "../../assets/icons/swap.svg";
 import { ReactComponent as DashboardIcon } from "../../assets/icons/dashboard.svg";
 import { ReactComponent as WrapIcon } from "../../assets/icons/wrap.svg";
 import { ReactComponent as HectorIcon } from "../../assets/icons/hector-nav-logo.svg";

@@ -119,9 +119,15 @@
     }
     .token {
       display: grid;
-      grid-template-columns: max-content 1fr;
+      grid-template-columns: max-content 1fr 1fr;
       column-gap: 10px;
       align-items: center;
+      svg {
+        width: 20px;
+        height: 20px;
+        justify-self: center;
+        opacity: 0.6;
+      }
       div:first-child {
         opacity: 0.5;
       }

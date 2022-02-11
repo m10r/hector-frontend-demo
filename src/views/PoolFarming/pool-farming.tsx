@@ -57,6 +57,7 @@ import { error } from "src/slices/MessagesSlice";
 import DaiToken from "../../assets/tokens/DAI.svg";
 import UsdcToken from "../../assets/tokens/USDC.svg";
 import curveToken from "../../assets/tokens/curve.png";
+import { ReactComponent as BestFarmIcon } from "../../assets/icons/best-farm.svg";
 import farmingInfoDark from "../../assets/Farming-info-dark.png";
 import farmingInfoLight from "../../assets/Farming-info-light.png";
 import HelpOutlineIcon from "@material-ui/icons/HelpOutline";
@@ -79,6 +80,8 @@ function curveInputProps(index: any) {
   };
 }
 
+type Tokens = "DAI" | "TOR" | "USDC" | "";
+
 const getFormattedStakingInfo = (prop: keyof StakingInfo, stakingInfo: StakingInfo, units?: ethers.BigNumberish) =>
   stakingInfo ? +ethers.utils.formatUnits(stakingInfo[prop], units) : 0;
 
@@ -94,11 +97,12 @@ export default function PoolFarming({ theme, themeMode }: any) {
     daiUsdcBalance,
     isLoading,
   } = useSelector((state: RootState) => state.farm);
-  const [quantity, setQuantity] = useState("");
+  const quantity = "1000";
+
   const [stakeQuantity, setStakeQuantity] = useState("");
   const [withdrawQuantity, setWtihdrawQuantity] = useState("");
 
-  const [calcQuantity, setCalcQuantity] = useState(0);
+  const [optimalCoin, setOptimalCoin] = useState<Tokens>("");
   const [view, setView] = useState(0);
   const [torStats, setTorStats] = useState({ apy: "", torTVL: "" });
   const { provider, chainID, address } = useWeb3Context();
@@ -132,7 +136,6 @@ export default function PoolFarming({ theme, themeMode }: any) {
 
   async function dispatchStakingInfo(): Promise<void> {
     await dispatch(getStakingInfo({ networkID: chainID, provider, address, value: quantity }));
-    setCalcQuantity(+quantity);
   }
   async function dispatchClaimEarned(): Promise<void> {
     await dispatch(claimRewards({ networkID: chainID, provider, address }));
@@ -171,7 +174,7 @@ export default function PoolFarming({ theme, themeMode }: any) {
 
   async function getAllData() {
     await dispatch(getAssetPrice({ networkID: chainID, provider }));
-    await dispatch(getStakingInfo({ networkID: chainID, provider, address, value: "0" }));
+    await dispatch(getStakingInfo({ networkID: chainID, provider, address, value: quantity }));
     await dispatch(getStakingRewardsInfo({ networkID: chainID, provider, address }));
     await dispatch(getTorPoolInfo({ networkID: chainID, provider, address }));
     await dispatch(getTorBalance({ networkID: chainID, provider, address }));
@@ -203,7 +206,7 @@ export default function PoolFarming({ theme, themeMode }: any) {
   useEffect(() => {
     const updateInterval = setInterval(() => {
       if (address) {
-        dispatch(getStakingInfo({ networkID: chainID, provider, address, value: "0" }));
+        dispatch(getStakingInfo({ networkID: chainID, provider, address, value: quantity }));
         dispatch(getTorBalance({ networkID: chainID, provider, address }));
       }
     }, 1000 * 60);
@@ -211,6 +214,22 @@ export default function PoolFarming({ theme, themeMode }: any) {
       clearInterval(updateInterval);
     };
   }, [address]);
+
+  useEffect(() => {
+    const optimalAmounts = [
+      getFormattedStakingInfo("_optimalHugsAmount", stakingInfo, "ether"),
+      getFormattedStakingInfo("_optimalDaiAmount", stakingInfo, "ether"),
+      getFormattedStakingInfo("_optimalUsdcAmount", stakingInfo, "ether"),
+    ];
+    const index = optimalAmounts.indexOf(Math.max.apply(null, optimalAmounts));
+    if (index === 0) {
+      setOptimalCoin("TOR");
+    } else if (index === 1) {
+      setOptimalCoin("DAI");
+    } else {
+      setOptimalCoin("USDC");
+    }
+  }, [stakingInfo]);
 
   return (
     <div className="pool-farming">
@@ -225,6 +244,13 @@ export default function PoolFarming({ theme, themeMode }: any) {
             <div>TOR Balance</div>
             <div className="balance">{trim(torBalance?.balance, 2)}</div>
           </div>
+          {optimalCoin === "TOR" && (
+            <>
+              <Tooltip title="Recommended to deposit TOR into to curve for most LP">
+                <BestFarmIcon />
+              </Tooltip>
+            </>
+          )}
         </div>
         <hr />
         <div className="token">
@@ -233,6 +259,13 @@ export default function PoolFarming({ theme, themeMode }: any) {
             <div>DAI Balance</div>
             <div className="balance">{trim(daiUsdcBalance?.daiBalance, 2)}</div>
           </div>
+          {optimalCoin === "DAI" && (
+            <>
+              <Tooltip title="Recommended to deposit DAI into to curve for most LP">
+                <BestFarmIcon />
+              </Tooltip>
+            </>
+          )}
         </div>
         <hr />
 
@@ -242,6 +275,13 @@ export default function PoolFarming({ theme, themeMode }: any) {
             <div>USDC Balance</div>
             <div className="balance">{trim(daiUsdcBalance?.usdcBalance, 2)}</div>
           </div>
+          {optimalCoin === "USDC" && (
+            <>
+              <Tooltip title="Recommended to deposit USDC into to curve for most LP">
+                <BestFarmIcon />
+              </Tooltip>
+            </>
+          )}
         </div>
         <hr />
 
@@ -447,8 +487,6 @@ interface TokenBalances {
   curveProportions: CurveProportions;
   torPoolInfo: TorPoolInfo;
 }
-
-type Tokens = "DAI" | "TOR" | "USDC";
 
 const Curve = ({ daiUsdcBalance, torBalance, curveProportions, torPoolInfo }: TokenBalances) => {
   const dispatch = useDispatch();
