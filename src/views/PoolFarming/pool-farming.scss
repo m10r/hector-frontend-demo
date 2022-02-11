@@ -8,6 +8,10 @@
 .pool-farming {
   display: grid;
   box-sizing: border-box;
+  grid-template:
+    "stats stats"
+    "balances rewards"
+    "curve curve" / 0.5fr 1fr;
   gap: 20px;
   align-content: center;
   justify-content: center;
@@ -62,7 +66,7 @@
   .stats {
     justify-content: space-between;
     display: flex;
-    grid-column: span 2;
+    grid-area: stats;
     align-items: center;
     .tor-title {
       font-size: 25px;
@@ -95,6 +99,7 @@
   }
 
   .wallet {
+    grid-area: balances;
     min-width: 250px;
     display: grid;
     hr {
@@ -127,6 +132,16 @@
           font-weight: bold;
         }
       }
+      @media screen and (max-width: 675px) {
+        .details {
+          grid-auto-flow: column;
+          align-items: center;
+          .balance {
+            font-size: 20px;
+            text-align: right;
+          }
+        }
+      }
       img {
         width: 30px;
         height: 30px;
@@ -136,6 +151,7 @@
 
   .farming {
     display: grid;
+    grid-area: rewards;
     box-sizing: border-box;
     grid-template-rows: max-content;
     .header {
@@ -197,17 +213,9 @@
     }
   }
 
-  @media screen and (max-width: 670px) {
-    .farming,
-    .wallet {
-      grid-column: span 2;
-    }
-  }
-
   .curve-pool {
+    grid-area: curve;
     display: grid;
-    grid-template-columns: 1fr;
-    grid-column: span 2;
     column-gap: 20px;
 
     @media screen and (max-width: 1111px) {
@@ -322,15 +330,14 @@
     border-radius: 26px;
   }
 }
-@media screen and (max-width: 1450px) {
+
+@media screen and (max-width: 675px) {
   .pool-farming {
-    grid-template-columns: auto 1fr;
-  }
-}
-@media screen and (max-width: 750px) {
-  .pool-farming {
-    grid-template-columns: 1fr;
-    grid-template-rows: repeat(3, max-content);
+    grid-template:
+      "stats"
+      "balances"
+      "rewards"
+      "curve" /1fr;
   }
 }
 
