@@ -9,7 +9,6 @@ import SDK, {
   CrossChainTrade,
   InsufficientLiquidityError,
 } from "hector-rubic-sdk";
-import { useWeb3Context } from "src/hooks";
 import { sleep } from "src/helpers/Sleep";
 import { ReactComponent as ChevronIcon } from "src/assets/icons/chevron.svg";
 import { ReactComponent as ArrowDownIcon } from "src/assets/icons/arrow-down.svg";
@@ -21,13 +20,13 @@ import { abi as ierc20Abi } from "src/abi/IERC20.json";
 import { abi as erc20Abi } from "src/abi/ERC20.json";
 import { FANTOM, AVALANCHE, BINANCE, Chain, CHAINS, ETHEREUM, MOONRIVER, POLYGON, Token } from "../../helpers/Chains";
 import { prettyDisplayNumber } from "src/helpers";
-import { switchNetwork } from "src/helpers/SwitchNetwork";
+import { useWeb3Chain, Web3Connection } from "src/hooks/web3Chain";
 
-const FTM = FANTOM.tokens.find(t => t.id === "fantom");
-const HEC = FANTOM.tokens.find(t => t.id === "hector-dao");
-const lastExchange = getLastExchange() ?? { from: { chain: FANTOM, token: FTM }, to: { chain: FANTOM, token: HEC } };
-
-function getLastExchange(): { from: { chain: Chain; token: Token }; to: { chain: Chain; token: Token } } {
+interface Exchange {
+  from: { chain: Chain; token: Token };
+  to: { chain: Chain; token: Token };
+}
+function getLastExchange(): Exchange {
   const lastExchange = JSON.parse(localStorage.getItem("exchange"));
   if (!lastExchange) {
     return undefined;
@@ -84,22 +83,39 @@ const rubicConfiguration: Configuration = {
   },
 };
 
+const FTM = FANTOM.tokens.find(t => t.id === "fantom");
+const HEC = FANTOM.tokens.find(t => t.id === "hector-dao");
+
 export default function Exchange() {
+  const lastExchange = useMemo(() => {
+    return getLastExchange() ?? { from: { chain: FANTOM, token: FTM }, to: { chain: FANTOM, token: HEC } };
+  }, []);
+  const [from, setFrom] = useState<Token>(lastExchange.from.token);
+  const [to, setTo] = useState<Token>(lastExchange.to.token);
+  const [fromChain, setFromChain] = useState<Chain>(lastExchange.from.chain);
+  const [toChain, setToChain] = useState<Chain>(lastExchange.to.chain);
+  const [fromUsd, setFromUsd] = useState<string>();
+  const [toUsd, setToUsd] = useState<string>();
+  const [amount, setAmount] = useState("");
+  const [trade, setTrade] = useState<InstantTrade | CrossChainTrade | undefined>(undefined);
+  const [canBuy, setCanBuy] = useState(true);
+  const [loading, setLoading] = useState(false);
+
   const [configuration, setConfiguration] = useState(rubicConfiguration);
   const [rubic, setRubic] = useState<SDK>(null);
   useEffect(() => {
     SDK.createSDK(configuration).then(setRubic);
   }, []);
 
-  const web3 = useWeb3Context();
+  const web3 = useWeb3Chain(fromChain);
   const [wallet, setWallet] = useState<WalletProvider>(null);
   useEffect(() => {
-    if (!web3.connected) {
+    if (web3.connection !== Web3Connection.Connected) {
       return;
     }
     setWallet({
       address: web3.address,
-      chainId: web3.chainID,
+      chainId: web3.chain.chainId,
       core: window.ethereum,
     });
   }, [web3]);
@@ -118,26 +134,20 @@ export default function Exchange() {
     update();
   }, [rubic, wallet]);
 
-  const [from, setFrom] = useState<Token>(lastExchange.from.token);
-  const [to, setTo] = useState<Token>(lastExchange.to.token);
-  const [fromChain, setFromChain] = useState<Chain>(lastExchange.from.chain);
-  const [toChain, setToChain] = useState<Chain>(lastExchange.to.chain);
-  const [fromUsd, setFromUsd] = useState<string>();
-  const [toUsd, setToUsd] = useState<string>();
-  const [amount, setAmount] = useState("");
-  const [trade, setTrade] = useState<InstantTrade | CrossChainTrade | undefined>(undefined);
-  const [canBuy, setCanBuy] = useState(true);
-  const [loading, setLoading] = useState(false);
-
   useEffect(() => {
-    switchNetwork(fromChain);
-  }, [fromChain]);
+    if (web3.connection === Web3Connection.ConnectedWrongChain) {
+      web3.switchChain();
+    }
+  }, [web3]);
 
   const [decimals, setDecimals] = useState<number>(18);
 
   const provider = useMemo(() => new ethers.providers.JsonRpcProvider(fromChain.rpc[0]), [fromChain]);
 
   async function getBalance(): Promise<EthersBigNumber> {
+    if (web3.connection !== Web3Connection.Connected) {
+      return;
+    }
     if (from.address === NATIVE_ADDRESS) {
       return await web3.provider.getBalance(web3.address);
     }
@@ -341,12 +351,10 @@ export default function Exchange() {
             onChange={e => setAmount(e.currentTarget.value)}
           />
           <span className="usd">{fromUsd ? `$${fromUsd}` : "—"}</span>
-          {/* <button
-            className="max-balance"
-            onClick={async () => setAmount(ethers.utils.formatUnits(await getBalance(), decimals))}
-          >
-            MAX
-          </button> */}
+          <div className="controls">
+            <button onClick={async () => setAmount(ethers.utils.formatUnits(await getBalance(), decimals))}>MIN</button>
+            <button onClick={async () => setAmount(ethers.utils.formatUnits(await getBalance(), decimals))}>MAX</button>
+          </div>
         </div>
         <div className="swap">
           <Spinner className="spinner" style={{ opacity: loading ? "1" : "0" }} />
@@ -382,7 +390,7 @@ export default function Exchange() {
           <span className="usd">{toUsd ? `$${toUsd}` : "—"}</span>
         </div>
         <TradeDetail trade={trade} />
-        {web3.connected ? (
+        {web3.connection === Web3Connection.Connected && (
           <button
             className="swap-button"
             onClick={async () => {
@@ -403,9 +411,20 @@ export default function Exchange() {
             style={{ opacity: trade ? 1 : 0.5, cursor: trade ? "pointer" : "not-allowed" }}
             disabled={trade == undefined}
           >
-            Swap
+            {fromChain.chainId === toChain.chainId ? "Swap" : "Bridge"}
           </button>
-        ) : (
+        )}
+        {web3.connection === Web3Connection.ConnectedWrongChain && (
+          <button
+            className="swap-button"
+            onClick={async () => {
+              await web3.switchChain();
+            }}
+          >
+            Connect to {fromChain.name}
+          </button>
+        )}
+        {web3.connection === Web3Connection.Disconnected && (
           <button
             className="swap-button"
             onClick={async () => {
