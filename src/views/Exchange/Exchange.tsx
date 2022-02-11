@@ -202,7 +202,6 @@ export default function Exchange() {
       }
 
       try {
-        console.log(to, toChain);
         const tradeRequest =
           fromChain.chainId === toChain.chainId
             ? rubic.instantTrades

@@ -140,7 +140,6 @@ export const Web3ContextProvider: React.FC<{ children: ReactElement }> = ({ chil
     setAddress(connectedAddress);
     setProvider(connectedProvider);
     setConnected(true);
-    console.log("updated everything");
     return connectedProvider;
   }, []);
 
@@ -183,7 +182,6 @@ export const Web3ContextProvider: React.FC<{ children: ReactElement }> = ({ chil
   };
 
   const disconnect = useCallback(async () => {
-    console.log("disconnecting");
     WEB_3_MODAL.clearCachedProvider();
     setConnected(false);
 
