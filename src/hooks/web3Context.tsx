@@ -4,7 +4,6 @@ import { StaticJsonRpcProvider, JsonRpcProvider, Web3Provider } from "@etherspro
 import WalletConnectProvider from "@walletconnect/web3-provider";
 import { IFrameEthereumProvider } from "@ledgerhq/iframe-provider";
 import { NodeHelper } from "src/helpers/NodeHelper";
-import { error } from "src/slices/MessagesSlice";
 import { CHAINS, FANTOM } from "src/helpers/Chains";
 
 /**
@@ -145,10 +144,8 @@ export const Web3ContextProvider: React.FC<{ children: ReactElement }> = ({ chil
     const chainId = await connectedProvider.getNetwork().then(network => network.chainId);
     setVChain(chainId);
     const connectedAddress = await connectedProvider.getSigner().getAddress();
-    const validNetwork = _checkNetwork(chainId);
-    if (!validNetwork) {
-      console.error("Unsupported network!");
-      error("Please connect your wallet!");
+    _checkNetwork(chainId);
+    if (chainId !== FANTOM.chainId) {
       return;
     }
     // Save everything after we've validated the right network.

@@ -38,6 +38,7 @@ import PoolFarming from "./views/PoolFarming/pool-farming";
 import Investments from "./views/Investments/investments";
 import { HECTOR_ENV } from "./helpers/Environment";
 import Mint from "./views/Mint/Mint";
+import { FANTOM } from "./helpers/Chains";
 
 const drawerWidth = 300;
 const transitionDuration = 969;
@@ -116,7 +117,7 @@ function App() {
     }
 
     // don't run unless provider is a Wallet...
-    if (whichDetails === "account" && address && connected) {
+    if (whichDetails === "account" && address && connected && chainID === FANTOM.chainId) {
       loadAccount(loadProvider);
     }
   }
