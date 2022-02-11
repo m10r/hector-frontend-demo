@@ -146,7 +146,7 @@ export default function Exchange() {
 
   async function getBalance(): Promise<EthersBigNumber> {
     if (web3.connection !== Web3Connection.Connected) {
-      return;
+      return EthersBigNumber.from(0);
     }
     if (from.address === NATIVE_ADDRESS) {
       return await web3.provider.getBalance(web3.address);
@@ -353,7 +353,12 @@ export default function Exchange() {
           <div className="controls">
             <button onClick={async () => setAmount(ethers.utils.formatUnits(await getBalance(), decimals))}>MIN</button>
             <div className="vr" />
-            <button onClick={async () => setAmount(ethers.utils.formatUnits(await getBalance(), decimals))}>MAX</button>
+            <button
+              onClick={async () => setAmount(ethers.utils.formatUnits(await getBalance(), decimals))}
+              disabled={web3.connection !== Web3Connection.Connected}
+            >
+              MAX
+            </button>
           </div>
         </div>
         <div className="swap">

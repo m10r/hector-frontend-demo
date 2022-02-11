@@ -152,6 +152,9 @@
           color: var(--interact-text-color);
           background-color: var(--interact-background-color);
         }
+        &:disabled {
+          cursor: not-allowed;
+        }
       }
     }
 
