@@ -56,7 +56,6 @@ import TabPanel from "src/components/TabPanel";
 import { error } from "src/slices/MessagesSlice";
 import DaiToken from "../../assets/tokens/DAI.svg";
 import UsdcToken from "../../assets/tokens/USDC.svg";
-import wFTMToken from "../../assets/tokens/wFTM.png";
 import curveToken from "../../assets/tokens/curve.png";
 import farmingInfoDark from "../../assets/Farming-info-dark.png";
 import farmingInfoLight from "../../assets/Farming-info-light.png";
