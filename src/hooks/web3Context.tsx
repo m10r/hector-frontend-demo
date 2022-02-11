@@ -1,6 +1,6 @@
 import React, { useState, ReactElement, useContext, useEffect, useMemo, useCallback } from "react";
-import Web3Modal from "web3modal";
-import { StaticJsonRpcProvider, JsonRpcProvider, Web3Provider } from "@ethersproject/providers";
+import Web3Modal, { CONNECT_EVENT } from "web3modal";
+import { StaticJsonRpcProvider, JsonRpcProvider, Web3Provider, ExternalProvider } from "@ethersproject/providers";
 import WalletConnectProvider from "@walletconnect/web3-provider";
 import { IFrameEthereumProvider } from "@ledgerhq/iframe-provider";
 import { NodeHelper } from "src/helpers/NodeHelper";
@@ -17,7 +17,7 @@ function isIframe() {
   Types
 */
 type onChainProvider = {
-  connect: () => Promise<Web3Provider | undefined>;
+  connect: () => Promise<JsonRpcProvider | undefined>;
   disconnect: () => void;
   checkWrongNetwork: () => Promise<boolean>;
   hasCachedProvider: () => boolean;
@@ -54,6 +54,22 @@ export const useAddress = () => {
   return address;
 };
 
+export const WEB_3_MODAL = new Web3Modal({
+  cacheProvider: true, // optional
+  providerOptions: {
+    walletconnect: {
+      package: WalletConnectProvider,
+      options: {
+        rpc: Object.fromEntries(CHAINS.map(c => [c.chainId, c.rpc[0]])),
+        qrcode: true,
+        qrcodeModalOptions: {
+          mobileLinks: ["metamask", "trust"],
+        },
+      },
+    },
+  },
+});
+
 export const Web3ContextProvider: React.FC<{ children: ReactElement }> = ({ children }) => {
   const [connected, setConnected] = useState(false);
   const [chainID, setChainID] = useState(250);
@@ -63,27 +79,9 @@ export const Web3ContextProvider: React.FC<{ children: ReactElement }> = ({ chil
 
   const [provider, setProvider] = useState<JsonRpcProvider>(new StaticJsonRpcProvider(uri));
 
-  const [web3Modal, setWeb3Modal] = useState<Web3Modal>(
-    new Web3Modal({
-      cacheProvider: true, // optional
-      providerOptions: {
-        walletconnect: {
-          package: WalletConnectProvider,
-          options: {
-            rpc: Object.fromEntries(CHAINS.map(c => [c.chainId, c.rpc[0]])),
-            qrcode: true,
-            qrcodeModalOptions: {
-              mobileLinks: ["metamask", "trust"],
-            },
-          },
-        },
-      },
-    }),
-  );
-
   const hasCachedProvider = (): boolean => {
-    if (!web3Modal) return false;
-    if (!web3Modal.cachedProvider) return false;
+    if (!WEB_3_MODAL) return false;
+    if (!WEB_3_MODAL.cachedProvider) return false;
     return true;
   };
 
@@ -127,20 +125,11 @@ export const Web3ContextProvider: React.FC<{ children: ReactElement }> = ({ chil
     return true;
   };
 
-  // connect - only runs for WalletProviders
-  const connect = useCallback(async () => {
-    // handling Ledger Live;
-    let rawProvider;
-    if (isIframe()) {
-      rawProvider = new IFrameEthereumProvider();
-    } else {
-      rawProvider = await web3Modal.connect();
-    }
-
+  const _connect = useCallback(async (provider: ExternalProvider) => {
     // new _initListeners implementation matches Web3Modal Docs
     // ... see here: https://github.com/Web3Modal/web3modal/blob/2ff929d0e99df5edf6bb9e88cff338ba6d8a3991/example/src/App.tsx#L185
-    _initListeners(rawProvider);
-    const connectedProvider = new Web3Provider(rawProvider, "any");
+    _initListeners(provider);
+    const connectedProvider = new Web3Provider(provider, "any");
     const chainId = await connectedProvider.getNetwork().then(network => network.chainId);
     setVChain(chainId);
     const connectedAddress = await connectedProvider.getSigner().getAddress();
@@ -148,16 +137,41 @@ export const Web3ContextProvider: React.FC<{ children: ReactElement }> = ({ chil
     if (chainId !== FANTOM.chainId) {
       return;
     }
-    // Save everything after we've validated the right network.
-    // Eventually we'll be fine without doing network validations.
     setAddress(connectedAddress);
     setProvider(connectedProvider);
-
-    // Keep this at the bottom of the method, to ensure any repaints have the data we need
     setConnected(true);
-
+    console.log("updated everything");
     return connectedProvider;
-  }, [provider, web3Modal, connected]);
+  }, []);
+
+  const connect = useCallback(async () => {
+    if (connected && provider) {
+      return provider;
+    }
+
+    // handling Ledger Live;
+    let rawProvider;
+    if (isIframe()) {
+      rawProvider = new IFrameEthereumProvider();
+    } else {
+      rawProvider = await WEB_3_MODAL.connect();
+    }
+
+    return await _connect(rawProvider);
+  }, [_connect, connected, provider]);
+
+  useEffect(() => {
+    if (connected) {
+      return;
+    }
+    const onConnect = (provider: ExternalProvider) => {
+      _connect(provider);
+    };
+    WEB_3_MODAL.on(CONNECT_EVENT, onConnect);
+    return () => {
+      WEB_3_MODAL.off(CONNECT_EVENT, onConnect);
+    };
+  }, [_connect, connected]);
 
   const checkWrongNetwork = async (): Promise<boolean> => {
     const chainId = await provider.getNetwork().then(network => network.chainId);
@@ -170,13 +184,13 @@ export const Web3ContextProvider: React.FC<{ children: ReactElement }> = ({ chil
 
   const disconnect = useCallback(async () => {
     console.log("disconnecting");
-    web3Modal.clearCachedProvider();
+    WEB_3_MODAL.clearCachedProvider();
     setConnected(false);
 
     setTimeout(() => {
       window.location.reload();
     }, 1);
-  }, [provider, web3Modal, connected]);
+  }, [provider, connected]);
 
   const onChainProvider = useMemo(
     () => ({
@@ -189,22 +203,10 @@ export const Web3ContextProvider: React.FC<{ children: ReactElement }> = ({ chil
       address,
       chainID,
       vchainID,
-      web3Modal,
+      web3Modal: WEB_3_MODAL,
       uri,
     }),
-    [
-      connect,
-      disconnect,
-      checkWrongNetwork,
-      hasCachedProvider,
-      provider,
-      connected,
-      address,
-      chainID,
-      vchainID,
-      web3Modal,
-      uri,
-    ],
+    [connect, disconnect, checkWrongNetwork, hasCachedProvider, provider, connected, address, chainID, vchainID, uri],
   );
 
   useEffect(() => {

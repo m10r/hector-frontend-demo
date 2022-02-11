@@ -353,7 +353,7 @@ export default function Exchange() {
           <span className="usd">{fromUsd ? `$${fromUsd}` : "—"}</span>
           <div className="controls">
             <button onClick={async () => setAmount(ethers.utils.formatUnits(await getBalance(), decimals))}>MIN</button>
-            <div className="vr"/>
+            <div className="vr" />
             <button onClick={async () => setAmount(ethers.utils.formatUnits(await getBalance(), decimals))}>MAX</button>
           </div>
         </div>
@@ -422,7 +422,7 @@ export default function Exchange() {
               await web3.switchChain();
             }}
           >
-            Connect to {fromChain.name}
+            Switch to {fromChain.name}
           </button>
         )}
         {web3.connection === Web3Connection.Disconnected && (

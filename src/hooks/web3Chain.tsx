@@ -1,10 +1,10 @@
 import React, { useState, ReactElement, useContext, useCallback, useEffect, useMemo } from "react";
-import Web3Modal from "web3modal";
-import { Web3Provider } from "@ethersproject/providers";
-import WalletConnectProvider from "@walletconnect/web3-provider";
+import Web3Modal, { CONNECT_EVENT } from "web3modal";
+import { ExternalProvider, JsonRpcFetchFunc, JsonRpcProvider, Web3Provider } from "@ethersproject/providers";
 import { IFrameEthereumProvider } from "@ledgerhq/iframe-provider";
 import { Chain, CHAINS } from "src/helpers/Chains";
 import { switchNetwork } from "src/helpers/SwitchNetwork";
+import { WEB_3_MODAL } from "./web3Context";
 
 export enum Web3Connection {
   Disconnected,
@@ -34,18 +34,10 @@ interface ContextProps {
   address?: string;
   connect: () => Promise<void>;
   provider?: Web3Provider;
-  web3Modal: Web3Modal;
 }
 const Web3Chain = React.createContext<ContextProps>(undefined);
 export function useWeb3Chain(want: Chain): Web3ChainStatus {
-  const { connected, address, connect, provider, web3Modal } = useContext(Web3Chain);
-
-  useEffect(() => {
-    // Always run connect() on application start.
-    if (web3Modal?.cachedProvider) {
-      connect();
-    }
-  }, []);
+  const { connected, address, connect, provider } = useContext(Web3Chain);
 
   return useMemo(() => {
     if (!connected) {
@@ -69,41 +61,7 @@ export const Web3ChainProvider: React.FC<{ children: ReactElement }> = ({ childr
   const [address, setAddress] = useState<string>();
   const [provider, setProvider] = useState<Web3Provider>(undefined);
 
-  const [web3Modal, setWeb3Modal] = useState<Web3Modal>(
-    new Web3Modal({
-      cacheProvider: true, // optional
-      providerOptions: {
-        walletconnect: {
-          package: WalletConnectProvider,
-          options: {
-            rpc: Object.fromEntries(CHAINS.map(c => [c.chainId, c.rpc[0]])),
-            qrcode: true,
-            qrcodeModalOptions: {
-              mobileLinks: ["metamask", "trust"],
-            },
-          },
-        },
-      },
-    }),
-  );
-
-  const connect = useCallback(async () => {
-    let externalProvider;
-    if (window.location !== window.parent.location) {
-      // Ledger Live
-      externalProvider = new IFrameEthereumProvider();
-    } else {
-      try {
-        externalProvider = await web3Modal.connect();
-      } catch (e) {
-        console.error("wallet isn't logged in");
-      }
-    }
-
-    if (!externalProvider) {
-      return;
-    }
-
+  const onConnect = useCallback(async externalProvider => {
     externalProvider.on("accountsChanged", async (accounts: string[]) => {
       location.reload();
     });
@@ -117,7 +75,43 @@ export const Web3ChainProvider: React.FC<{ children: ReactElement }> = ({ childr
     });
     const connectedProvider = new Web3Provider(externalProvider, "any");
     setProvider(connectedProvider);
-  }, [web3Modal]);
+  }, []);
+
+  const connect = useCallback(async () => {
+    let externalProvider;
+    if (window.location !== window.parent.location) {
+      // Ledger Live
+      externalProvider = new IFrameEthereumProvider();
+    } else {
+      try {
+        externalProvider = await WEB_3_MODAL.connect();
+      } catch (e) {
+        console.error("wallet isn't logged in");
+      }
+    }
+
+    if (!externalProvider) {
+      return;
+    }
+    onConnect(externalProvider);
+  }, [onConnect]);
+
+  useEffect(() => {
+    if (chain != undefined) {
+      return;
+    }
+    WEB_3_MODAL.on(CONNECT_EVENT, onConnect);
+    return () => {
+      WEB_3_MODAL.off(CONNECT_EVENT, onConnect);
+    };
+  }, [onConnect, chain]);
+
+  useEffect(() => {
+    // Always run connect() on application start.
+    if (WEB_3_MODAL.cachedProvider) {
+      connect();
+    }
+  }, []);
 
   useEffect(() => {
     if (provider == undefined) {
@@ -145,9 +139,5 @@ export const Web3ChainProvider: React.FC<{ children: ReactElement }> = ({ childr
     };
   }, [provider]);
 
-  return (
-    <Web3Chain.Provider value={{ connected: chain, connect, address, provider, web3Modal }}>
-      {children}
-    </Web3Chain.Provider>
-  );
+  return <Web3Chain.Provider value={{ connected: chain, connect, address, provider }}>{children}</Web3Chain.Provider>;
 };
