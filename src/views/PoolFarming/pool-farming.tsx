@@ -245,7 +245,7 @@ export default function PoolFarming({ theme, themeMode }: any) {
             <div className="balance">{trim(torBalance?.balance, 2)}</div>
             {optimalCoin === "TOR" && (
               <>
-                <Tooltip title="Recommended to deposit TOR into to curve for most LP">
+                <Tooltip title="Depositing TOR will get you the most LP">
                   <BestFarmIcon />
                 </Tooltip>
               </>
@@ -260,7 +260,7 @@ export default function PoolFarming({ theme, themeMode }: any) {
             <div className="balance">{trim(daiUsdcBalance?.daiBalance, 2)}</div>
             {optimalCoin === "DAI" && (
               <>
-                <Tooltip title="Recommended to deposit DAI into to curve for most LP">
+                <Tooltip title="Depositing DAI will get you the most LP">
                   <BestFarmIcon />
                 </Tooltip>
               </>
@@ -276,7 +276,7 @@ export default function PoolFarming({ theme, themeMode }: any) {
             <div className="balance">{trim(daiUsdcBalance?.usdcBalance, 2)}</div>
             {optimalCoin === "USDC" && (
               <>
-                <Tooltip title="Recommended to deposit USDC into to curve for most LP">
+                <Tooltip title="Depositing USDC will get you the most LP">
                   <BestFarmIcon />
                 </Tooltip>
               </>

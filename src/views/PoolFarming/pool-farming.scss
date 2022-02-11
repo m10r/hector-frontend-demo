@@ -170,6 +170,7 @@
     grid-area: rewards;
     box-sizing: border-box;
     grid-template-rows: max-content;
+    min-height: 200px;
     .header {
       grid: max-content / max-content 1fr max-content;
       height: fit-content;
