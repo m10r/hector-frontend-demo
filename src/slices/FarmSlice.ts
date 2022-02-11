@@ -497,7 +497,6 @@ export const redeem = createAsyncThunk("farm/redeem", async ({ networkID, provid
       await dispatch(getDaiUsdcBalance({ networkID, provider, address }));
       await dispatch(getTorBalance({ networkID, provider, address }));
       dispatch(info(messages.your_balance_updated));
-
     }
   }
 });

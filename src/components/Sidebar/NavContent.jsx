@@ -241,7 +241,7 @@ function NavContent() {
             </div>
           </div>
         </div>
-        <hr />
+        <hr style={{ width: "80%", marginBottom: "25px", marginTop: "25px" }} />
         <Box className="dapp-menu-bottom" display="flex" justifyContent="space-between" flexDirection="column">
           <div className="dapp-menu-external-links">
             {externalUrls.map(({ url, icon, title, label }, i) => {
