@@ -353,6 +353,7 @@ export default function Exchange() {
           <span className="usd">{fromUsd ? `$${fromUsd}` : "—"}</span>
           <div className="controls">
             <button onClick={async () => setAmount(ethers.utils.formatUnits(await getBalance(), decimals))}>MIN</button>
+            <div className="vr"/>
             <button onClick={async () => setAmount(ethers.utils.formatUnits(await getBalance(), decimals))}>MAX</button>
           </div>
         </div>

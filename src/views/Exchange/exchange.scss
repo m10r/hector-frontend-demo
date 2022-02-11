@@ -132,9 +132,16 @@
       border-radius: 0 0 6px 6px;
       overflow: hidden;
 
+      .vr {
+        width: 4px;
+        background-color: var(--primary-background-color);
+      }
+
       > button {
         border: unset;
-        padding: 5px 10px 3px 10px;
+        width: 50px;
+        padding-top: 5px;
+        padding-bottom: 3px;
         font: inherit;
         font-weight: 500;
         font-size: 0.6em;
