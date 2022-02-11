@@ -25,7 +25,7 @@ import InputAdornment from "@material-ui/core/InputAdornment";
 import Button from "@material-ui/core/Button";
 import { TorSupplyChart } from "../TreasuryDashboard/TreasuryDashboard";
 import "./Mint.scss";
-import { FormHelperText, Tab, Tabs, Tooltip } from "@material-ui/core";
+import { FormControlLabel, FormHelperText, Radio, RadioGroup, Tab, Tabs, Tooltip } from "@material-ui/core";
 import TabPanel from "src/components/TabPanel";
 import { trim } from "src/helpers";
 import InfoTooltip from "src/components/InfoTooltip/InfoTooltip";
@@ -37,6 +37,8 @@ function InputProps(index: any) {
   };
 }
 
+type Tokens = "usdc" | "dai";
+
 export default function Mint() {
   const dispatch = useDispatch();
   const { torBalance, redeemInfo, mintAllowance, daiUsdcBalance, mintInfo, isLoading } = useSelector(
@@ -44,9 +46,15 @@ export default function Mint() {
   );
   const [daiQuantity, setDAIQuantity] = useState("");
   const [usdcQuantity, setUSDCQuantity] = useState("");
-
+  const [redeemAmount, setRedeemAmount] = useState("0");
+  const [radioValue, setRadioValue] = useState<Tokens>("dai");
   const { provider, chainID, address } = useWeb3Context();
   const [view, setView] = useState(0);
+
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const token = (event.target as HTMLInputElement).value as Tokens;
+    setRadioValue(token);
+  };
 
   const changeTabs = (event: React.ChangeEvent<{}>, newValue: number) => {
     setView(newValue);
@@ -101,14 +109,8 @@ export default function Mint() {
   };
 
   const redeemTokens = async () => {
-    if (+daiQuantity > 0) {
-      await dispatch(redeem({ networkID: chainID, provider, address, value: daiQuantity, mint: "dai" }));
-    }
-    if (+usdcQuantity > 0) {
-      await dispatch(redeem({ networkID: chainID, provider, address, value: usdcQuantity, mint: "usdc" }));
-    }
-    setDAIQuantity("");
-    setUSDCQuantity("");
+    await dispatch(redeem({ networkID: chainID, provider, address, value: redeemAmount, mint: radioValue }));
+    setRedeemAmount("");
   };
 
   async function getMintData() {
@@ -117,9 +119,7 @@ export default function Mint() {
     await dispatch(
       getMintInfo({ networkID: chainID, provider, address, value: (+usdcQuantity + +daiQuantity).toString() }),
     );
-    await dispatch(
-      getRedeemInfo({ networkID: chainID, provider, address, value: (+usdcQuantity + +daiQuantity).toString() }),
-    );
+    await dispatch(getRedeemInfo({ networkID: chainID, provider, address, value: redeemAmount }));
     await dispatch(getDaiUsdcBalance({ networkID: chainID, provider, address }));
   }
 
@@ -134,9 +134,7 @@ export default function Mint() {
       dispatch(
         getMintInfo({ networkID: chainID, provider, address, value: (+usdcQuantity + +daiQuantity).toString() }),
       );
-      dispatch(
-        getRedeemInfo({ networkID: chainID, provider, address, value: (+usdcQuantity + +daiQuantity).toString() }),
-      );
+      dispatch(getRedeemInfo({ networkID: chainID, provider, address, value: redeemAmount }));
     }
   }, [usdcQuantity, daiQuantity, provider, address]);
 
@@ -154,11 +152,11 @@ export default function Mint() {
     }
   };
   const tooltipRedeemText = (): string => {
-    if (+daiQuantity + +usdcQuantity > torBalance?.balance) {
+    if (+redeemAmount > torBalance?.balance) {
       return "Must have redeem quantity below TOR balance.";
     } else if (!hasRedeemAllowance()) {
       return "Please approve to redeem.";
-    } else if (+daiQuantity + +usdcQuantity === 0) {
+    } else if (+redeemAmount === 0) {
       return "Must have a redeem amount above 0";
     } else if (!redeemInfo.isCurvePercentageAboveFloor) {
       return "Redeeming is not availabe because curve offers a better price";
@@ -230,101 +228,105 @@ export default function Mint() {
             <Tab label="Mint" {...InputProps(0)} />
             <Tab label="Redeem" {...InputProps(1)} />
           </Tabs>
-          <div className="mint-dai">
-            <img src={DaiToken} />
-            {hasDaiMintAllowance() && (
-              <>
-                <FormControl className="input-amount" fullWidth variant="outlined">
-                  <InputLabel htmlFor="outlined-adornment-amount">DAI</InputLabel>
-                  <OutlinedInput
-                    id="outlined-adornment-amount"
-                    type="number"
-                    error={isDaiFormInvalid()}
-                    value={daiQuantity}
-                    onChange={e => setDAIQuantity(e.target.value)}
-                    endAdornment={
-                      <InputAdornment position="end">
-                        {" "}
-                        <Button
-                          variant="text"
-                          onClick={() =>
-                            view === 0
-                              ? setDAIQuantity(daiUsdcBalance?.daiBalance.toString())
-                              : setDAIQuantity(torBalance?.balance.toString())
-                          }
-                          color="inherit"
-                        >
-                          Max
-                        </Button>
-                      </InputAdornment>
-                    }
-                    labelWidth={25}
-                  />
-                  {isDaiFormInvalid() && <FormHelperText error>Must be less than or equal to balance!</FormHelperText>}
-                </FormControl>
-              </>
-            )}
-
-            {!hasDaiMintAllowance() && (
-              <Button
-                className="stake-button"
-                variant="contained"
-                color="primary"
-                disabled={isLoading}
-                onClick={() => approveDai()}
-              >
-                Approve
-              </Button>
-            )}
-          </div>
-          <div className="mint-usdc">
-            <img src={UsdcToken} />
-            {hasUsdcMintAllowance() && (
-              <>
-                <FormControl className="input-amount" fullWidth variant="outlined">
-                  <InputLabel htmlFor="outlined-adornment-amount">USDC</InputLabel>
-                  <OutlinedInput
-                    id="outlined-adornment-amount"
-                    type="number"
-                    error={isUsdcFormInvalid()}
-                    value={usdcQuantity}
-                    endAdornment={
-                      <InputAdornment position="end">
-                        {" "}
-                        <Button
-                          variant="text"
-                          onClick={() =>
-                            view === 0
-                              ? setUSDCQuantity(daiUsdcBalance?.usdcBalance.toString())
-                              : setUSDCQuantity(torBalance?.balance.toString())
-                          }
-                          color="inherit"
-                        >
-                          Max
-                        </Button>
-                      </InputAdornment>
-                    }
-                    onChange={e => setUSDCQuantity(e.target.value)}
-                    labelWidth={40}
-                  />
-                  {isUsdcFormInvalid() && <FormHelperText error>Must be less than or equal to balance!</FormHelperText>}
-                </FormControl>
-              </>
-            )}
-
-            {!hasUsdcMintAllowance() && (
-              <Button
-                className="stake-button"
-                variant="contained"
-                color="primary"
-                disabled={isLoading}
-                onClick={() => approveUsdc()}
-              >
-                Approve
-              </Button>
-            )}
-          </div>
           <TabPanel value={view} index={0}>
+            <div className="mint-dai">
+              <img src={DaiToken} />
+              {hasDaiMintAllowance() && (
+                <>
+                  <FormControl className="input-amount" fullWidth variant="outlined">
+                    <InputLabel htmlFor="outlined-adornment-amount">DAI</InputLabel>
+                    <OutlinedInput
+                      id="outlined-adornment-amount"
+                      type="number"
+                      error={isDaiFormInvalid()}
+                      value={daiQuantity}
+                      onChange={e => setDAIQuantity(e.target.value)}
+                      endAdornment={
+                        <InputAdornment position="end">
+                          {" "}
+                          <Button
+                            variant="text"
+                            onClick={() =>
+                              view === 0
+                                ? setDAIQuantity(daiUsdcBalance?.daiBalance.toString())
+                                : setDAIQuantity(torBalance?.balance.toString())
+                            }
+                            color="inherit"
+                          >
+                            Max
+                          </Button>
+                        </InputAdornment>
+                      }
+                      labelWidth={25}
+                    />
+                    {isDaiFormInvalid() && (
+                      <FormHelperText error>Must be less than or equal to balance!</FormHelperText>
+                    )}
+                  </FormControl>
+                </>
+              )}
+
+              {!hasDaiMintAllowance() && (
+                <Button
+                  className="stake-button"
+                  variant="contained"
+                  color="primary"
+                  disabled={isLoading}
+                  onClick={() => approveDai()}
+                >
+                  Approve
+                </Button>
+              )}
+            </div>
+            <div className="mint-usdc">
+              <img src={UsdcToken} />
+              {hasUsdcMintAllowance() && (
+                <>
+                  <FormControl className="input-amount" fullWidth variant="outlined">
+                    <InputLabel htmlFor="outlined-adornment-amount">USDC</InputLabel>
+                    <OutlinedInput
+                      id="outlined-adornment-amount"
+                      type="number"
+                      error={isUsdcFormInvalid()}
+                      value={usdcQuantity}
+                      endAdornment={
+                        <InputAdornment position="end">
+                          {" "}
+                          <Button
+                            variant="text"
+                            onClick={() =>
+                              view === 0
+                                ? setUSDCQuantity(daiUsdcBalance?.usdcBalance.toString())
+                                : setUSDCQuantity(torBalance?.balance.toString())
+                            }
+                            color="inherit"
+                          >
+                            Max
+                          </Button>
+                        </InputAdornment>
+                      }
+                      onChange={e => setUSDCQuantity(e.target.value)}
+                      labelWidth={40}
+                    />
+                    {isUsdcFormInvalid() && (
+                      <FormHelperText error>Must be less than or equal to balance!</FormHelperText>
+                    )}
+                  </FormControl>
+                </>
+              )}
+
+              {!hasUsdcMintAllowance() && (
+                <Button
+                  className="stake-button"
+                  variant="contained"
+                  color="primary"
+                  disabled={isLoading}
+                  onClick={() => approveUsdc()}
+                >
+                  Approve
+                </Button>
+              )}
+            </div>
             {mintInfo && (
               <Tooltip title={tooltipDepositText()}>
                 <span>
@@ -351,6 +353,40 @@ export default function Mint() {
             )}
           </TabPanel>
           <TabPanel value={view} index={1}>
+            <div className="redeem">
+              <FormControl className="input-amount" fullWidth variant="outlined">
+                <InputLabel htmlFor="outlined-adornment-amount">TOR Amount</InputLabel>
+                <OutlinedInput
+                  id="outlined-adornment-amount"
+                  type="number"
+                  value={redeemAmount}
+                  onChange={e => setRedeemAmount(e.target.value)}
+                  endAdornment={
+                    <InputAdornment position="end">
+                      {" "}
+                      <Button
+                        variant="text"
+                        onClick={() => setRedeemAmount(torBalance?.balance.toString())}
+                        color="inherit"
+                      >
+                        Max
+                      </Button>
+                    </InputAdornment>
+                  }
+                  labelWidth={55}
+                />
+              </FormControl>
+              <RadioGroup
+                className="radio-group"
+                aria-label="tokens"
+                name="tokens"
+                value={radioValue}
+                onChange={handleChange}
+              >
+                <FormControlLabel value="dai" control={<Radio />} label="DAI" />
+                <FormControlLabel value="usdc" control={<Radio />} label="USDC" />
+              </RadioGroup>
+            </div>
             {redeemInfo && hasRedeemAllowance() && (
               <Tooltip title={tooltipRedeemText()}>
                 <span>
@@ -364,8 +400,8 @@ export default function Mint() {
                       !redeemInfo.isCurvePercentageAboveFloor ||
                       !redeemInfo.ishigherThanReserveFloor ||
                       !hasRedeemAllowance() ||
-                      +daiQuantity + +usdcQuantity > torBalance?.balance ||
-                      +daiQuantity + +usdcQuantity === 0
+                      +redeemAmount > torBalance?.balance ||
+                      +redeemAmount === 0
                     }
                     onClick={() => redeemTokens()}
                   >

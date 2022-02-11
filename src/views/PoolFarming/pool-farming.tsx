@@ -829,8 +829,8 @@ const Curve = ({ daiUsdcBalance, torBalance, curveProportions, torPoolInfo }: To
         </TabPanel>
         <RadioGroup
           className="radio-group"
-          aria-label="gender"
-          name="gender1"
+          aria-label="tokens"
+          name="tokens"
           value={radioValue}
           onChange={handleChange}
         >
