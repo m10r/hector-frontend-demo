@@ -152,7 +152,7 @@ export default function Mint() {
     }
   };
   const tooltipRedeemText = (): string => {
-    if (+redeemAmount > torBalance?.balance) {
+    if (+redeemAmount > +trim(torBalance?.balance, 2)) {
       return "Must have redeem quantity below TOR balance.";
     } else if (!hasRedeemAllowance()) {
       return "Please approve to redeem.";
@@ -404,7 +404,7 @@ export default function Mint() {
                       !redeemInfo.isCurvePercentageAboveFloor ||
                       !redeemInfo.ishigherThanReserveFloor ||
                       !hasRedeemAllowance() ||
-                      +redeemAmount > torBalance?.balance ||
+                      +redeemAmount > +trim(torBalance?.balance, 2) ||
                       +redeemAmount === 0
                     }
                     onClick={() => redeemTokens()}
