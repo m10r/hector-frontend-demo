@@ -97,7 +97,7 @@ export default function PoolFarming({ theme, themeMode }: any) {
     daiUsdcBalance,
     isLoading,
   } = useSelector((state: RootState) => state.farm);
-  const quantity = "1000";
+  const quantity = "10000";
 
   const [stakeQuantity, setStakeQuantity] = useState("");
   const [withdrawQuantity, setWtihdrawQuantity] = useState("");
