@@ -127,7 +127,7 @@ export default function PoolFarming({ theme, themeMode }: any) {
     if (stakingInfo && assetPrice) {
       const earnedUSD = +ethers.utils.formatEther(stakingInfo?._earnedRewardAmount);
       const assetPriceUSD = assetPrice.toNumber() / 1e8;
-      return (earnedUSD * assetPriceUSD).toFixed(2);
+      return earnedUSD * assetPriceUSD;
     }
   }, [stakingInfo, assetPrice]);
 
@@ -338,7 +338,8 @@ export default function PoolFarming({ theme, themeMode }: any) {
                 <div>
                   <div className="title">wFTM Rewards: </div>
                   <div className="data">
-                    {trim(getFormattedStakingInfo("_earnedRewardAmount", stakingInfo, "ether"), 4)}
+                    {trim(getFormattedStakingInfo("_earnedRewardAmount", stakingInfo, "ether"), 4)} (
+                    {formatCurrency(+getEarnedUsd(), 2)})
                   </div>
                 </div>
                 <div className="buttons">
