@@ -224,7 +224,7 @@ export default function PoolFarming({ theme, themeMode }: any) {
           <TorSVG style={{ height: "30px", width: "30px" }} />
           <div className="details">
             <div>TOR Balance</div>
-            <div className="balance">{trim(torBalance?.balance, 4)}</div>
+            <div className="balance">{trim(torBalance?.balance, 2)}</div>
           </div>
         </div>
         <hr />
@@ -232,7 +232,7 @@ export default function PoolFarming({ theme, themeMode }: any) {
           <img src={DaiToken} />
           <div className="details">
             <div>DAI Balance</div>
-            <div className="balance">{trim(daiUsdcBalance?.daiBalance, 4)}</div>
+            <div className="balance">{trim(daiUsdcBalance?.daiBalance, 2)}</div>
           </div>
         </div>
         <hr />
@@ -241,7 +241,7 @@ export default function PoolFarming({ theme, themeMode }: any) {
           <img src={UsdcToken} />
           <div className="details">
             <div>USDC Balance</div>
-            <div className="balance">{trim(daiUsdcBalance?.usdcBalance, 4)}</div>
+            <div className="balance">{trim(daiUsdcBalance?.usdcBalance, 2)}</div>
           </div>
         </div>
         <hr />
@@ -250,7 +250,7 @@ export default function PoolFarming({ theme, themeMode }: any) {
           <img src={curveToken} />
           <div className="details">
             <div>LP Balance</div>
-            <div className="balance">{trim(torPoolInfo?.balance, 4)}</div>
+            <div className="balance">{trim(torPoolInfo?.balance, 2)}</div>
           </div>
         </div>
       </div>
