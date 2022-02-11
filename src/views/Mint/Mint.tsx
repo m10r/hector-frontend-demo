@@ -354,28 +354,32 @@ export default function Mint() {
           </TabPanel>
           <TabPanel value={view} index={1}>
             <div className="redeem">
-              <FormControl className="input-amount" fullWidth variant="outlined">
-                <InputLabel htmlFor="outlined-adornment-amount">TOR Amount</InputLabel>
-                <OutlinedInput
-                  id="outlined-adornment-amount"
-                  type="number"
-                  value={redeemAmount}
-                  onChange={e => setRedeemAmount(e.target.value)}
-                  endAdornment={
-                    <InputAdornment position="end">
-                      {" "}
-                      <Button
-                        variant="text"
-                        onClick={() => setRedeemAmount(torBalance?.balance.toString())}
-                        color="inherit"
-                      >
-                        Max
-                      </Button>
-                    </InputAdornment>
-                  }
-                  labelWidth={55}
-                />
-              </FormControl>
+              <div>
+                <TorSVG style={{ height: "25px", width: "25px" }} />
+                <FormControl className="input-amount" fullWidth variant="outlined">
+                  <InputLabel htmlFor="outlined-adornment-amount">TOR Amount</InputLabel>
+                  <OutlinedInput
+                    id="outlined-adornment-amount"
+                    type="number"
+                    value={redeemAmount}
+                    onChange={e => setRedeemAmount(e.target.value)}
+                    endAdornment={
+                      <InputAdornment position="end">
+                        {" "}
+                        <Button
+                          variant="text"
+                          onClick={() => setRedeemAmount(torBalance?.balance.toString())}
+                          color="inherit"
+                        >
+                          Max
+                        </Button>
+                      </InputAdornment>
+                    }
+                    labelWidth={90}
+                  />
+                </FormControl>
+              </div>
+
               <RadioGroup
                 className="radio-group"
                 aria-label="tokens"

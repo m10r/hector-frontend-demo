@@ -136,6 +136,12 @@
         row-gap: 10px;
         margin-bottom: 10px;
         justify-items: center;
+        > div {
+          align-items: center;
+          column-gap: 10px;
+          width: 100%;
+          display: flex;
+        }
         .radio-group {
           width: 100%;
           justify-items: center;
