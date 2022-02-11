@@ -241,47 +241,47 @@ export default function PoolFarming({ theme, themeMode }: any) {
         <div className="token">
           <TorSVG style={{ height: "30px", width: "30px" }} />
           <div className="details">
-            <div>TOR Balance</div>
+            <div className="coin">TOR Balance</div>
             <div className="balance">{trim(torBalance?.balance, 2)}</div>
+            {optimalCoin === "TOR" && (
+              <>
+                <Tooltip title="Recommended to deposit TOR into to curve for most LP">
+                  <BestFarmIcon />
+                </Tooltip>
+              </>
+            )}
           </div>
-          {optimalCoin === "TOR" && (
-            <>
-              <Tooltip title="Recommended to deposit TOR into to curve for most LP">
-                <BestFarmIcon />
-              </Tooltip>
-            </>
-          )}
         </div>
         <hr />
         <div className="token">
           <img src={DaiToken} />
           <div className="details">
-            <div>DAI Balance</div>
+            <div className="coin">DAI Balance</div>
             <div className="balance">{trim(daiUsdcBalance?.daiBalance, 2)}</div>
+            {optimalCoin === "DAI" && (
+              <>
+                <Tooltip title="Recommended to deposit DAI into to curve for most LP">
+                  <BestFarmIcon />
+                </Tooltip>
+              </>
+            )}
           </div>
-          {optimalCoin === "DAI" && (
-            <>
-              <Tooltip title="Recommended to deposit DAI into to curve for most LP">
-                <BestFarmIcon />
-              </Tooltip>
-            </>
-          )}
         </div>
         <hr />
 
         <div className="token">
           <img src={UsdcToken} />
           <div className="details">
-            <div>USDC Balance</div>
+            <div className="coin">USDC Balance</div>
             <div className="balance">{trim(daiUsdcBalance?.usdcBalance, 2)}</div>
+            {optimalCoin === "USDC" && (
+              <>
+                <Tooltip title="Recommended to deposit USDC into to curve for most LP">
+                  <BestFarmIcon />
+                </Tooltip>
+              </>
+            )}
           </div>
-          {optimalCoin === "USDC" && (
-            <>
-              <Tooltip title="Recommended to deposit USDC into to curve for most LP">
-                <BestFarmIcon />
-              </Tooltip>
-            </>
-          )}
         </div>
         <hr />
 

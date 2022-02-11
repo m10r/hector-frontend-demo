@@ -119,28 +119,38 @@
     }
     .token {
       display: grid;
-      grid-template-columns: max-content 1fr 1fr;
+      grid-template-columns: max-content 1fr;
       column-gap: 10px;
       align-items: center;
-      svg {
-        width: 20px;
-        height: 20px;
-        justify-self: center;
-        opacity: 0.6;
-      }
+
       div:first-child {
         opacity: 0.5;
       }
       .details {
         display: grid;
+        align-items: center;
+        grid-template:
+          "coin best-farm"
+          "amount best-farm"/1fr 1fr;
         row-gap: 5px;
+        .coin {
+          grid-area: coin;
+        }
         .balance {
+          grid-area: amount;
           font-weight: bold;
+        }
+        svg {
+          grid-area: best-farm;
+          width: 20px;
+          height: 20px;
+          justify-self: center;
+          opacity: 0.6;
         }
       }
       @media screen and (max-width: 675px) {
         .details {
-          grid-auto-flow: column;
+          grid-template: "coin best-farm amount"/ 1fr 1fr 1fr;
           align-items: center;
           .balance {
             font-size: 20px;
