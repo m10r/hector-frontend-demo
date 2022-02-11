@@ -34,10 +34,19 @@ interface ContextProps {
   address?: string;
   connect: () => Promise<void>;
   provider?: Web3Provider;
+  web3Modal: Web3Modal;
 }
 const Web3Chain = React.createContext<ContextProps>(undefined);
 export function useWeb3Chain(want: Chain): Web3ChainStatus {
-  const { connected, address, connect, provider } = useContext(Web3Chain);
+  const { connected, address, connect, provider, web3Modal } = useContext(Web3Chain);
+
+  useEffect(() => {
+    // Always run connect() on application start.
+    if (web3Modal?.cachedProvider) {
+      connect();
+    }
+  }, []);
+
   return useMemo(() => {
     if (!connected) {
       return { connection: Web3Connection.Disconnected, connect };
@@ -111,14 +120,6 @@ export const Web3ChainProvider: React.FC<{ children: ReactElement }> = ({ childr
   }, [web3Modal]);
 
   useEffect(() => {
-    // Always run connect() on application start.
-    const hasCachedProvider = web3Modal?.cachedProvider != undefined;
-    if (hasCachedProvider) {
-      connect();
-    }
-  }, []);
-
-  useEffect(() => {
     if (provider == undefined) {
       setChain(undefined);
       setAddress(undefined);
@@ -144,5 +145,9 @@ export const Web3ChainProvider: React.FC<{ children: ReactElement }> = ({ childr
     };
   }, [provider]);
 
-  return <Web3Chain.Provider value={{ connected: chain, connect, address, provider }}>{children}</Web3Chain.Provider>;
+  return (
+    <Web3Chain.Provider value={{ connected: chain, connect, address, provider, web3Modal }}>
+      {children}
+    </Web3Chain.Provider>
+  );
 };
