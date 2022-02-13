@@ -105,7 +105,7 @@ export default function PoolFarming({ theme, themeMode }: any) {
   const [optimalCoin, setOptimalCoin] = useState<Tokens>("");
   const [view, setView] = useState(0);
   const [torStats, setTorStats] = useState({ apy: "", torTVL: "" });
-  const { provider, chainID, address } = useWeb3Context();
+  const { provider, chainID, address, connected } = useWeb3Context();
 
   const handleChange = (event: React.ChangeEvent<{}>, newValue: number) => {
     setView(newValue);
@@ -216,20 +216,22 @@ export default function PoolFarming({ theme, themeMode }: any) {
   }, [address]);
 
   useEffect(() => {
-    const optimalAmounts = [
-      getFormattedStakingInfo("_optimalHugsAmount", stakingInfo, "ether"),
-      getFormattedStakingInfo("_optimalDaiAmount", stakingInfo, "ether"),
-      getFormattedStakingInfo("_optimalUsdcAmount", stakingInfo, "ether"),
-    ];
-    const index = optimalAmounts.indexOf(Math.max.apply(null, optimalAmounts));
-    if (index === 0) {
-      setOptimalCoin("TOR");
-    } else if (index === 1) {
-      setOptimalCoin("DAI");
-    } else {
-      setOptimalCoin("USDC");
+    if (connected) {
+      const optimalAmounts = [
+        getFormattedStakingInfo("_optimalHugsAmount", stakingInfo, "ether"),
+        getFormattedStakingInfo("_optimalDaiAmount", stakingInfo, "ether"),
+        getFormattedStakingInfo("_optimalUsdcAmount", stakingInfo, "ether"),
+      ];
+      const index = optimalAmounts.indexOf(Math.max.apply(null, optimalAmounts));
+      if (index === 0) {
+        setOptimalCoin("TOR");
+      } else if (index === 1) {
+        setOptimalCoin("DAI");
+      } else {
+        setOptimalCoin("USDC");
+      }
     }
-  }, [stakingInfo]);
+  }, [stakingInfo, connected]);
 
   return (
     <div className="pool-farming">
