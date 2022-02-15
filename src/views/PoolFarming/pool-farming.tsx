@@ -64,7 +64,7 @@ import HelpOutlineIcon from "@material-ui/icons/HelpOutline";
 import CancelIcon from "@material-ui/icons/Cancel";
 import { formatCurrency, trim } from "src/helpers";
 import apollo from "src/lib/apolloClient";
-import { THE_ALT_GRAPH_URL } from "src/constants";
+import { THE_ALT_GRAPH_URL, THE_GRAPH_URL } from "src/constants";
 
 type UserAction = "stake" | "unstake" | "approve" | "mint" | "deposit" | "withdraw";
 function a11yProps(index: any) {
@@ -189,7 +189,7 @@ export default function PoolFarming({ theme, themeMode }: any) {
         torTVL
       }
     }`;
-    apollo(query, THE_ALT_GRAPH_URL).then((r: any) => {
+    apollo(query, THE_GRAPH_URL).then((r: any) => {
       if (!r?.data?.tors) {
         return;
       }
