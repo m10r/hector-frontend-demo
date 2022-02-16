@@ -47,6 +47,7 @@ import {
   curveUsdcApprove,
   curveTorApprove,
   curveWithdrawApprove,
+  stakingGateway,
 } from "src/slices/FarmSlice";
 import { ReactComponent as ArrowUp } from "../../assets/icons/arrow-up.svg";
 import { CurveProportions, StakingInfo, TorBalance, TorPoolInfo } from "src/types/farming.model";
@@ -64,7 +65,7 @@ import HelpOutlineIcon from "@material-ui/icons/HelpOutline";
 import CancelIcon from "@material-ui/icons/Cancel";
 import { formatCurrency, trim } from "src/helpers";
 import apollo from "src/lib/apolloClient";
-import { THE_ALT_GRAPH_URL, THE_GRAPH_URL } from "src/constants";
+import { THE_GRAPH_URL } from "src/constants";
 
 type UserAction = "stake" | "unstake" | "approve" | "mint" | "deposit" | "withdraw";
 function a11yProps(index: any) {
@@ -182,22 +183,20 @@ export default function PoolFarming({ theme, themeMode }: any) {
     await dispatch(getDaiUsdcBalance({ networkID: chainID, provider, address }));
   }
 
-  useEffect(() => {
-    const query = `query {
-      tors(first: 1, orderBy: timestamp, orderDirection: desc) {
-        apy
-        torTVL
+  async function updateTorStats() {
+    if (chainID && provider) {
+      const data = await stakingGateway(chainID, provider).getStakingInfo(
+        "0x0000000000000000000000000000000000000000",
+        0,
+      );
+      if (data) {
+        setTorStats({ apy: ethers.utils.formatEther(data._apr), torTVL: ethers.utils.formatEther(data._tvl) });
       }
-    }`;
-    apollo(query, THE_GRAPH_URL).then((r: any) => {
-      if (!r?.data?.tors) {
-        return;
-      }
-      setTorStats({ apy: r.data.tors[0].apy, torTVL: r.data.tors[0].torTVL });
-    });
-  }, []);
+    }
+  }
 
   useEffect(() => {
+    updateTorStats();
     if (chainID && provider && address) {
       getAllData();
     }

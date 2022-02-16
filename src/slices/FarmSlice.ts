@@ -50,7 +50,7 @@ export interface DaiUsdcBalance {
   daiBalance: number;
 }
 
-const stakingGateway = (chainID: number, provider: JsonRpcProvider) =>
+export const stakingGateway = (chainID: number, provider: JsonRpcProvider) =>
   new ethers.Contract(FANTOM.FARMING_AGGREGATOR_ADDRESS, farmingAggregatorAbi, provider);
 
 const stakingRewardsContract = (chainID: number, provider: JsonRpcProvider, address: string) =>
