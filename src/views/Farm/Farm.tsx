@@ -1,4 +1,4 @@
-import "./pool-farming.scss";
+import "./farm.scss";
 import { useCallback, useEffect, useState, VFC } from "react";
 
 import { BigNumber, ethers } from "ethers";
@@ -50,7 +50,7 @@ import {
   stakingGateway,
 } from "src/slices/FarmSlice";
 import { ReactComponent as ArrowUp } from "../../assets/icons/arrow-up.svg";
-import { CurveProportions, StakingInfo, TorBalance, TorPoolInfo } from "src/types/farming.model";
+import { CurveProportions, StakingInfo, TorBalance, TorPoolInfo } from "src/types/farm.model";
 import { Skeleton } from "@material-ui/lab";
 import { ReactComponent as TorSVG } from "../../assets/tokens/TOR.svg";
 import TabPanel from "src/components/TabPanel";

@@ -18,7 +18,7 @@ import {
   MintInfo,
   RedeemInfo,
   MintAllowance
-} from "src/types/farming.model";
+} from "src/types/farm.model";
 import { abi as farmingAggregatorAbi } from "../abi/farmingAggregatorContract.json";
 import { abi as torPoolAbi } from "../abi/farmingTorPoolContract.json";
 import { abi as stakingRewardsAbi } from "../abi/farmingStakingRewardsContract.json";
