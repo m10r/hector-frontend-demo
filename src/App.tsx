@@ -34,7 +34,7 @@ import Calculator from "./views/Calculator/Calculator";
 import Exchange from "./views/Exchange/Exchange";
 import { RootState } from "./store";
 import { Banner } from "./components/banner/banner";
-import PoolFarming from "./views/PoolFarming/pool-farming";
+import { PoolFarming } from "./views/PoolFarming/pool-farming";
 import Investments from "./views/Investments/investments";
 import { HECTOR_ENV } from "./helpers/Environment";
 import Mint from "./views/Mint/Mint";

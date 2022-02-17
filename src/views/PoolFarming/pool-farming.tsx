@@ -1,5 +1,5 @@
 import "./pool-farming.scss";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, VFC } from "react";
 
 import { BigNumber, ethers } from "ethers";
 import {
@@ -86,7 +86,7 @@ type Tokens = "DAI" | "TOR" | "USDC" | "";
 const getFormattedStakingInfo = (prop: keyof StakingInfo, stakingInfo: StakingInfo, units?: ethers.BigNumberish) =>
   stakingInfo ? +ethers.utils.formatUnits(stakingInfo[prop], units) : 0;
 
-export default function PoolFarming({ theme, themeMode }: any) {
+export const PoolFarming: VFC<any> = ({ theme, themeMode }) => {
   const dispatch = useDispatch();
   const {
     assetPrice,
@@ -457,13 +457,13 @@ export default function PoolFarming({ theme, themeMode }: any) {
       </div>
     </div>
   );
-}
+};
 
-interface FarmStats {
+interface FarmStatsProps {
   stakingInfo: StakingInfo;
   torStats: { apy: string; torTVL: string };
 }
-const FarmStats = ({ torStats, stakingInfo }: FarmStats) => {
+const FarmStats: VFC<FarmStatsProps> = ({ torStats, stakingInfo }) => {
   return (
     <div className="MuiPaper-root hec-card stats">
       <div className="header">
@@ -486,14 +486,14 @@ const FarmStats = ({ torStats, stakingInfo }: FarmStats) => {
   );
 };
 
-interface TokenBalances {
+interface CurveProps {
   daiUsdcBalance: DaiUsdcBalance;
   torBalance: TorBalance;
   curveProportions: CurveProportions;
   torPoolInfo: TorPoolInfo;
 }
 
-const Curve = ({ daiUsdcBalance, torBalance, curveProportions, torPoolInfo }: TokenBalances) => {
+const Curve: VFC<CurveProps> = ({ daiUsdcBalance, torBalance, curveProportions, torPoolInfo }) => {
   const dispatch = useDispatch();
   const [view, setView] = useState(0);
   const [daiAmount, setDAIAmount] = useState("");
@@ -910,7 +910,7 @@ const Curve = ({ daiUsdcBalance, torBalance, curveProportions, torPoolInfo }: To
   );
 };
 
-const HelpModal = ({ theme }: any) => {
+const HelpModal: VFC<any> = ({ theme }) => {
   // const [modalStyle] = useState(getModalStyle);
   const [open, setOpen] = useState(false);
 
