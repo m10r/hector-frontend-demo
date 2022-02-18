@@ -90,7 +90,7 @@ export const bulletpoints = {
       right: 20,
       top: -12,
       background: "linear-gradient(180deg, #768299 -10%, #98B3E9 100%)",
-      name: "TVD",
+      name: "sHEC",
       stopColor: ["#768299", "#98B3E9"],
       marketValue: "totalValueLocked",
     },
@@ -109,14 +109,6 @@ export const bulletpoints = {
       name: "Tor",
       stopColor: ["#e89e5a", "#be7c40"],
       marketValue: "torTVL",
-    },
-    {
-      right: 20,
-      top: -12,
-      background: "linear-gradient(180deg, #ffd89b -10%, #fbbe5d 100%)",
-      stopColor: ["#ffd89b", "#fbbe5d"],
-      name: "Wormhole",
-      marketValue: "treasuryBaseRewardPool",
     },
   ],
   coin: [
@@ -166,7 +158,15 @@ export const bulletpoints = {
       marketValue: "treasuryWFTMMarketValue",
       riskFree: "treasuryWFTMRiskFreeValue",
     },
-
+    {
+      right: 20,
+      top: -12,
+      background: "linear-gradient(180deg, #ffd89b -10%, #00ff01 100%)",
+      stopColor: ["#ffd89b", "#00ff01"],
+      name: "Wormhole",
+      marketValue: "treasuryBaseRewardPool",
+      riskFree: "treasuryRiskFreeBaseRewardPool",
+    },
     {
       right: 29,
       top: -12,
@@ -176,6 +176,7 @@ export const bulletpoints = {
       marketValue: "treasuryWETHMarketValue",
       riskFree: "treasuryWETHRiskFreeValue",
     },
+
     {
       right: 29,
       top: -12,

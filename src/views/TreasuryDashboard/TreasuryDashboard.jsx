@@ -73,7 +73,11 @@ function TreasuryDashboard() {
           torTVL: +obj.timestamp > torTimeStamp ? r?.data?.tors[i].torTVL : 0,
         };
         if (i < ethData?.length) {
-          data = { ...data, treasuryBaseRewardPool: +ethData[i].treasuryBaseRewardPool };
+          data = {
+            ...data,
+            treasuryRiskFreeBaseRewardPool: +ethData[i].treasuryBaseRewardPool * 0.5,
+            treasuryBaseRewardPool: +ethData[i].treasuryBaseRewardPool,
+          };
         }
         return data;
       });
