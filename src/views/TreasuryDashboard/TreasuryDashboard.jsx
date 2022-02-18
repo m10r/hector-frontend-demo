@@ -210,7 +210,13 @@ function TreasuryDashboard() {
                   stopColor={bulletpoints.tvl.map(coin => coin.stopColor)}
                   headerText="Total Value Deposited"
                   headerSubText={`${
-                    data && formatCurrency(+data[0].totalValueLocked + +convexPool[0].treasuryBaseRewardPool)
+                    data &&
+                    formatCurrency(
+                      +data[0].bankTotal +
+                        +data[0].torTVL +
+                        +data[0].totalValueLocked +
+                        +convexPool[0].treasuryBaseRewardPool,
+                    )
                   }`}
                   bulletpointColors={bulletpoints.tvl}
                   itemNames={bulletpoints.tvl.map(coin => coin.name)}
