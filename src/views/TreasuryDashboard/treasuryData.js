@@ -55,6 +55,15 @@ query {
   }
 }
 `;
+export const ethMetricsQuery = `
+query {
+  ethMetrics(first: 1000, orderBy: timestamp, orderDirection: desc) {
+    id
+    timestamp
+    treasuryBaseRewardPool
+  }
+}
+`;
 
 export const rebasesV1DataQuery = `
 query {
@@ -81,6 +90,11 @@ export const bulletpoints = {
       right: 20,
       top: -12,
       background: "linear-gradient(180deg, #768299 -10%, #98B3E9 100%)",
+    },
+    {
+      right: 20,
+      top: -12,
+      background: "linear-gradient(180deg, #ffd89b -10%, #fbbe5d 100%)",
     },
   ],
   coin: [
@@ -250,7 +264,7 @@ export const bulletpoints = {
 };
 
 export const tooltipItems = {
-  tvl: ["Total Value Deposited"],
+  tvl: ["Total Value Deposited", "Wormhole (USDC+DAI)"],
   apy: ["APY"],
   runway: ["Days"],
   pol: ["SLP Treasury", "Market SLP"],

@@ -12,6 +12,7 @@ import {
   tooltipInfoMessages,
   itemType,
   torQuery,
+  ethMetricsQuery,
 } from "./treasuryData.js";
 import { useTheme } from "@material-ui/core/styles";
 import "./treasury-dashboard.scss";
@@ -19,9 +20,11 @@ import apollo from "../../lib/apolloClient";
 import InfoTooltip from "src/components/InfoTooltip/InfoTooltip.jsx";
 import { prettyDisplayNumber } from "src/helpers";
 import BigNumber from "bignumber.js";
+import { ETH_GRAPH_URL } from "src/constants.ts";
 
 function TreasuryDashboard() {
   const [data, setData] = useState(null);
+  const [convexPool, setConvexPool] = useState();
   const [apy, setApy] = useState([]);
   const [runway, setRunway] = useState(null);
   const [hecSupply, setHecSupply] = useState(null);
@@ -54,17 +57,25 @@ function TreasuryDashboard() {
     return state.app.marketPrice * state.app.currentIndex;
   });
 
-  useEffect(() => {
-    apollo(treasuryDataQuery).then(r => {
+  async function getGraphData() {
+    const ethData = await apollo(ethMetricsQuery, ETH_GRAPH_URL).then(res => {
+      setConvexPool(res.data.ethMetrics);
+      return res.data.ethMetrics;
+    });
+    await apollo(treasuryDataQuery).then(r => {
       let metrics = r?.data?.protocolMetrics.map((entry, i) => {
         const obj = Object.entries(entry).reduce((obj, [key, value]) => ((obj[key] = parseFloat(value)), obj), {});
         const bankTotal = obj.bankBorrowed + obj.bankSupplied;
         const torTimeStamp = 1642857253;
-        return {
+        let data = {
           ...obj,
           bankTotal,
           torTVL: +obj.timestamp > torTimeStamp ? r?.data?.tors[i].torTVL : 0,
         };
+        if (i < ethData?.length) {
+          data = { ...data, treasuryBaseRewardPool: +ethData[i].treasuryBaseRewardPool };
+        }
+        return data;
       });
       let staked = r?.data?.protocolMetrics.map(entry => ({
         staked: (parseFloat(entry.sHecCirculatingSupply) / parseFloat(entry.hecCirculatingSupply)) * 100,
@@ -85,6 +96,10 @@ function TreasuryDashboard() {
         setHecSupply(supply);
       }
     });
+  }
+
+  useEffect(() => {
+    getGraphData();
 
     apollo(rebasesV1DataQuery).then(r => {
       let apy = r?.data?.rebases.map(entry => ({
@@ -189,12 +204,17 @@ function TreasuryDashboard() {
             <Grid item lg={6} md={6} sm={12} xs={12}>
               <Paper className="hec-card hec-chart-card">
                 <Chart
-                  type="area"
+                  type="stack"
                   data={data}
-                  dataKey={["totalValueLocked"]}
-                  stopColor={[["#768299", "#98B3E9"]]}
+                  dataKey={["totalValueLocked", "treasuryBaseRewardPool"]}
+                  stopColor={[
+                    ["#768299", "#98B3E9"],
+                    ["#ffd89b", "#fbbe5d"],
+                  ]}
                   headerText="Total Value Deposited"
-                  headerSubText={`${data && formatCurrency(data[0].totalValueLocked)}`}
+                  headerSubText={`${
+                    data && formatCurrency(+data[0].totalValueLocked + +convexPool[0].treasuryBaseRewardPool)
+                  }`}
                   bulletpointColors={bulletpoints.tvl}
                   itemNames={tooltipItems.tvl}
                   itemType={itemType.dollar}
