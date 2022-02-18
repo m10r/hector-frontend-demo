@@ -165,7 +165,7 @@ export const bulletpoints = {
       stopColor: ["#ffd89b", "#00ff01"],
       name: "Wormhole",
       marketValue: "treasuryBaseRewardPool",
-      riskFree: "treasuryRiskFreeBaseRewardPool",
+      riskFree: "treasuryBaseRewardPool",
     },
     {
       right: 29,

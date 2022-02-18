@@ -75,7 +75,6 @@ function TreasuryDashboard() {
         if (i < ethData?.length) {
           data = {
             ...data,
-            treasuryRiskFreeBaseRewardPool: +ethData[i].treasuryBaseRewardPool * 0.5,
             treasuryBaseRewardPool: +ethData[i].treasuryBaseRewardPool,
           };
         }
