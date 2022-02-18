@@ -17,7 +17,7 @@ import {
   CurveAllowance,
   MintInfo,
   RedeemInfo,
-  MintAllowance
+  MintAllowance,
 } from "src/types/farm.model";
 import { abi as farmingAggregatorAbi } from "../abi/farmingAggregatorContract.json";
 import { abi as torPoolAbi } from "../abi/farmingTorPoolContract.json";
@@ -32,7 +32,7 @@ import { IBaseAddressAsyncThunk, IBaseAsyncThunk, IValueAsyncThunk } from "./int
 import { error, info, success } from "./MessagesSlice";
 
 interface MintThunk extends IValueAsyncThunk {
-  mint: 'dai' | 'usdc'
+  mint: "dai" | "usdc";
 }
 
 interface ICurveTokensThunk extends IBaseAddressAsyncThunk {
@@ -68,15 +68,19 @@ const torPoolContract = (chainID: number, provider: JsonRpcProvider, address: st
   ) as unknown) as TorPoolContract;
 
 const torContract = (chainID: number, provider: JsonRpcProvider, address: string) =>
-  new ethers.Contract(FANTOM.TOR_ADDRESS, torAbi, provider.getSigner(address)) as unknown as TorContract;
-
-const usdcContract = (chainID: number, provider: JsonRpcProvider, address: string) => new ethers.Contract(FANTOM.USDC_ADDRESS, IERC20, provider.getSigner(address));
-const daiContract = (chainID: number, provider: JsonRpcProvider, address: string) => new ethers.Contract(FANTOM.DAI_ADDRESS, IERC20, provider.getSigner(address));
+  (new ethers.Contract(FANTOM.TOR_ADDRESS, torAbi, provider.getSigner(address)) as unknown) as TorContract;
+const usdcContract = (chainID: number, provider: JsonRpcProvider, address: string) =>
+  new ethers.Contract(FANTOM.USDC_ADDRESS, IERC20, provider.getSigner(address));
+const daiContract = (chainID: number, provider: JsonRpcProvider, address: string) =>
+  new ethers.Contract(FANTOM.DAI_ADDRESS, IERC20, provider.getSigner(address));
+const wftmContract = (chainID: number, provider: JsonRpcProvider, address: string) =>
+  new ethers.Contract(FANTOM.WFTM_ADDRESS, IERC20, provider.getSigner(address));
 
 const torMinterContract = (chainID: number, provider: JsonRpcProvider, address: string) =>
   new ethers.Contract(FANTOM.TOR_MINTER_ADDRESS, torMinterAbi, provider.getSigner(address));
 
-const curveFiContract = (chainID: number, provider: JsonRpcProvider, address: string) => new ethers.Contract(FANTOM.CURVE_FI_ADDRESS, curveFiAbi, provider.getSigner(address))
+const curveFiContract = (chainID: number, provider: JsonRpcProvider, address: string) =>
+  new ethers.Contract(FANTOM.CURVE_FI_ADDRESS, curveFiAbi, provider.getSigner(address));
 
 export const getAssetPrice = createAsyncThunk(
   "farm/getAssetPrice",
@@ -110,17 +114,34 @@ export const getTorBalance = createAsyncThunk(
   },
 );
 
+export const getWftmBalance = createAsyncThunk(
+  "farm/getWftmBalance",
+  async ({ networkID, provider, address }: IBaseAddressAsyncThunk) => {
+    try {
+      const wftm = wftmContract(networkID, provider, address);
+      const originalBalance = wftm.balanceOf(address);
+      const balance = +ethers.utils.formatEther(originalBalance);
+      const allowance = +wftm.allowance(address, FANTOM.TOR_MINTER_ADDRESS);
+      return { balance, originalBalance, allowance };
+    } catch (e) {
+      console.error(e);
+    }
+  },
+);
+
 export const getTorBalanceAmounts = createAsyncThunk(
   "farm/getTorBalanceAmounts",
-  async ({ networkID, provider, address, value = '100' }: IValueAsyncThunk) => {
+  async ({ networkID, provider, address, value = "100" }: IValueAsyncThunk) => {
     try {
       const torBalanceAmountsContract = new ethers.Contract(FANTOM.TOR_LP_AMOUNTS_ADDRESS, torPoolAmountAbi, provider);
-      const getBalancedPercentages = await torBalanceAmountsContract.getAmounts(ethers.utils.parseUnits(value, 'ether'));
+      const getBalancedPercentages = await torBalanceAmountsContract.getAmounts(
+        ethers.utils.parseUnits(value, "ether"),
+      );
       return {
         dai: +ethers.utils.formatEther(getBalancedPercentages._daiAmount),
-        usdc: +ethers.utils.formatUnits(getBalancedPercentages._usdcAmount, 'mwei'),
-        tor: +ethers.utils.formatEther(getBalancedPercentages._torAmount)
-      } as CurveProportions
+        usdc: +ethers.utils.formatUnits(getBalancedPercentages._usdcAmount, "mwei"),
+        tor: +ethers.utils.formatEther(getBalancedPercentages._torAmount),
+      } as CurveProportions;
     } catch (e) {
       console.error(e);
     }
@@ -157,432 +178,536 @@ export const getStakingInfo = createAsyncThunk(
   },
 );
 
-export const unstake = createAsyncThunk("farm/unstake", async ({ networkID, provider, address, value }: IValueAsyncThunk, { dispatch }) => {
-  let unstakeTx;
-  try {
-    unstakeTx = await stakingRewardsContract(networkID, provider, address).withdraw(ethers.utils.parseUnits(value, 'ether'));
-    await unstakeTx.wait();
-    dispatch(success(messages.tx_successfully_send));
-    await sleep(7);
-    dispatch(info(messages.your_balance_update_soon));
-    await sleep(9);
-    dispatch(info(messages.your_balance_updated));
-  } catch (e) {
-    console.error(e);
-    dispatch(error("Failed to withdraw"));
-  } finally {
-    await dispatch(getStakingRewardsInfo({ networkID, provider, address }));
-    await dispatch(getTorPoolInfo({ networkID, provider, address }));
-
-  }
-},
-);
-
-export const stake = createAsyncThunk("farm/stake", async ({ networkID, provider, address, value }: IValueAsyncThunk, { dispatch }) => {
-  let stakeTx;
-  try {
-    stakeTx = await stakingRewardsContract(networkID, provider, address).stake(ethers.utils.parseUnits(value, "ether"));
-    await stakeTx.wait();
-    dispatch(success(messages.tx_successfully_send));
-    await sleep(7);
-    dispatch(info(messages.your_balance_update_soon));
-    await sleep(9);
-    dispatch(info(messages.your_balance_updated));
-  } catch (e) {
-    dispatch(error("Failed to stake"));
-  } finally {
-    if (stakeTx) {
+export const unstake = createAsyncThunk(
+  "farm/unstake",
+  async ({ networkID, provider, address, value }: IValueAsyncThunk, { dispatch }) => {
+    let unstakeTx;
+    try {
+      unstakeTx = await stakingRewardsContract(networkID, provider, address).withdraw(
+        ethers.utils.parseUnits(value, "ether"),
+      );
+      await unstakeTx.wait();
+      dispatch(success(messages.tx_successfully_send));
+      await sleep(7);
+      dispatch(info(messages.your_balance_update_soon));
+      await sleep(9);
+      dispatch(info(messages.your_balance_updated));
+    } catch (e) {
+      console.error(e);
+      dispatch(error("Failed to withdraw"));
+    } finally {
       await dispatch(getStakingRewardsInfo({ networkID, provider, address }));
       await dispatch(getTorPoolInfo({ networkID, provider, address }));
-
     }
-  }
-});
-
-export const torPoolApprove = createAsyncThunk("farm/torPoolApprove", async ({ networkID, provider, address }: IBaseAddressAsyncThunk, { dispatch }) => {
-  try {
-    const approveTrans = await torPoolContract(networkID, provider, address).approve(
-      FANTOM.FARMINNG_STAKING_REWARDS_ADDRESS,
-      ethers.utils.parseUnits("1000000", "ether").toString(),
-    );
-    await approveTrans.wait();
-    dispatch(success(messages.tx_successfully_send));
-    await sleep(7);
-    dispatch(info(messages.your_balance_update_soon));
-    await sleep(9);
-    dispatch(info(messages.your_balance_updated));
-  } catch (e) {
-    console.error(e);
-    dispatch(error("Failed to approve"));
-  }
-});
-
-export const getDaiUsdcBalance = createAsyncThunk("farm/getDaiUsdcBalance", async ({ networkID, provider, address }: IBaseAddressAsyncThunk, { dispatch }) => {
-  try {
-    const usdcHexBalance = await usdcContract(networkID, provider, address).balanceOf(address);
-    const daiHexBalance = await daiContract(networkID, provider, address).balanceOf(address);
-    const usdcBalance = +ethers.utils.formatUnits(usdcHexBalance, 'mwei');
-    const daiBalance = +ethers.utils.formatEther(daiHexBalance);
-
-    return { usdcHexBalance, daiHexBalance, usdcBalance, daiBalance } as DaiUsdcBalance;
-  } catch (e) {
-    console.error(e);
-    dispatch(error("Failed to get balances for dai and usdc"));
-  }
-});
-
-export const claimRewards = createAsyncThunk("farm/claimRewards", async ({ networkID, provider, address }: IBaseAddressAsyncThunk, { dispatch }) => {
-  try {
-    const stakeTrans = await stakingRewardsContract(networkID, provider, address).getReward();
-    await stakeTrans.wait();
-    dispatch(success(messages.tx_successfully_send));
-    await sleep(7);
-    dispatch(info(messages.your_balance_update_soon));
-    await sleep(9);
-    dispatch(info(messages.your_balance_updated));
-  } catch (e) {
-    dispatch(error("Failed to claim rewards"));
-  }
-},
+  },
 );
 
-export const getCurveAllowance = createAsyncThunk("farm/getCurveAllowance", async ({ networkID, provider, address }: IBaseAddressAsyncThunk, { dispatch }) => {
-  try {
-    const usdcAllowance = await usdcContract(networkID, provider, address).allowance(address, FANTOM.CURVE_FI_ADDRESS);
-    const daiAllowance = await daiContract(networkID, provider, address).allowance(address, FANTOM.CURVE_FI_ADDRESS);
-    const torAllowance = await torContract(networkID, provider, address).allowance(address, FANTOM.CURVE_FI_ADDRESS);
-    const torPoolAllowance = await torPoolContract(networkID, provider, address).allowance(address, FANTOM.CURVE_FI_ADDRESS);
-    return { torAllowance, usdcAllowance, daiAllowance, torPoolAllowance } as CurveAllowance;
-  } catch (e) {
-    console.error(e);
-    dispatch(error("Failed to get deposit allowance for curve"));
-  }
-});
-
-export const curveDaiApprove = createAsyncThunk("farm/curveDaiApprove", async ({ networkID, provider, address }: IBaseAddressAsyncThunk, { dispatch }) => {
-  let approveTx;
-  try {
-    approveTx = await daiContract(networkID, provider, address).approve(
-      FANTOM.CURVE_FI_ADDRESS,
-      ethers.utils.parseUnits("1000000", "ether"),
-    );
-    await approveTx.wait();
-    dispatch(success(messages.tx_successfully_send));
-    await sleep(7);
-    dispatch(info(messages.your_balance_update_soon));
-    await sleep(9);
-  } catch (e) {
-    console.error(e);
-    dispatch(error("Failed to approve DAI"));
-  } finally {
-    if (approveTx) {
-      await dispatch(getCurveAllowance({ networkID, provider, address }))
+export const stake = createAsyncThunk(
+  "farm/stake",
+  async ({ networkID, provider, address, value }: IValueAsyncThunk, { dispatch }) => {
+    let stakeTx;
+    try {
+      stakeTx = await stakingRewardsContract(networkID, provider, address).stake(
+        ethers.utils.parseUnits(value, "ether"),
+      );
+      await stakeTx.wait();
+      dispatch(success(messages.tx_successfully_send));
+      await sleep(7);
+      dispatch(info(messages.your_balance_update_soon));
+      await sleep(9);
       dispatch(info(messages.your_balance_updated));
-
+    } catch (e) {
+      dispatch(error("Failed to stake"));
+    } finally {
+      if (stakeTx) {
+        await dispatch(getStakingRewardsInfo({ networkID, provider, address }));
+        await dispatch(getTorPoolInfo({ networkID, provider, address }));
+      }
     }
-  }
-});
-export const curveUsdcApprove = createAsyncThunk("farm/curveUsdcApprove", async ({ networkID, provider, address }: IBaseAddressAsyncThunk, { dispatch }) => {
-  let approveTx;
-  try {
-    approveTx = await usdcContract(networkID, provider, address).approve(
-      FANTOM.CURVE_FI_ADDRESS,
-      ethers.utils.parseUnits("1000000", "ether"),
-    );
-    await approveTx.wait();
-
-    dispatch(success(messages.tx_successfully_send));
-    await sleep(7);
-    dispatch(info(messages.your_balance_update_soon));
-    await sleep(9);
-  } catch (e) {
-    console.error(e);
-    dispatch(error("Failed to approve USDC"));
-  } finally {
-    if (approveTx) {
-      await dispatch(getCurveAllowance({ networkID, provider, address }));
-      dispatch(info(messages.your_balance_updated));
-
-    }
-  }
-});
-export const curveTorApprove = createAsyncThunk("farm/curveTorApprove", async ({ networkID, provider, address }: IBaseAddressAsyncThunk, { dispatch }) => {
-  let approveTx;
-  try {
-    approveTx = await torContract(networkID, provider, address).approve(
-      FANTOM.CURVE_FI_ADDRESS,
-      ethers.utils.parseUnits("1000000", "ether").toString()
-    );
-    await approveTx.wait();
-    dispatch(success(messages.tx_successfully_send));
-    await sleep(7);
-    dispatch(info(messages.your_balance_update_soon));
-    await sleep(9);
-  } catch (e) {
-    console.error(e);
-    dispatch(error("Failed to approve TOR"));
-  } finally {
-    if (approveTx) {
-      await dispatch(getCurveAllowance({ networkID, provider, address }));
-      dispatch(info(messages.your_balance_updated));
-
-    }
-  }
-});
-
-export const curveWithdrawApprove = createAsyncThunk("farm/curveWithdrawApprove", async ({ networkID, provider, address }: IBaseAddressAsyncThunk, { dispatch }) => {
-  let approveTx;
-  try {
-    approveTx = await torPoolContract(networkID, provider, address).approve(
-      FANTOM.CURVE_FI_ADDRESS,
-      ethers.utils.parseUnits("1000000", "ether").toString(),
-    );
-    await approveTx.wait();
-    dispatch(success(messages.tx_successfully_send));
-    await sleep(7);
-    dispatch(info(messages.your_balance_update_soon));
-    await sleep(9);
-    dispatch(info(messages.your_balance_updated));
-  } catch (e) {
-    console.error(e);
-    dispatch(error("Failed to approve"));
-  } finally {
-    if (approveTx) {
-      dispatch(getCurveAllowance({ networkID, provider, address }));
-    }
-  }
-});
-
-export const depositCurveTokens = createAsyncThunk("farm/depositCurveTokens", async ({ networkID, provider, address, torAmount, daiAmount, usdcAmount }: ICurveTokensThunk, { dispatch }) => {
-  let depositTx;
-  try {
-    depositTx = await curveFiContract(networkID, provider, address)["add_liquidity(address,uint256[3],uint256)"](FANTOM.TOR_LP_POOL_ADDRESS, [ethers.utils.parseUnits(torAmount), ethers.utils.parseUnits(daiAmount), ethers.utils.parseUnits(usdcAmount, "mwei")], 1);
-    await depositTx.wait();
-    dispatch(success(messages.tx_successfully_send));
-    await sleep(7);
-    dispatch(info(messages.your_balance_update_soon));
-
-  } catch (e) {
-    console.error(e)
-    dispatch(error("Failed to depost into curve"));
-  } finally {
-    await sleep(9);
-    await dispatch(getDaiUsdcBalance({ networkID, provider, address }))
-    await dispatch(getTorBalance({ networkID, provider, address }));
-    await dispatch(getTorPoolInfo({ networkID, provider, address }));
-    if (depositTx) {
-      dispatch(info(messages.your_balance_updated));
-    }
-  }
-},
+  },
 );
 
-export const withdrawCurveTokens = createAsyncThunk("farm/withdrawCurveTokens", async ({ networkID, provider, address, lpBalance, torAmount, daiAmount, usdcAmount }: ICurveTokensThunk, { dispatch }) => {
-  let withdrawTx;
-  try {
-    withdrawTx = await curveFiContract(networkID, provider, address)["remove_liquidity(address,uint256,uint256[3])"](FANTOM.TOR_LP_POOL_ADDRESS, lpBalance, [ethers.utils.parseUnits(torAmount), ethers.utils.parseUnits(daiAmount), ethers.utils.parseUnits(usdcAmount, "mwei")]);
-    await withdrawTx.wait();
-    dispatch(success(messages.tx_successfully_send));
-    await sleep(7);
-    dispatch(info(messages.your_balance_update_soon));
-  } catch (e) {
-    console.error(e)
-    dispatch(error("Failed to withdraw into curve"));
-  } finally {
-    await sleep(9);
-    await dispatch(getDaiUsdcBalance({ networkID, provider, address }));
-    await dispatch(getTorBalance({ networkID, provider, address }));
-    await dispatch(getTorPoolInfo({ networkID, provider, address }));
-    if (withdrawTx) {
+export const torPoolApprove = createAsyncThunk(
+  "farm/torPoolApprove",
+  async ({ networkID, provider, address }: IBaseAddressAsyncThunk, { dispatch }) => {
+    try {
+      const approveTrans = await torPoolContract(networkID, provider, address).approve(
+        FANTOM.FARMINNG_STAKING_REWARDS_ADDRESS,
+        ethers.utils.parseUnits("1000000", "ether").toString(),
+      );
+      await approveTrans.wait();
+      dispatch(success(messages.tx_successfully_send));
+      await sleep(7);
+      dispatch(info(messages.your_balance_update_soon));
+      await sleep(9);
       dispatch(info(messages.your_balance_updated));
+    } catch (e) {
+      console.error(e);
+      dispatch(error("Failed to approve"));
     }
-  }
-},
+  },
 );
-export const withdrawOneCurveTokens = createAsyncThunk("farm/withdrawOneCurveTokens", async ({ networkID, provider, address, lpBalance, coin }: ICurveTokensThunk, { dispatch }) => {
-  let withdrawTx;
-  try {
-    withdrawTx = await curveFiContract(networkID, provider, address)["remove_liquidity_one_coin(address,uint256,int128,uint256)"](FANTOM.TOR_LP_POOL_ADDRESS, lpBalance, coin, 1);
-    await withdrawTx.wait();
-    dispatch(success(messages.tx_successfully_send));
-    await sleep(7);
-    dispatch(info(messages.your_balance_update_soon));
-  } catch (e) {
-    console.error(e)
-    dispatch(error("Failed to withdraw into token"));
-  } finally {
-    await sleep(9);
-    await dispatch(getDaiUsdcBalance({ networkID, provider, address }));
-    await dispatch(getTorBalance({ networkID, provider, address }));
-    await dispatch(getTorPoolInfo({ networkID, provider, address }));
-    if (withdrawTx) {
-      dispatch(info(messages.your_balance_updated));
+
+export const getDaiUsdcBalance = createAsyncThunk(
+  "farm/getDaiUsdcBalance",
+  async ({ networkID, provider, address }: IBaseAddressAsyncThunk, { dispatch }) => {
+    try {
+      const usdcHexBalance = await usdcContract(networkID, provider, address).balanceOf(address);
+      const daiHexBalance = await daiContract(networkID, provider, address).balanceOf(address);
+      const usdcBalance = +ethers.utils.formatUnits(usdcHexBalance, "mwei");
+      const daiBalance = +ethers.utils.formatEther(daiHexBalance);
+
+      return { usdcHexBalance, daiHexBalance, usdcBalance, daiBalance } as DaiUsdcBalance;
+    } catch (e) {
+      console.error(e);
+      dispatch(error("Failed to get balances for dai and usdc"));
     }
-  }
-},
+  },
+);
+
+export const claimRewards = createAsyncThunk(
+  "farm/claimRewards",
+  async ({ networkID, provider, address }: IBaseAddressAsyncThunk, { dispatch }) => {
+    try {
+      const stakeTrans = await stakingRewardsContract(networkID, provider, address).getReward();
+      await stakeTrans.wait();
+      dispatch(success(messages.tx_successfully_send));
+      await sleep(7);
+      dispatch(info(messages.your_balance_update_soon));
+      await sleep(9);
+      dispatch(info(messages.your_balance_updated));
+    } catch (e) {
+      dispatch(error("Failed to claim rewards"));
+    }
+  },
+);
+
+export const getCurveAllowance = createAsyncThunk(
+  "farm/getCurveAllowance",
+  async ({ networkID, provider, address }: IBaseAddressAsyncThunk, { dispatch }) => {
+    try {
+      const usdcAllowance = await usdcContract(networkID, provider, address).allowance(
+        address,
+        FANTOM.CURVE_FI_ADDRESS,
+      );
+      const daiAllowance = await daiContract(networkID, provider, address).allowance(address, FANTOM.CURVE_FI_ADDRESS);
+      const torAllowance = await torContract(networkID, provider, address).allowance(address, FANTOM.CURVE_FI_ADDRESS);
+      const torPoolAllowance = await torPoolContract(networkID, provider, address).allowance(
+        address,
+        FANTOM.CURVE_FI_ADDRESS,
+      );
+      return { torAllowance, usdcAllowance, daiAllowance, torPoolAllowance } as CurveAllowance;
+    } catch (e) {
+      console.error(e);
+      dispatch(error("Failed to get deposit allowance for curve"));
+    }
+  },
+);
+
+export const curveDaiApprove = createAsyncThunk(
+  "farm/curveDaiApprove",
+  async ({ networkID, provider, address }: IBaseAddressAsyncThunk, { dispatch }) => {
+    let approveTx;
+    try {
+      approveTx = await daiContract(networkID, provider, address).approve(
+        FANTOM.CURVE_FI_ADDRESS,
+        ethers.utils.parseUnits("1000000", "ether"),
+      );
+      await approveTx.wait();
+      dispatch(success(messages.tx_successfully_send));
+      await sleep(7);
+      dispatch(info(messages.your_balance_update_soon));
+      await sleep(9);
+    } catch (e) {
+      console.error(e);
+      dispatch(error("Failed to approve DAI"));
+    } finally {
+      if (approveTx) {
+        await dispatch(getCurveAllowance({ networkID, provider, address }));
+        dispatch(info(messages.your_balance_updated));
+      }
+    }
+  },
+);
+export const curveUsdcApprove = createAsyncThunk(
+  "farm/curveUsdcApprove",
+  async ({ networkID, provider, address }: IBaseAddressAsyncThunk, { dispatch }) => {
+    let approveTx;
+    try {
+      approveTx = await usdcContract(networkID, provider, address).approve(
+        FANTOM.CURVE_FI_ADDRESS,
+        ethers.utils.parseUnits("1000000", "ether"),
+      );
+      await approveTx.wait();
+
+      dispatch(success(messages.tx_successfully_send));
+      await sleep(7);
+      dispatch(info(messages.your_balance_update_soon));
+      await sleep(9);
+    } catch (e) {
+      console.error(e);
+      dispatch(error("Failed to approve USDC"));
+    } finally {
+      if (approveTx) {
+        await dispatch(getCurveAllowance({ networkID, provider, address }));
+        dispatch(info(messages.your_balance_updated));
+      }
+    }
+  },
+);
+export const curveTorApprove = createAsyncThunk(
+  "farm/curveTorApprove",
+  async ({ networkID, provider, address }: IBaseAddressAsyncThunk, { dispatch }) => {
+    let approveTx;
+    try {
+      approveTx = await torContract(networkID, provider, address).approve(
+        FANTOM.CURVE_FI_ADDRESS,
+        ethers.utils.parseUnits("1000000", "ether").toString(),
+      );
+      await approveTx.wait();
+      dispatch(success(messages.tx_successfully_send));
+      await sleep(7);
+      dispatch(info(messages.your_balance_update_soon));
+      await sleep(9);
+    } catch (e) {
+      console.error(e);
+      dispatch(error("Failed to approve TOR"));
+    } finally {
+      if (approveTx) {
+        await dispatch(getCurveAllowance({ networkID, provider, address }));
+        dispatch(info(messages.your_balance_updated));
+      }
+    }
+  },
+);
+
+export const curveWithdrawApprove = createAsyncThunk(
+  "farm/curveWithdrawApprove",
+  async ({ networkID, provider, address }: IBaseAddressAsyncThunk, { dispatch }) => {
+    let approveTx;
+    try {
+      approveTx = await torPoolContract(networkID, provider, address).approve(
+        FANTOM.CURVE_FI_ADDRESS,
+        ethers.utils.parseUnits("1000000", "ether").toString(),
+      );
+      await approveTx.wait();
+      dispatch(success(messages.tx_successfully_send));
+      await sleep(7);
+      dispatch(info(messages.your_balance_update_soon));
+      await sleep(9);
+      dispatch(info(messages.your_balance_updated));
+    } catch (e) {
+      console.error(e);
+      dispatch(error("Failed to approve"));
+    } finally {
+      if (approveTx) {
+        dispatch(getCurveAllowance({ networkID, provider, address }));
+      }
+    }
+  },
+);
+
+export const depositCurveTokens = createAsyncThunk(
+  "farm/depositCurveTokens",
+  async ({ networkID, provider, address, torAmount, daiAmount, usdcAmount }: ICurveTokensThunk, { dispatch }) => {
+    let depositTx;
+    try {
+      depositTx = await curveFiContract(networkID, provider, address)["add_liquidity(address,uint256[3],uint256)"](
+        FANTOM.TOR_LP_POOL_ADDRESS,
+        [
+          ethers.utils.parseUnits(torAmount),
+          ethers.utils.parseUnits(daiAmount),
+          ethers.utils.parseUnits(usdcAmount, "mwei"),
+        ],
+        1,
+      );
+      await depositTx.wait();
+      dispatch(success(messages.tx_successfully_send));
+      await sleep(7);
+      dispatch(info(messages.your_balance_update_soon));
+    } catch (e) {
+      console.error(e);
+      dispatch(error("Failed to depost into curve"));
+    } finally {
+      await sleep(9);
+      await dispatch(getDaiUsdcBalance({ networkID, provider, address }));
+      await dispatch(getTorBalance({ networkID, provider, address }));
+      await dispatch(getTorPoolInfo({ networkID, provider, address }));
+      if (depositTx) {
+        dispatch(info(messages.your_balance_updated));
+      }
+    }
+  },
+);
+
+export const withdrawCurveTokens = createAsyncThunk(
+  "farm/withdrawCurveTokens",
+  async (
+    { networkID, provider, address, lpBalance, torAmount, daiAmount, usdcAmount }: ICurveTokensThunk,
+    { dispatch },
+  ) => {
+    let withdrawTx;
+    try {
+      withdrawTx = await curveFiContract(networkID, provider, address)[
+        "remove_liquidity(address,uint256,uint256[3])"
+      ](FANTOM.TOR_LP_POOL_ADDRESS, lpBalance, [
+        ethers.utils.parseUnits(torAmount),
+        ethers.utils.parseUnits(daiAmount),
+        ethers.utils.parseUnits(usdcAmount, "mwei"),
+      ]);
+      await withdrawTx.wait();
+      dispatch(success(messages.tx_successfully_send));
+      await sleep(7);
+      dispatch(info(messages.your_balance_update_soon));
+    } catch (e) {
+      console.error(e);
+      dispatch(error("Failed to withdraw into curve"));
+    } finally {
+      await sleep(9);
+      await dispatch(getDaiUsdcBalance({ networkID, provider, address }));
+      await dispatch(getTorBalance({ networkID, provider, address }));
+      await dispatch(getTorPoolInfo({ networkID, provider, address }));
+      if (withdrawTx) {
+        dispatch(info(messages.your_balance_updated));
+      }
+    }
+  },
+);
+export const withdrawOneCurveTokens = createAsyncThunk(
+  "farm/withdrawOneCurveTokens",
+  async ({ networkID, provider, address, lpBalance, coin }: ICurveTokensThunk, { dispatch }) => {
+    let withdrawTx;
+    try {
+      withdrawTx = await curveFiContract(networkID, provider, address)[
+        "remove_liquidity_one_coin(address,uint256,int128,uint256)"
+      ](FANTOM.TOR_LP_POOL_ADDRESS, lpBalance, coin, 1);
+      await withdrawTx.wait();
+      dispatch(success(messages.tx_successfully_send));
+      await sleep(7);
+      dispatch(info(messages.your_balance_update_soon));
+    } catch (e) {
+      console.error(e);
+      dispatch(error("Failed to withdraw into token"));
+    } finally {
+      await sleep(9);
+      await dispatch(getDaiUsdcBalance({ networkID, provider, address }));
+      await dispatch(getTorBalance({ networkID, provider, address }));
+      await dispatch(getTorPoolInfo({ networkID, provider, address }));
+      if (withdrawTx) {
+        dispatch(info(messages.your_balance_updated));
+      }
+    }
+  },
 );
 
 const torRedeemContract = (provider: JsonRpcProvider, address: string) =>
   new ethers.Contract(FANTOM.TOR_REDEEM_ADDRESS, torRedeemAbi, provider.getSigner(address));
 
-export const getMintInfo = createAsyncThunk("farm/getMintInfo", async ({ networkID, provider, address, value }: IValueAsyncThunk, { dispatch }) => {
-  try {
-    const redeemContract = torRedeemContract(provider, address);
-    const isLowerThanReserveCeiling = await redeemContract.lowerThanReserveCeilingAfterMint(ethers.utils.parseEther(value));
-    const isCurvePercentageBelowCeiling = await redeemContract.curvePercentageBelowCeiling(ethers.utils.parseEther(value));
-    const mintLimit = await redeemContract.getCurrentMintBuffer();
-    return { isLowerThanReserveCeiling, isCurvePercentageBelowCeiling, mintLimit };
-  } catch (e) {
-    console.error(e);
-    dispatch(error(`Failed to get mint info`));
-  }
-});
-
-export const getRedeemInfo = createAsyncThunk("farm/getRedeemInfo", async ({ networkID, provider, address, value }: IValueAsyncThunk, { dispatch }) => {
-  try {
-    const redeemContract = torRedeemContract(provider, address);
-    const ishigherThanReserveFloor = await redeemContract.higherThanReserveFloorAfterRedeem(ethers.utils.parseEther(value));
-    const isCurvePercentageAboveFloor = await redeemContract.curvePercentageAboveFloor(ethers.utils.parseEther(value));
-    const redeemLimit = await redeemContract.getCurrentRedeemBuffer();
-    return { ishigherThanReserveFloor, isCurvePercentageAboveFloor, redeemLimit };
-  } catch (e) {
-    console.error(e);
-    dispatch(error(`Failed to get redeem info`));
-  }
-});
-
-export const mint = createAsyncThunk("farm/mint", async ({ networkID, provider, address, value, mint }: MintThunk, { dispatch }) => {
-  let mintTx;
-  try {
-    if (mint === 'dai') {
-      mintTx = await torMinterContract(networkID, provider, address).mintWithDai(ethers.utils.parseUnits(value, "ether"));
-    } else {
-      mintTx = await torMinterContract(networkID, provider, address).mintWithUsdc(ethers.utils.parseUnits(value, "mwei"));
+export const getMintInfo = createAsyncThunk(
+  "farm/getMintInfo",
+  async ({ networkID, provider, address, value }: IValueAsyncThunk, { dispatch }) => {
+    try {
+      const redeemContract = torRedeemContract(provider, address);
+      const isLowerThanReserveCeiling = await redeemContract.lowerThanReserveCeilingAfterMint(
+        ethers.utils.parseEther(value),
+      );
+      const isCurvePercentageBelowCeiling = await redeemContract.curvePercentageBelowCeiling(
+        ethers.utils.parseEther(value),
+      );
+      const mintLimit = await redeemContract.getCurrentMintBuffer();
+      return { isLowerThanReserveCeiling, isCurvePercentageBelowCeiling, mintLimit };
+    } catch (e) {
+      console.error(e);
+      dispatch(error(`Failed to get mint info`));
     }
-    await mintTx.wait();
-    dispatch(success(messages.tx_successfully_send));
-    await sleep(7);
-    dispatch(info(messages.your_balance_update_soon));
-    await sleep(9);
-  } catch (e) {
-    console.error(e);
-    dispatch(error(`Failed to mint ${mint}`));
-  } finally {
-    if (mintTx) {
-      await dispatch(getDaiUsdcBalance({ networkID, provider, address }));
-      await dispatch(getTorBalance({ networkID, provider, address }));
-      dispatch(info(messages.your_balance_updated));
+  },
+);
+
+export const getRedeemInfo = createAsyncThunk(
+  "farm/getRedeemInfo",
+  async ({ networkID, provider, address, value }: IValueAsyncThunk, { dispatch }) => {
+    try {
+      const redeemContract = torRedeemContract(provider, address);
+      const ishigherThanReserveFloor = await redeemContract.higherThanReserveFloorAfterRedeem(
+        ethers.utils.parseEther(value),
+      );
+      const isCurvePercentageAboveFloor = await redeemContract.curvePercentageAboveFloor(
+        ethers.utils.parseEther(value),
+      );
+      const redeemLimit = await redeemContract.getCurrentRedeemBuffer();
+      return { ishigherThanReserveFloor, isCurvePercentageAboveFloor, redeemLimit };
+    } catch (e) {
+      console.error(e);
+      dispatch(error(`Failed to get redeem info`));
     }
-  }
-});
+  },
+);
 
-export const redeem = createAsyncThunk("farm/redeem", async ({ networkID, provider, address, value, mint }: MintThunk, { dispatch }) => {
-  let redeemTx;
-  try {
-    if (mint === 'dai') {
-      redeemTx = await torMinterContract(networkID, provider, address).redeemToDai(ethers.utils.parseUnits(value, "ether"));
-    } else {
-      redeemTx = await torMinterContract(networkID, provider, address).redeemToUsdc(ethers.utils.parseUnits(value, "ether"));
+export const mint = createAsyncThunk(
+  "farm/mint",
+  async ({ networkID, provider, address, value, mint }: MintThunk, { dispatch }) => {
+    let mintTx;
+    try {
+      if (mint === "dai") {
+        mintTx = await torMinterContract(networkID, provider, address).mintWithDai(
+          ethers.utils.parseUnits(value, "ether"),
+        );
+      } else {
+        mintTx = await torMinterContract(networkID, provider, address).mintWithUsdc(
+          ethers.utils.parseUnits(value, "mwei"),
+        );
+      }
+      await mintTx.wait();
+      dispatch(success(messages.tx_successfully_send));
+      await sleep(7);
+      dispatch(info(messages.your_balance_update_soon));
+      await sleep(9);
+    } catch (e) {
+      console.error(e);
+      dispatch(error(`Failed to mint ${mint}`));
+    } finally {
+      if (mintTx) {
+        await dispatch(getDaiUsdcBalance({ networkID, provider, address }));
+        await dispatch(getTorBalance({ networkID, provider, address }));
+        dispatch(info(messages.your_balance_updated));
+      }
     }
-    await redeemTx.wait();
-    dispatch(success(messages.tx_successfully_send));
-    await sleep(7);
-    dispatch(info(messages.your_balance_update_soon));
-    await sleep(9);
-  } catch (e) {
-    console.error(e);
-    dispatch(error(`Failed to redeem ${mint}`));
-  } finally {
-    if (redeemTx) {
-      await dispatch(getDaiUsdcBalance({ networkID, provider, address }));
-      await dispatch(getTorBalance({ networkID, provider, address }));
-      dispatch(info(messages.your_balance_updated));
+  },
+);
+
+export const redeem = createAsyncThunk(
+  "farm/redeem",
+  async ({ networkID, provider, address, value, mint }: MintThunk, { dispatch }) => {
+    let redeemTx;
+    try {
+      if (mint === "dai") {
+        redeemTx = await torMinterContract(networkID, provider, address).redeemToDai(
+          ethers.utils.parseUnits(value, "ether"),
+        );
+      } else {
+        redeemTx = await torMinterContract(networkID, provider, address).redeemToUsdc(
+          ethers.utils.parseUnits(value, "ether"),
+        );
+      }
+      await redeemTx.wait();
+      dispatch(success(messages.tx_successfully_send));
+      await sleep(7);
+      dispatch(info(messages.your_balance_update_soon));
+      await sleep(9);
+    } catch (e) {
+      console.error(e);
+      dispatch(error(`Failed to redeem ${mint}`));
+    } finally {
+      if (redeemTx) {
+        await dispatch(getDaiUsdcBalance({ networkID, provider, address }));
+        await dispatch(getTorBalance({ networkID, provider, address }));
+        dispatch(info(messages.your_balance_updated));
+      }
     }
-  }
-});
+  },
+);
 
-export const getMintAllowance = createAsyncThunk("farm/getMintAllowance", async ({ networkID, provider, address }: IBaseAddressAsyncThunk, { dispatch }) => {
-  try {
-    const usdcAllowance = await usdcContract(networkID, provider, address).allowance(address, FANTOM.TOR_MINTER_ADDRESS);
-    const daiAllowance = await daiContract(networkID, provider, address).allowance(address, FANTOM.TOR_MINTER_ADDRESS);
-    const torAllowance = await torContract(networkID, provider, address).allowance(address, FANTOM.TOR_MINTER_ADDRESS)
-    return { usdcAllowance, daiAllowance, torAllowance };
-  } catch (e) {
-    console.error(e);
-    dispatch(error("Failed to get allowance for minting"));
-  }
-});
-
-
-export const daiMintApprove = createAsyncThunk("farm/daiMintApprove", async ({ networkID, provider, address }: IBaseAddressAsyncThunk, { dispatch }) => {
-  let daiMintTx;
-  try {
-    daiMintTx = await daiContract(networkID, provider, address).approve(
-      FANTOM.TOR_MINTER_ADDRESS,
-      ethers.utils.parseUnits("1000000", "ether"),
-    );
-    await daiMintTx.wait();
-    dispatch(success(messages.tx_successfully_send));
-    await sleep(7);
-    dispatch(info(messages.your_balance_update_soon));
-    await sleep(9);
-  } catch (e) {
-    console.error(e);
-    dispatch(error("Failed to approve DAI"));
-  } finally {
-    if (daiMintTx) {
-      await dispatch(getMintAllowance({ networkID, provider, address }));
-      dispatch(info(messages.your_balance_updated));
-
+export const getMintAllowance = createAsyncThunk(
+  "farm/getMintAllowance",
+  async ({ networkID, provider, address }: IBaseAddressAsyncThunk, { dispatch }) => {
+    try {
+      const usdcAllowance = await usdcContract(networkID, provider, address).allowance(
+        address,
+        FANTOM.TOR_MINTER_ADDRESS,
+      );
+      const daiAllowance = await daiContract(networkID, provider, address).allowance(
+        address,
+        FANTOM.TOR_MINTER_ADDRESS,
+      );
+      const torAllowance = await torContract(networkID, provider, address).allowance(
+        address,
+        FANTOM.TOR_MINTER_ADDRESS,
+      );
+      return { usdcAllowance, daiAllowance, torAllowance };
+    } catch (e) {
+      console.error(e);
+      dispatch(error("Failed to get allowance for minting"));
     }
-  }
-});
+  },
+);
 
-export const usdcMintApprove = createAsyncThunk("farm/usdcMintApprove", async ({ networkID, provider, address }: IBaseAddressAsyncThunk, { dispatch }) => {
-  let usdcMintTx;
-  try {
-    usdcMintTx = await usdcContract(networkID, provider, address).approve(
-      FANTOM.TOR_MINTER_ADDRESS,
-      ethers.utils.parseUnits("1000000", "ether"),
-    );
-    await usdcMintTx.wait();
-    dispatch(success(messages.tx_successfully_send));
-    await sleep(7);
-    dispatch(info(messages.your_balance_update_soon));
-    await sleep(9);
-  } catch (e) {
-    console.error(e);
-    dispatch(error("Failed to approve USDC"));
-  } finally {
-    if (usdcMintTx) {
-      await dispatch(getMintAllowance({ networkID, provider, address }));
-      dispatch(info(messages.your_balance_updated));
+export const daiMintApprove = createAsyncThunk(
+  "farm/daiMintApprove",
+  async ({ networkID, provider, address }: IBaseAddressAsyncThunk, { dispatch }) => {
+    let daiMintTx;
+    try {
+      daiMintTx = await daiContract(networkID, provider, address).approve(
+        FANTOM.TOR_MINTER_ADDRESS,
+        ethers.utils.parseUnits("1000000", "ether"),
+      );
+      await daiMintTx.wait();
+      dispatch(success(messages.tx_successfully_send));
+      await sleep(7);
+      dispatch(info(messages.your_balance_update_soon));
+      await sleep(9);
+    } catch (e) {
+      console.error(e);
+      dispatch(error("Failed to approve DAI"));
+    } finally {
+      if (daiMintTx) {
+        await dispatch(getMintAllowance({ networkID, provider, address }));
+        dispatch(info(messages.your_balance_updated));
+      }
     }
-  }
-});
+  },
+);
 
-export const redeemApprove = createAsyncThunk("farm/redeemApprove", async ({ networkID, provider, address }: IBaseAddressAsyncThunk, { dispatch }) => {
-  let redeemTx;
-  try {
-    redeemTx = await torContract(networkID, provider, address).approve(
-      FANTOM.TOR_MINTER_ADDRESS,
-      ethers.utils.parseUnits("1000000", "ether").toString(),
-    );
-    await redeemTx.wait();
-    dispatch(success(messages.tx_successfully_send));
-    await sleep(7);
-    dispatch(info(messages.your_balance_update_soon));
-    await sleep(9);
-  } catch (e) {
-    console.error(e);
-    dispatch(error("Failed to approve DAI"));
-  } finally {
-    if (redeemTx) {
-      await dispatch(getMintAllowance({ networkID, provider, address }));
-      dispatch(info(messages.your_balance_updated));
+export const usdcMintApprove = createAsyncThunk(
+  "farm/usdcMintApprove",
+  async ({ networkID, provider, address }: IBaseAddressAsyncThunk, { dispatch }) => {
+    let usdcMintTx;
+    try {
+      usdcMintTx = await usdcContract(networkID, provider, address).approve(
+        FANTOM.TOR_MINTER_ADDRESS,
+        ethers.utils.parseUnits("1000000", "ether"),
+      );
+      await usdcMintTx.wait();
+      dispatch(success(messages.tx_successfully_send));
+      await sleep(7);
+      dispatch(info(messages.your_balance_update_soon));
+      await sleep(9);
+    } catch (e) {
+      console.error(e);
+      dispatch(error("Failed to approve USDC"));
+    } finally {
+      if (usdcMintTx) {
+        await dispatch(getMintAllowance({ networkID, provider, address }));
+        dispatch(info(messages.your_balance_updated));
+      }
     }
-  }
-});
+  },
+);
+
+export const redeemApprove = createAsyncThunk(
+  "farm/redeemApprove",
+  async ({ networkID, provider, address }: IBaseAddressAsyncThunk, { dispatch }) => {
+    let redeemTx;
+    try {
+      redeemTx = await torContract(networkID, provider, address).approve(
+        FANTOM.TOR_MINTER_ADDRESS,
+        ethers.utils.parseUnits("1000000", "ether").toString(),
+      );
+      await redeemTx.wait();
+      dispatch(success(messages.tx_successfully_send));
+      await sleep(7);
+      dispatch(info(messages.your_balance_update_soon));
+      await sleep(9);
+    } catch (e) {
+      console.error(e);
+      dispatch(error("Failed to approve DAI"));
+    } finally {
+      if (redeemTx) {
+        await dispatch(getMintAllowance({ networkID, provider, address }));
+        dispatch(info(messages.your_balance_updated));
+      }
+    }
+  },
+);
 
 const initialState: IFarmSlice = {
   isLoading: false,
@@ -904,8 +1029,7 @@ const farmSlice = createSlice({
       .addCase(withdrawOneCurveTokens.rejected, (state, { error }) => {
         state.isLoading = false;
         console.error(error.name, error.message, error.stack);
-      })
-
+      });
   },
 });
 
