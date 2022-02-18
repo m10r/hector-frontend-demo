@@ -292,7 +292,7 @@ function App() {
               <ChooseBond />
             </Route>
             <Route path="/farming">
-              <PoolFarming theme={theme} themeMode={themeMode} />
+              <PoolFarming />
             </Route>
             <Route path="/mint">
               <Mint />

@@ -7,7 +7,6 @@ import {
   FormControl,
   FormControlLabel,
   FormHelperText,
-  FormLabel,
   IconButton,
   InputAdornment,
   InputLabel,
@@ -64,8 +63,7 @@ import farmingInfoLight from "../../assets/Farming-info-light.png";
 import HelpOutlineIcon from "@material-ui/icons/HelpOutline";
 import CancelIcon from "@material-ui/icons/Cancel";
 import { formatCurrency, trim } from "src/helpers";
-import apollo from "src/lib/apolloClient";
-import { THE_GRAPH_URL } from "src/constants";
+import useTheme from "src/hooks/useTheme";
 
 type UserAction = "stake" | "unstake" | "approve" | "mint" | "deposit" | "withdraw";
 function a11yProps(index: any) {
@@ -81,101 +79,26 @@ function curveInputProps(index: any) {
   };
 }
 
-type Tokens = "DAI" | "TOR" | "USDC" | "";
+type PoolToken = "DAI" | "TOR" | "USDC";
 
 const getFormattedStakingInfo = (prop: keyof StakingInfo, stakingInfo: StakingInfo, units?: ethers.BigNumberish) =>
   stakingInfo ? +ethers.utils.formatUnits(stakingInfo[prop], units) : 0;
 
-export const PoolFarming: VFC<any> = ({ theme, themeMode }) => {
+const QUANTITY = "10000";
+
+export const PoolFarming: VFC = () => {
   const dispatch = useDispatch();
-  const {
-    assetPrice,
-    stakingRewardsInfo,
-    torPoolInfo,
-    torBalance,
-    stakingInfo,
-    curveProportions,
-    daiUsdcBalance,
-    isLoading,
-  } = useSelector((state: RootState) => state.farm);
-  const quantity = "10000";
+  const { torPoolInfo, torBalance, stakingInfo, curveProportions, daiUsdcBalance } = useSelector(
+    (state: RootState) => state.farm,
+  );
 
-  const [stakeQuantity, setStakeQuantity] = useState("");
-  const [withdrawQuantity, setWtihdrawQuantity] = useState("");
-
-  const [optimalCoin, setOptimalCoin] = useState<Tokens>("");
-  const [view, setView] = useState(0);
+  const [optimalCoin, setOptimalCoin] = useState<PoolToken>(undefined);
   const [torStats, setTorStats] = useState({ apy: "", torTVL: "" });
   const { provider, chainID, address, connected } = useWeb3Context();
 
-  const handleChange = (event: React.ChangeEvent<{}>, newValue: number) => {
-    setView(newValue);
-  };
-  const hasAllowance = useCallback(() => {
-    return torPoolInfo?.allowance < torPoolInfo?.balance;
-  }, [torPoolInfo]);
-
-  const hasLpBalance = useCallback(() => torPoolInfo?.balance > 0 && torPoolInfo?.allowance > torPoolInfo?.balance, [
-    torPoolInfo,
-  ]);
-
-  const setMax = () => {
-    if (view === 0) {
-      setStakeQuantity(ethers.utils.formatEther(torPoolInfo.originalBalance));
-    } else {
-      setWtihdrawQuantity(ethers.utils.formatEther(stakingRewardsInfo.originalBalance));
-    }
-  };
-
-  const getEarnedUsd = useCallback(() => {
-    if (stakingInfo && assetPrice) {
-      const earnedUSD = +ethers.utils.formatEther(stakingInfo?._earnedRewardAmount);
-      const assetPriceUSD = assetPrice.toNumber() / 1e8;
-      return earnedUSD * assetPriceUSD;
-    }
-  }, [stakingInfo, assetPrice]);
-
-  async function dispatchStakingInfo(): Promise<void> {
-    await dispatch(getStakingInfo({ networkID: chainID, provider, address, value: quantity }));
-  }
-  async function dispatchClaimEarned(): Promise<void> {
-    await dispatch(claimRewards({ networkID: chainID, provider, address }));
-    dispatchStakingInfo();
-  }
-
-  const onUserAction = async (action: UserAction) => {
-    let value: string;
-    view === 0 ? (value = stakeQuantity) : (value = withdrawQuantity);
-
-    if (value === "0" || value === "0.0") {
-      return dispatch(error("Please enter a value greater than 0"));
-    }
-
-    if (action === "stake" && +value > +ethers.utils.formatEther(torPoolInfo.originalBalance)) {
-      return dispatch(error("You cannot stake more than your balance."));
-    }
-    if (action === "unstake" && +value > +ethers.utils.formatEther(stakingRewardsInfo.originalBalance)) {
-      return dispatch(error("You cannot withdraw more than your balance."));
-    }
-    switch (action) {
-      case "stake":
-        await dispatch(stake({ networkID: chainID, provider, address, value: stakeQuantity }));
-        break;
-      case "unstake":
-        await dispatch(unstake({ networkID: chainID, provider, address, value: withdrawQuantity }));
-        break;
-      case "approve":
-        await dispatch(torPoolApprove({ networkID: chainID, provider, address }));
-        break;
-    }
-    getAllData();
-    setStakeQuantity("");
-    setWtihdrawQuantity("");
-  };
-
   async function getAllData() {
     await dispatch(getAssetPrice({ networkID: chainID, provider }));
-    await dispatch(getStakingInfo({ networkID: chainID, provider, address, value: quantity }));
+    await dispatch(getStakingInfo({ networkID: chainID, provider, address, value: QUANTITY }));
     await dispatch(getStakingRewardsInfo({ networkID: chainID, provider, address }));
     await dispatch(getTorPoolInfo({ networkID: chainID, provider, address }));
     await dispatch(getTorBalance({ networkID: chainID, provider, address }));
@@ -205,7 +128,7 @@ export const PoolFarming: VFC<any> = ({ theme, themeMode }) => {
   useEffect(() => {
     const updateInterval = setInterval(() => {
       if (address) {
-        dispatch(getStakingInfo({ networkID: chainID, provider, address, value: quantity }));
+        dispatch(getStakingInfo({ networkID: chainID, provider, address, value: QUANTITY }));
         dispatch(getTorBalance({ networkID: chainID, provider, address }));
       }
     }, 1000 * 60);
@@ -235,225 +158,314 @@ export const PoolFarming: VFC<any> = ({ theme, themeMode }) => {
   return (
     <div className="pool-farming">
       <FarmStats torStats={torStats} stakingInfo={stakingInfo} />
-      <div className="MuiPaper-root hec-card wallet">
-        <div className="header">
-          <div className="header-title">Balances</div>
-        </div>
-        <div className="token">
-          <TorSVG style={{ height: "30px", width: "30px" }} />
-          <div className="details">
-            <div className="coin">TOR Balance</div>
-            <div className="balance">{trim(torBalance?.balance, 2)}</div>
-            {optimalCoin === "TOR" && (
-              <>
-                <Tooltip title="Depositing TOR will get you the most LP">
-                  <BestFarmIcon />
-                </Tooltip>
-              </>
-            )}
-          </div>
-        </div>
-        <hr />
-        <div className="token">
-          <img src={DaiToken} />
-          <div className="details">
-            <div className="coin">DAI Balance</div>
-            <div className="balance">{trim(daiUsdcBalance?.daiBalance, 2)}</div>
-            {optimalCoin === "DAI" && (
-              <>
-                <Tooltip title="Depositing DAI will get you the most LP">
-                  <BestFarmIcon />
-                </Tooltip>
-              </>
-            )}
-          </div>
-        </div>
-        <hr />
+      <Wallet
+        optimalCoin={optimalCoin}
+        torBalance={torBalance}
+        torPoolInfo={torPoolInfo}
+        daiUsdcBalance={daiUsdcBalance}
+      />
+      <FarmStaking onAction={getAllData} />
+      <Curve
+        daiUsdcBalance={daiUsdcBalance}
+        torBalance={torBalance}
+        curveProportions={curveProportions}
+        torPoolInfo={torPoolInfo}
+      />
+    </div>
+  );
+};
 
-        <div className="token">
-          <img src={UsdcToken} />
-          <div className="details">
-            <div className="coin">USDC Balance</div>
-            <div className="balance">{trim(daiUsdcBalance?.usdcBalance, 2)}</div>
-            {optimalCoin === "USDC" && (
-              <>
-                <Tooltip title="Depositing USDC will get you the most LP">
-                  <BestFarmIcon />
-                </Tooltip>
-              </>
-            )}
-          </div>
-        </div>
-        <hr />
+interface WalletProps {
+  optimalCoin: PoolToken;
+  torBalance: TorBalance;
+  daiUsdcBalance: DaiUsdcBalance;
+  torPoolInfo: TorPoolInfo;
+}
 
-        <div className="token">
-          <img src={curveToken} />
-          <div className="details">
-            <div>LP Balance</div>
-            <div className="balance">{trim(torPoolInfo?.balance, 2)}</div>
-          </div>
-        </div>
+const Wallet: VFC<WalletProps> = ({ optimalCoin, torPoolInfo, torBalance, daiUsdcBalance }) => (
+  <div className="MuiPaper-root hec-card wallet">
+    <div className="header">
+      <div className="header-title">Balances</div>
+    </div>
+    <div className="token">
+      <TorSVG style={{ height: "30px", width: "30px" }} />
+      <div className="details">
+        <div className="coin">TOR Balance</div>
+        <div className="balance">{trim(torBalance?.balance, 2)}</div>
+        {optimalCoin === "TOR" && (
+          <>
+            <Tooltip title="Depositing TOR will get you the most LP">
+              <BestFarmIcon />
+            </Tooltip>
+          </>
+        )}
       </div>
-      <div className="MuiPaper-root hec-card farming">
-        <div className="header">
-          <div className="header-title">Earn Rewards</div>
-          <HelpModal theme={theme} />
-        </div>
+    </div>
+    <hr />
+    <div className="token">
+      <img src={DaiToken} />
+      <div className="details">
+        <div className="coin">DAI Balance</div>
+        <div className="balance">{trim(daiUsdcBalance?.daiBalance, 2)}</div>
+        {optimalCoin === "DAI" && (
+          <>
+            <Tooltip title="Depositing DAI will get you the most LP">
+              <BestFarmIcon />
+            </Tooltip>
+          </>
+        )}
+      </div>
+    </div>
+    <hr />
 
-        <div className="actions">
-          {+getFormattedStakingInfo("_earnedRewardAmount", stakingInfo, "ether") > 0 ||
-          hasLpBalance() ||
-          hasAllowance() ||
-          stakingRewardsInfo?.balance > 0 ? (
-            <>
-              <div className="tab-group">
-                <Tabs
-                  className="tabs"
-                  textColor="primary"
-                  indicatorColor="primary"
-                  value={view}
-                  onChange={handleChange}
-                  aria-label="simple tabs example"
-                >
-                  <Tab label="Stake" {...a11yProps(0)} />
-                  <Tab label="Unstake" {...a11yProps(1)} />
-                </Tabs>
+    <div className="token">
+      <img src={UsdcToken} />
+      <div className="details">
+        <div className="coin">USDC Balance</div>
+        <div className="balance">{trim(daiUsdcBalance?.usdcBalance, 2)}</div>
+        {optimalCoin === "USDC" && (
+          <>
+            <Tooltip title="Depositing USDC will get you the most LP">
+              <BestFarmIcon />
+            </Tooltip>
+          </>
+        )}
+      </div>
+    </div>
+    <hr />
 
-                <TabPanel value={view} index={0}>
-                  <img src={curveToken} />
+    <div className="token">
+      <img src={curveToken} />
+      <div className="details">
+        <div>LP Balance</div>
+        <div className="balance">{trim(torPoolInfo?.balance, 2)}</div>
+      </div>
+    </div>
+  </div>
+);
 
-                  <FormControl className="input-amount" fullWidth variant="outlined">
-                    <InputLabel htmlFor="outlined-adornment-amount">Amount</InputLabel>
-                    <OutlinedInput
-                      id="outlined-adornment-amount"
-                      type="number"
-                      value={stakeQuantity}
-                      onChange={e => setStakeQuantity(e.target.value)}
-                      endAdornment={
-                        <InputAdornment position="end">
-                          {" "}
-                          {hasLpBalance() && (
-                            <Button variant="text" onClick={setMax} color="inherit">
-                              Max
-                            </Button>
-                          )}
-                        </InputAdornment>
-                      }
-                      labelWidth={60}
-                    />
-                  </FormControl>
-                </TabPanel>
-                <TabPanel value={view} index={1}>
-                  <img src={curveToken} />
+interface FarmStakingProps {
+  onAction: () => void;
+}
 
-                  <FormControl className="input-amount" fullWidth variant="outlined">
-                    <InputLabel htmlFor="outlined-adornment-amount">Amount</InputLabel>
-                    <OutlinedInput
-                      id="outlined-adornment-amount"
-                      type="number"
-                      value={withdrawQuantity}
-                      endAdornment={
-                        <InputAdornment position="end">
-                          {" "}
-                          {stakingRewardsInfo?.balance > 0 && (
-                            <Button variant="text" onClick={setMax} color="inherit">
-                              Max
-                            </Button>
-                          )}
-                        </InputAdornment>
-                      }
-                      onChange={e => setWtihdrawQuantity(e.target.value)}
-                      labelWidth={60}
-                    />
-                  </FormControl>
-                </TabPanel>
+const FarmStaking: VFC<FarmStakingProps> = ({ onAction }) => {
+  const dispatch = useDispatch();
+  const { provider, chainID, address } = useWeb3Context();
+  const { assetPrice, stakingRewardsInfo, torPoolInfo, stakingInfo, isLoading } = useSelector(
+    (state: RootState) => state.farm,
+  );
+  const hasAllowance = torPoolInfo?.allowance < torPoolInfo?.balance;
+  const hasLpBalance = torPoolInfo?.balance > 0 && torPoolInfo?.allowance > torPoolInfo?.balance;
+  const [view, setView] = useState(0);
+  const [stakeQuantity, setStakeQuantity] = useState("");
+  const [withdrawQuantity, setWithdrawQuantity] = useState("");
+
+  const setMax = () => {
+    if (view === 0) {
+      setStakeQuantity(ethers.utils.formatEther(torPoolInfo.originalBalance));
+    } else {
+      setWithdrawQuantity(ethers.utils.formatEther(stakingRewardsInfo.originalBalance));
+    }
+  };
+
+  const getEarnedUsd = useCallback(() => {
+    if (stakingInfo && assetPrice) {
+      const earnedUSD = +ethers.utils.formatEther(stakingInfo?._earnedRewardAmount);
+      const assetPriceUSD = assetPrice.toNumber() / 1e8;
+      return earnedUSD * assetPriceUSD;
+    }
+  }, [stakingInfo, assetPrice]);
+
+  const onUserAction = async (action: UserAction) => {
+    const value = view === 0 ? stakeQuantity : withdrawQuantity;
+
+    if (value === "0" || value === "0.0") {
+      return dispatch(error("Please enter a value greater than 0"));
+    }
+
+    if (action === "stake" && +value > +ethers.utils.formatEther(torPoolInfo.originalBalance)) {
+      return dispatch(error("You cannot stake more than your balance."));
+    }
+    if (action === "unstake" && +value > +ethers.utils.formatEther(stakingRewardsInfo.originalBalance)) {
+      return dispatch(error("You cannot withdraw more than your balance."));
+    }
+    switch (action) {
+      case "stake":
+        await dispatch(stake({ networkID: chainID, provider, address, value: stakeQuantity }));
+        break;
+      case "unstake":
+        await dispatch(unstake({ networkID: chainID, provider, address, value: withdrawQuantity }));
+        break;
+      case "approve":
+        await dispatch(torPoolApprove({ networkID: chainID, provider, address }));
+        break;
+    }
+    setStakeQuantity("");
+    setWithdrawQuantity("");
+    onAction();
+  };
+
+  async function dispatchStakingInfo(): Promise<void> {
+    await dispatch(getStakingInfo({ networkID: chainID, provider, address, value: QUANTITY }));
+  }
+
+  async function dispatchClaimEarned(): Promise<void> {
+    await dispatch(claimRewards({ networkID: chainID, provider, address }));
+    dispatchStakingInfo();
+  }
+
+  return (
+    <div className="MuiPaper-root hec-card farming">
+      <div className="header">
+        <div className="header-title">Earn Rewards</div>
+        <HelpModal />
+      </div>
+
+      <div className="actions">
+        {+getFormattedStakingInfo("_earnedRewardAmount", stakingInfo, "ether") > 0 ||
+        hasLpBalance ||
+        hasAllowance ||
+        stakingRewardsInfo?.balance > 0 ? (
+          <>
+            <div className="tab-group">
+              <Tabs
+                className="tabs"
+                textColor="primary"
+                indicatorColor="primary"
+                value={view}
+                onChange={(_, view) => setView(view)}
+                aria-label="simple tabs example"
+              >
+                <Tab label="Stake" {...a11yProps(0)} />
+                <Tab label="Unstake" {...a11yProps(1)} />
+              </Tabs>
+
+              <TabPanel value={view} index={0}>
+                <img src={curveToken} />
+
+                <FormControl className="input-amount" fullWidth variant="outlined">
+                  <InputLabel htmlFor="outlined-adornment-amount">Amount</InputLabel>
+                  <OutlinedInput
+                    id="outlined-adornment-amount"
+                    type="number"
+                    value={stakeQuantity}
+                    onChange={e => setStakeQuantity(e.target.value)}
+                    endAdornment={
+                      <InputAdornment position="end">
+                        {" "}
+                        {hasLpBalance && (
+                          <Button variant="text" onClick={setMax} color="inherit">
+                            Max
+                          </Button>
+                        )}
+                      </InputAdornment>
+                    }
+                    labelWidth={60}
+                  />
+                </FormControl>
+              </TabPanel>
+              <TabPanel value={view} index={1}>
+                <img src={curveToken} />
+
+                <FormControl className="input-amount" fullWidth variant="outlined">
+                  <InputLabel htmlFor="outlined-adornment-amount">Amount</InputLabel>
+                  <OutlinedInput
+                    id="outlined-adornment-amount"
+                    type="number"
+                    value={withdrawQuantity}
+                    endAdornment={
+                      <InputAdornment position="end">
+                        {" "}
+                        {stakingRewardsInfo?.balance > 0 && (
+                          <Button variant="text" onClick={setMax} color="inherit">
+                            Max
+                          </Button>
+                        )}
+                      </InputAdornment>
+                    }
+                    onChange={e => setWithdrawQuantity(e.target.value)}
+                    labelWidth={60}
+                  />
+                </FormControl>
+              </TabPanel>
+            </div>
+            <div className="info">
+              <div>
+                <div className="title">Staked LP Tokens: </div>
+                <div className="data">
+                  {stakingRewardsInfo?.balance || stakingRewardsInfo?.balance == 0 ? (
+                    stakingRewardsInfo?.balance.toFixed(2)
+                  ) : (
+                    <Skeleton width="40%" />
+                  )}
+                </div>
               </div>
-              <div className="info">
-                <div>
-                  <div className="title">Staked LP Tokens: </div>
-                  <div className="data">
-                    {stakingRewardsInfo?.balance || stakingRewardsInfo?.balance == 0 ? (
-                      stakingRewardsInfo?.balance.toFixed(2)
-                    ) : (
-                      <Skeleton width="40%" />
-                    )}
-                  </div>
+              <div>
+                <div className="title">wFTM Rewards: </div>
+                <div className="data">
+                  {trim(getFormattedStakingInfo("_earnedRewardAmount", stakingInfo, "ether"), 4)} (
+                  {formatCurrency(+getEarnedUsd(), 2)})
                 </div>
-                <div>
-                  <div className="title">wFTM Rewards: </div>
-                  <div className="data">
-                    {trim(getFormattedStakingInfo("_earnedRewardAmount", stakingInfo, "ether"), 4)} (
-                    {formatCurrency(+getEarnedUsd(), 2)})
-                  </div>
-                </div>
-                <div className="buttons">
-                  {+getFormattedStakingInfo("_earnedRewardAmount", stakingInfo, "ether") > 0 && (
-                    <>
-                      <Button
-                        className="stake-button"
-                        variant="contained"
-                        color="primary"
-                        disabled={isLoading}
-                        onClick={() => dispatchClaimEarned()}
-                      >
-                        Claim Rewards
-                      </Button>
-                    </>
-                  )}
-                  {view === 0 && (
-                    <Button
-                      className="stake-button"
-                      variant="contained"
-                      color="primary"
-                      disabled={!hasLpBalance() || isLoading || +stakeQuantity === 0}
-                      onClick={() => onUserAction("stake")}
-                    >
-                      Stake
-                    </Button>
-                  )}
-                  {view === 1 && (
-                    <>
-                      <Button
-                        className="stake-button"
-                        variant="contained"
-                        color="primary"
-                        disabled={isLoading || !(stakingRewardsInfo?.balance > 0) || +withdrawQuantity === 0}
-                        onClick={() => onUserAction("unstake")}
-                      >
-                        Withdraw
-                      </Button>
-                    </>
-                  )}
-                  {hasAllowance() && (
+              </div>
+              <div className="buttons">
+                {+getFormattedStakingInfo("_earnedRewardAmount", stakingInfo, "ether") > 0 && (
+                  <>
                     <Button
                       className="stake-button"
                       variant="contained"
                       color="primary"
                       disabled={isLoading}
-                      onClick={() => onUserAction("approve")}
+                      onClick={() => dispatchClaimEarned()}
                     >
-                      Approve
+                      Claim Rewards
                     </Button>
-                  )}
-                </div>
+                  </>
+                )}
+                {view === 0 && (
+                  <Button
+                    className="stake-button"
+                    variant="contained"
+                    color="primary"
+                    disabled={!hasLpBalance || isLoading || +stakeQuantity === 0}
+                    onClick={() => onUserAction("stake")}
+                  >
+                    Stake
+                  </Button>
+                )}
+                {view === 1 && (
+                  <>
+                    <Button
+                      className="stake-button"
+                      variant="contained"
+                      color="primary"
+                      disabled={isLoading || !(stakingRewardsInfo?.balance > 0) || +withdrawQuantity === 0}
+                      onClick={() => onUserAction("unstake")}
+                    >
+                      Withdraw
+                    </Button>
+                  </>
+                )}
+                {hasAllowance && (
+                  <Button
+                    className="stake-button"
+                    variant="contained"
+                    color="primary"
+                    disabled={isLoading}
+                    onClick={() => onUserAction("approve")}
+                  >
+                    Approve
+                  </Button>
+                )}
               </div>
-            </>
-          ) : (
-            <>
-              <div className="get-lp-text">
-                <i>Deposit tokens into Curve in order to stake and earn rewards on your LP tokens.</i>
-              </div>
-            </>
-          )}
-        </div>
-      </div>
-      <div className="curve-pool">
-        <Curve
-          daiUsdcBalance={daiUsdcBalance}
-          torBalance={torBalance}
-          curveProportions={curveProportions}
-          torPoolInfo={torPoolInfo}
-        />
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="get-lp-text">
+              <i>Deposit tokens into Curve in order to stake and earn rewards on your LP tokens.</i>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
@@ -501,11 +513,11 @@ const Curve: VFC<CurveProps> = ({ daiUsdcBalance, torBalance, curveProportions, 
   const [torAmount, setTORAmount] = useState("");
   const { provider, chainID, address } = useWeb3Context();
   const [sliderState, setSliderState] = useState(true);
-  const [radioValue, setRadioValue] = useState<Tokens>("TOR");
+  const [radioValue, setRadioValue] = useState<PoolToken>("TOR");
   const { curveAllowance, isLoading } = useSelector((state: RootState) => state.farm);
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const token = (event.target as HTMLInputElement).value as Tokens;
+    const token = (event.target as HTMLInputElement).value as PoolToken;
     setRadioValue(token);
     setMax(token);
   };
@@ -514,7 +526,7 @@ const Curve: VFC<CurveProps> = ({ daiUsdcBalance, torBalance, curveProportions, 
     setView(newValue);
   };
 
-  const setMax = (token: Tokens): void => {
+  const setMax = (token: PoolToken): void => {
     if (view === 1 && !sliderState) {
       if (token === "DAI") {
         setDAIAmount(trim(torPoolInfo?.balance, 2));
@@ -540,20 +552,11 @@ const Curve: VFC<CurveProps> = ({ daiUsdcBalance, torBalance, curveProportions, 
     }
   };
 
-  const hasAnyBalance = () => +daiAmount > 0 || +usdcAmount > 0 || +torAmount > 0;
-
-  const hasDaiDepositAllowance = useCallback(() => {
-    return curveAllowance?.daiAllowance > BigNumber.from("0");
-  }, [curveAllowance, daiUsdcBalance]);
-  const hasUsdcDepositAllowance = useCallback(() => {
-    return curveAllowance?.usdcAllowance > BigNumber.from("0");
-  }, [curveAllowance, daiUsdcBalance]);
-  const hasTorDepositAllowance = useCallback(() => {
-    return curveAllowance?.torAllowance > BigNumber.from("0");
-  }, [curveAllowance, torBalance]);
-  const hasPoolAllowance = useCallback(() => {
-    return curveAllowance?.torPoolAllowance > BigNumber.from("0");
-  }, [torPoolInfo]);
+  const hasAnyBalance = +daiAmount > 0 || +usdcAmount > 0 || +torAmount > 0;
+  const hasDaiDepositAllowance = curveAllowance?.daiAllowance > BigNumber.from("0");
+  const hasUsdcDepositAllowance = curveAllowance?.usdcAllowance > BigNumber.from("0");
+  const hasTorDepositAllowance = curveAllowance?.torAllowance > BigNumber.from("0");
+  const hasPoolAllowance = curveAllowance?.torPoolAllowance > BigNumber.from("0");
 
   const daiCurveApporve = () => {
     dispatch(
@@ -721,198 +724,202 @@ const Curve: VFC<CurveProps> = ({ daiUsdcBalance, torBalance, curveProportions, 
   }, [chainID, provider, address]);
 
   return (
-    <div className="MuiPaper-root hec-card curve">
-      <div className="header">
-        <div className="header-title">Curve</div>
-        <div className="link">
-          <Link className="lp-link" target="_blank" href="https://ftm.curve.fi/factory/62/deposit">
-            <SvgIcon component={ArrowUp} htmlColor="#A3A3A3" />
-          </Link>
-        </div>
-        <FormControlLabel
-          className={!sliderState ? "slider-off slider" : "slider"}
-          control={
-            <Switch
-              checked={sliderState}
-              onChange={() => setSliderState(!sliderState)}
-              name="sliderState"
-              color="primary"
-            />
-          }
-          label={view === 0 ? "Max" : "Combination"}
-        />
-      </div>
-      <div className="tab-group">
-        <Tabs
-          className="tabs"
-          textColor="primary"
-          indicatorColor="primary"
-          value={view}
-          onChange={changeTabs}
-          aria-label="simple tabs example"
-        >
-          <Tab label="Deposit" {...curveInputProps(0)} />
-          <Tab label="Withdraw" {...curveInputProps(1)} />
-        </Tabs>
-        <div className="token-inputs">
-          <div className="token">
-            <TorSVG style={{ height: "30px", width: "30px" }} />
-            {(hasTorDepositAllowance() || view === 1) && (
-              <FormControl className="input-amount" fullWidth variant="outlined">
-                <InputLabel htmlFor="outlined-adornment-amount">TOR</InputLabel>
-                <OutlinedInput
-                  error={isTorFormInvalid()}
-                  type="number"
-                  disabled={view === 1}
-                  value={torAmount}
-                  onChange={e => setTokenAmount("TOR", e.target.value)}
-                  labelWidth={30}
-                />
-                {isTorFormInvalid() && <FormHelperText error>Must be less than or equal to balance!</FormHelperText>}
-              </FormControl>
-            )}
-            {!hasTorDepositAllowance() && view !== 1 && (
-              <Button
-                className="stake-button"
-                variant="contained"
-                color="primary"
-                disabled={isLoading}
-                onClick={() => torCurveApprove()}
-              >
-                Approve
-              </Button>
-            )}
+    <div className="curve-pool">
+      <div className="MuiPaper-root hec-card curve">
+        <div className="header">
+          <div className="header-title">Curve</div>
+          <div className="link">
+            <Link className="lp-link" target="_blank" href="https://ftm.curve.fi/factory/62/deposit">
+              <SvgIcon component={ArrowUp} htmlColor="#A3A3A3" />
+            </Link>
           </div>
-          <div className="token">
-            <img src={DaiToken} />
-            {(hasDaiDepositAllowance() || view === 1) && (
-              <FormControl className="input-amount" fullWidth variant="outlined">
-                <InputLabel htmlFor="outlined-dai-amount">DAI</InputLabel>
-                <OutlinedInput
-                  error={isDaiFormInvalid()}
-                  type="number"
-                  disabled={view === 1}
-                  value={daiAmount}
-                  onChange={e => setTokenAmount("DAI", e.target.value)}
-                  labelWidth={27}
-                />
-                {isDaiFormInvalid() && <FormHelperText error>Must be less than or equal to balance!</FormHelperText>}
-              </FormControl>
-            )}
-            {!hasDaiDepositAllowance() && view !== 1 && (
-              <Button
-                className="stake-button"
-                variant="contained"
+          <FormControlLabel
+            className={!sliderState ? "slider-off slider" : "slider"}
+            control={
+              <Switch
+                checked={sliderState}
+                onChange={() => setSliderState(!sliderState)}
+                name="sliderState"
                 color="primary"
-                disabled={isLoading}
-                onClick={() => daiCurveApporve()}
-              >
-                Approve
-              </Button>
-            )}
-          </div>
-          <div className="token">
-            <img src={UsdcToken} />
-            {(hasUsdcDepositAllowance() || view === 1) && (
-              <FormControl className="input-amount" fullWidth variant="outlined">
-                <InputLabel htmlFor="outlined-adornment-amount">USDC</InputLabel>
-                <OutlinedInput
-                  error={isUsdcFormInvalid()}
-                  type="number"
-                  disabled={view === 1}
-                  value={usdcAmount}
-                  onChange={e => setTokenAmount("USDC", e.target.value)}
-                  labelWidth={40}
-                />
-                {isUsdcFormInvalid() && <FormHelperText error>Must be less than or equal to balance!</FormHelperText>}
-              </FormControl>
-            )}
-            {!hasUsdcDepositAllowance() && view !== 1 && (
-              <Button
-                className="stake-button"
-                variant="contained"
-                color="primary"
-                disabled={isLoading}
-                onClick={() => usdcCurveApporve()}
-              >
-                Approve
-              </Button>
-            )}
-          </div>
-        </div>
-        <TabPanel value={view} index={0}>
-          <Tooltip
-            title={
-              hasDaiDepositAllowance() && hasUsdcDepositAllowance() && hasTorDepositAllowance()
-                ? ""
-                : "Please approve remaining tokens before depositing"
+              />
             }
+            label={view === 0 ? "Max" : "Combination"}
+          />
+        </div>
+        <div className="tab-group">
+          <Tabs
+            className="tabs"
+            textColor="primary"
+            indicatorColor="primary"
+            value={view}
+            onChange={changeTabs}
+            aria-label="simple tabs example"
           >
-            <span>
+            <Tab label="Deposit" {...curveInputProps(0)} />
+            <Tab label="Withdraw" {...curveInputProps(1)} />
+          </Tabs>
+          <div className="token-inputs">
+            <div className="token">
+              <TorSVG style={{ height: "30px", width: "30px" }} />
+              {(hasTorDepositAllowance || view === 1) && (
+                <FormControl className="input-amount" fullWidth variant="outlined">
+                  <InputLabel htmlFor="outlined-adornment-amount">TOR</InputLabel>
+                  <OutlinedInput
+                    error={isTorFormInvalid()}
+                    type="number"
+                    disabled={view === 1}
+                    value={torAmount}
+                    onChange={e => setTokenAmount("TOR", e.target.value)}
+                    labelWidth={30}
+                  />
+                  {isTorFormInvalid() && <FormHelperText error>Must be less than or equal to balance!</FormHelperText>}
+                </FormControl>
+              )}
+              {!hasTorDepositAllowance && view !== 1 && (
+                <Button
+                  className="stake-button"
+                  variant="contained"
+                  color="primary"
+                  disabled={isLoading}
+                  onClick={() => torCurveApprove()}
+                >
+                  Approve
+                </Button>
+              )}
+            </div>
+            <div className="token">
+              <img src={DaiToken} />
+              {(hasDaiDepositAllowance || view === 1) && (
+                <FormControl className="input-amount" fullWidth variant="outlined">
+                  <InputLabel htmlFor="outlined-dai-amount">DAI</InputLabel>
+                  <OutlinedInput
+                    error={isDaiFormInvalid()}
+                    type="number"
+                    disabled={view === 1}
+                    value={daiAmount}
+                    onChange={e => setTokenAmount("DAI", e.target.value)}
+                    labelWidth={27}
+                  />
+                  {isDaiFormInvalid() && <FormHelperText error>Must be less than or equal to balance!</FormHelperText>}
+                </FormControl>
+              )}
+              {!hasDaiDepositAllowance && view !== 1 && (
+                <Button
+                  className="stake-button"
+                  variant="contained"
+                  color="primary"
+                  disabled={isLoading}
+                  onClick={() => daiCurveApporve()}
+                >
+                  Approve
+                </Button>
+              )}
+            </div>
+            <div className="token">
+              <img src={UsdcToken} />
+              {(hasUsdcDepositAllowance || view === 1) && (
+                <FormControl className="input-amount" fullWidth variant="outlined">
+                  <InputLabel htmlFor="outlined-adornment-amount">USDC</InputLabel>
+                  <OutlinedInput
+                    error={isUsdcFormInvalid()}
+                    type="number"
+                    disabled={view === 1}
+                    value={usdcAmount}
+                    onChange={e => setTokenAmount("USDC", e.target.value)}
+                    labelWidth={40}
+                  />
+                  {isUsdcFormInvalid() && <FormHelperText error>Must be less than or equal to balance!</FormHelperText>}
+                </FormControl>
+              )}
+              {!hasUsdcDepositAllowance && view !== 1 && (
+                <Button
+                  className="stake-button"
+                  variant="contained"
+                  color="primary"
+                  disabled={isLoading}
+                  onClick={() => usdcCurveApporve()}
+                >
+                  Approve
+                </Button>
+              )}
+            </div>
+          </div>
+          <TabPanel value={view} index={0}>
+            <Tooltip
+              title={
+                hasDaiDepositAllowance && hasUsdcDepositAllowance && hasTorDepositAllowance
+                  ? ""
+                  : "Please approve remaining tokens before depositing"
+              }
+            >
+              <span>
+                <Button
+                  disabled={
+                    isLoading ||
+                    isUsdcFormInvalid() ||
+                    isDaiFormInvalid() ||
+                    isTorFormInvalid() ||
+                    !hasAnyBalance ||
+                    !hasDaiDepositAllowance ||
+                    !hasUsdcDepositAllowance ||
+                    !hasTorDepositAllowance
+                  }
+                  className="stake-button"
+                  variant="contained"
+                  color="primary"
+                  onClick={() => onDeposit()}
+                >
+                  Deposit
+                </Button>
+              </span>
+            </Tooltip>
+          </TabPanel>
+          {view === 1 && !sliderState && (
+            <RadioGroup
+              className="radio-group"
+              aria-label="tokens"
+              name="tokens"
+              value={radioValue}
+              onChange={handleChange}
+            >
+              <FormControlLabel value="TOR" control={<Radio />} label="TOR" />
+              <FormControlLabel value="DAI" control={<Radio />} label="DAI" />
+              <FormControlLabel value="USDC" control={<Radio />} label="USDC" />
+            </RadioGroup>
+          )}
+          <TabPanel value={view} index={1}>
+            {hasPoolAllowance && (
               <Button
-                disabled={
-                  isLoading ||
-                  isUsdcFormInvalid() ||
-                  isDaiFormInvalid() ||
-                  isTorFormInvalid() ||
-                  !hasAnyBalance() ||
-                  !hasDaiDepositAllowance() ||
-                  !hasUsdcDepositAllowance() ||
-                  !hasTorDepositAllowance()
-                }
+                onClick={() => (sliderState ? onWithdraw() : onWithdrawOneToken())}
+                className="stake-button"
+                disabled={!hasAnyBalance || isLoading}
+                variant="contained"
+                color="primary"
+              >
+                Withdraw
+              </Button>
+            )}
+            {!hasPoolAllowance && (
+              <Button
                 className="stake-button"
                 variant="contained"
                 color="primary"
-                onClick={() => onDeposit()}
+                disabled={isLoading}
+                onClick={() => approveCurveWithdraw()}
               >
-                Deposit
+                Approve
               </Button>
-            </span>
-          </Tooltip>
-        </TabPanel>
-        <RadioGroup
-          className="radio-group"
-          aria-label="tokens"
-          name="tokens"
-          value={radioValue}
-          onChange={handleChange}
-        >
-          {view === 1 && !sliderState && <FormControlLabel value="TOR" control={<Radio />} label="TOR" />}
-          {view === 1 && !sliderState && <FormControlLabel value="DAI" control={<Radio />} label="DAI" />}
-          {view === 1 && !sliderState && <FormControlLabel value="USDC" control={<Radio />} label="USDC" />}
-        </RadioGroup>
-        <TabPanel value={view} index={1}>
-          {hasPoolAllowance() && (
-            <Button
-              onClick={() => (sliderState ? onWithdraw() : onWithdrawOneToken())}
-              className="stake-button"
-              disabled={!hasAnyBalance() || isLoading}
-              variant="contained"
-              color="primary"
-            >
-              Withdraw
-            </Button>
-          )}
-          {!hasPoolAllowance() && (
-            <Button
-              className="stake-button"
-              variant="contained"
-              color="primary"
-              disabled={isLoading}
-              onClick={() => approveCurveWithdraw()}
-            >
-              Approve
-            </Button>
-          )}
-        </TabPanel>
+            )}
+          </TabPanel>
+        </div>
       </div>
     </div>
   );
 };
 
-const HelpModal: VFC<any> = ({ theme }) => {
-  // const [modalStyle] = useState(getModalStyle);
+const HelpModal: VFC = () => {
   const [open, setOpen] = useState(false);
+  const [theme] = useTheme();
 
   const handleOpen = () => {
     setOpen(true);
