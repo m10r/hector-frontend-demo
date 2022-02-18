@@ -206,17 +206,14 @@ function TreasuryDashboard() {
                 <Chart
                   type="stack"
                   data={data}
-                  dataKey={["totalValueLocked", "treasuryBaseRewardPool"]}
-                  stopColor={[
-                    ["#768299", "#98B3E9"],
-                    ["#ffd89b", "#fbbe5d"],
-                  ]}
+                  dataKey={bulletpoints.tvl.map(coin => coin.marketValue)}
+                  stopColor={bulletpoints.tvl.map(coin => coin.stopColor)}
                   headerText="Total Value Deposited"
                   headerSubText={`${
                     data && formatCurrency(+data[0].totalValueLocked + +convexPool[0].treasuryBaseRewardPool)
                   }`}
                   bulletpointColors={bulletpoints.tvl}
-                  itemNames={tooltipItems.tvl}
+                  itemNames={bulletpoints.tvl.map(coin => coin.name)}
                   itemType={itemType.dollar}
                   infoTooltipMessage={tooltipInfoMessages.tvl}
                   expandedGraphStrokeColor={theme.palette.graphStrokeColor}
