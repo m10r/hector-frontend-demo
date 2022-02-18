@@ -163,7 +163,7 @@ export const bulletpoints = {
       top: -12,
       background: "linear-gradient(180deg, #ffd89b -10%, #00ff01 100%)",
       stopColor: ["#ffd89b", "#00ff01"],
-      name: "Wormhole",
+      name: "Curve",
       marketValue: "treasuryBaseRewardPool",
       riskFree: "treasuryBaseRewardPool",
     },
