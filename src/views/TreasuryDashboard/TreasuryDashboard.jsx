@@ -213,13 +213,7 @@ function TreasuryDashboard() {
                   stopColor={bulletpoints.tvl.map(coin => coin.stopColor)}
                   headerText="Total Value Deposited"
                   headerSubText={`${
-                    data &&
-                    formatCurrency(
-                      +data[0].bankTotal +
-                        +data[0].torTVL +
-                        +data[0].totalValueLocked +
-                        +convexPool[0].treasuryBaseRewardPool,
-                    )
+                    data && formatCurrency(+data[0].bankTotal + +data[0].torTVL + +data[0].totalValueLocked)
                   }`}
                   bulletpointColors={bulletpoints.tvl}
                   itemNames={bulletpoints.tvl.map(coin => coin.name)}
@@ -238,7 +232,9 @@ function TreasuryDashboard() {
                   dataKey={bulletpoints.coin.map(coin => coin.marketValue)}
                   stopColor={bulletpoints.coin.map(coin => coin.stopColor)}
                   headerText="Market Value of Treasury Assets"
-                  headerSubText={`${data && formatCurrency(data[0].treasuryMarketValue)}`}
+                  headerSubText={`${
+                    data && formatCurrency(+data[0].treasuryMarketValue + +convexPool[0].treasuryBaseRewardPool)
+                  }`}
                   bulletpointColors={bulletpoints.coin}
                   itemNames={bulletpoints.coin.map(coin => coin.name)}
                   itemType={itemType.dollar}
@@ -257,7 +253,9 @@ function TreasuryDashboard() {
                   dataKey={bulletpoints.coin.filter(coin => coin.riskFree).map(coin => coin.riskFree)}
                   stopColor={bulletpoints.coin.map(coin => coin.stopColor)}
                   headerText="Risk Free Value of Treasury Assets"
-                  headerSubText={`${data && formatCurrency(data[0].treasuryRiskFreeValue)}`}
+                  headerSubText={`${
+                    data && formatCurrency(+data[0].treasuryRiskFreeValue + +convexPool[0].treasuryBaseRewardPool)
+                  }`}
                   bulletpointColors={bulletpoints.coin}
                   itemNames={bulletpoints.coin.filter(coin => coin.riskFree).map(coin => coin.name)}
                   itemType={itemType.dollar}
