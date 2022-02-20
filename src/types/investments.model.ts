@@ -10,7 +10,7 @@ interface Proposal {
 export interface TokenDetail {
     token: string;
     ticker: string;
-    logo: string | React.FunctionComponent<React.SVGProps<SVGSVGElement>>;
+    logo?: string | React.FunctionComponent<React.SVGProps<SVGSVGElement>>;
     buyBack: string;
     price: string;
     burn: string;
@@ -25,7 +25,7 @@ interface Investment {
 
 export interface Transaction {
     proposal: Proposal;
-    type: 'BuyBack-Burn' | 'Investment' | 'Marketing';
+    type: 'Buyback-Burn' | 'Investment' | 'Marketing';
     title: string;
     investments: Investment;
 }
@@ -33,4 +33,26 @@ export interface Transaction {
 export interface AllInvestments {
     transactions: Transaction[];
     assetsUM?: any;
+}
+
+export interface FTMScanTransaction {
+    blockHash: string;
+    blockNumber: string;
+    confirmations: string;
+    contractAddress: string;
+    cumulativeGasUsed: string;
+    from: string;
+    gas: string;
+    gasPrice: string;
+    gasUsed: string;
+    hash: string;
+    input: string;
+    nonce: string;
+    timeStamp: string;
+    to: string;
+    tokenDecimal: string;
+    tokenName: string;
+    tokenSymbol: string;
+    transactionIndex: string;
+    value: string;
 }

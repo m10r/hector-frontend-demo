@@ -27,7 +27,7 @@ export default function GlobalInfo({ transactions, isLoading }: TransactionProps
 
   useEffect(() => {
     transactions
-      .filter(trans => trans.type === "BuyBack-Burn")
+      .filter(trans => trans.type === "Buyback-Burn")
       .forEach(trans => {
         trans.investments.tokenDetails.forEach(token => {
           if (token.burn) {

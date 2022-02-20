@@ -1,4 +1,4 @@
-import { Transaction } from "src/types/investments.model";
+import { FTMScanTransaction, TokenDetail, Transaction } from "src/types/investments.model";
 import "./latest-transactions.scss";
 import LinkIcon from "@material-ui/icons/Link";
 import HecToken from "../../../assets/tokens/HEC.png";
@@ -11,20 +11,23 @@ import wEthToken from "../../../assets/tokens/wETH.png";
 import { useEffect, useState } from "react";
 import HelpOutlineIcon from "@material-ui/icons/HelpOutline";
 import { Box, CircularProgress, Fade, Link, Paper, Popper, Tooltip } from "@material-ui/core";
-import { useSelector } from "react-redux";
-import { RootState } from "src/store";
+import { useWeb3Context } from "src/hooks/web3Context";
+import { ethers } from "ethers";
 
 interface Props {
   transactions: Transaction[];
   isLoading: boolean;
+  ftmScanTransactionData: FTMScanTransaction[][];
 }
+
 type Open = {
   [key: string]: boolean;
 };
-export default function LatestTransactions({ transactions, isLoading }: Props) {
+export default function LatestTransactions({ transactions, ftmScanTransactionData, isLoading }: Props) {
   const [sortedTransactions, setSortedTransactions] = useState<Transaction[]>([]);
   const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
   const [open, setOpen] = useState<Open>({});
+  const { provider } = useWeb3Context();
 
   const handleClick = (index: number) => (event: any) => {
     setAnchorEl(event.currentTarget);
@@ -39,14 +42,50 @@ export default function LatestTransactions({ transactions, isLoading }: Props) {
     setOpen(open => ({ ...open, [index]: true }));
   };
 
-  useEffect(() => {
-    const data = [...transactions]
+  const getTokens = (data: FTMScanTransaction[]): TokenDetail[] => {
+    return data
+      .filter((transaction, i, arr) => arr.findIndex(item => item.tokenSymbol === transaction.tokenSymbol) === i)
+      .map(
+        transaction =>
+          ({ token: transaction.tokenName, ticker: transaction.tokenSymbol, price: transaction.value } as TokenDetail),
+      );
+  };
+
+  const getInvestedAmount = (transGroup: FTMScanTransaction[]): string => {
+    if (transGroup.length > 4) {
+      return (+ethers.utils.formatEther(transGroup.find(item => item.tokenSymbol === "DAI").value) * 2).toFixed(2);
+    } else {
+      return (+ethers.utils.formatEther(transGroup.find(item => item.tokenSymbol === "DAI").value)).toFixed(2);
+    }
+  };
+  const formatFTMScanData = () => {
+    const ftmScantransactions: Transaction[] = ftmScanTransactionData.map((trans, i) => {
+      return {
+        proposal: undefined,
+        title: "Buyback and Burn",
+        type: "Buyback-Burn",
+        investments: {
+          tokenDetails: getTokens(ftmScanTransactionData[i]),
+          transactionLinks: [`https://ftmscan.com/tx/${trans[0].hash}`],
+          transactionDate: new Date(+trans[0]?.timeStamp * 1000).toLocaleDateString(),
+          investedAmount: getInvestedAmount(trans),
+        },
+      };
+    });
+
+    const sortedData = [...ftmScantransactions, ...transactions]
       .sort((a, b) => {
         return new Date(a.investments.transactionDate).getTime() - new Date(b.investments.transactionDate).getTime();
       })
       .reverse();
-    setSortedTransactions(data);
-  }, [transactions]);
+    setSortedTransactions(sortedData);
+  };
+
+  useEffect(() => {
+    if (ftmScanTransactionData.length > 0) {
+      formatFTMScanData();
+    }
+  }, [transactions, ftmScanTransactionData]);
 
   return (
     <div className="latest-transactions MuiPaper-root hec-card">
@@ -100,7 +139,7 @@ export default function LatestTransactions({ transactions, isLoading }: Props) {
                       ))}
                     </div>
                     <div className="price">
-                      <b>{transaction.investments.investedAmount}</b>
+                      <b>${transaction.investments.investedAmount}</b>
                     </div>
                     <div onClick={handleClick(i)}>
                       <LinkIcon />
