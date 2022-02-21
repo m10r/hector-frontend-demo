@@ -18,7 +18,7 @@ export default class Root extends Component {
       <Web3ChainProvider>
         <Web3ContextProvider>
           <Provider store={store}>
-            <BrowserRouter basename={"/#"}>
+            <BrowserRouter basename={BASE_PATH ? `/${BASE_PATH}/#` : `/#`}>
               <App />
             </BrowserRouter>
           </Provider>

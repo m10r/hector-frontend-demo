@@ -27,6 +27,8 @@ jobs:
           cache: "npm"
       - run: npm install
       - run: npm run build:qa
+        env:
+          REACT_APP_BASE_PATH: ${{ github.ref_name }}
       - name: Deploy over FTP
         uses: SamKirkland/FTP-Deploy-Action@4.2.0
         with:
