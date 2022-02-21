@@ -4,6 +4,7 @@ import { Provider } from "react-redux";
 import { BrowserRouter } from "react-router-dom";
 import { Web3ContextProvider } from "./hooks/web3Context";
 import { Web3ChainProvider } from "./hooks/web3Chain";
+import { BASE_PATH } from "src/helpers/Environment";
 
 import App from "./App";
 import store from "./store";
