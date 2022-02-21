@@ -106,7 +106,7 @@ export const bulletpoints = {
       right: 29,
       top: -12,
       background: "linear-gradient(180deg, #e89e5a -10%, #be7c40 100%)",
-      name: "Tor",
+      name: "Tor Curve LP",
       stopColor: ["#e89e5a", "#be7c40"],
       marketValue: "torTVL",
     },

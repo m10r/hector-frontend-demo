@@ -26,14 +26,14 @@ const renderTooltipItems = (payload, bulletpointColors, itemNames, itemType, isS
   return isStaked ? (
     <Box>
       <Box className="item" display="flex" justifyContent="space-between">
-        <Typography variant="body2">
+        <Typography style={{ marginRight: "10px" }} variant="body2">
           <span className="tooltip-bulletpoint" style={bulletpointColors[0]}></span>
           Staked
         </Typography>
         <Typography>{`${Math.round(payload[0].value)}%`}</Typography>
       </Box>
       <Box className="item" display="flex" justifyContent="space-between">
-        <Typography variant="body2">
+        <Typography style={{ marginRight: "10px" }} variant="body2">
           <span className="tooltip-bulletpoint" style={bulletpointColors[1]}></span>
           Not staked
         </Typography>
@@ -44,14 +44,14 @@ const renderTooltipItems = (payload, bulletpointColors, itemNames, itemType, isS
   ) : isPOL ? (
     <Box>
       <Box className="item" display="flex" justifyContent="space-between">
-        <Typography variant="body2">
+        <Typography style={{ marginRight: "10px" }} variant="body2">
           <span className="tooltip-bulletpoint" style={bulletpointColors[0]}></span>
           {itemNames[0]}
         </Typography>
         <Typography>{`${Math.round(payload[0].value)}%`}</Typography>
       </Box>
       <Box className="item" display="flex" justifyContent="space-between">
-        <Typography variant="body2">
+        <Typography style={{ marginRight: "10px" }} variant="body2">
           <span className="tooltip-bulletpoint" style={bulletpointColors[1]}></span>
           {itemNames[1]}
         </Typography>
@@ -64,7 +64,7 @@ const renderTooltipItems = (payload, bulletpointColors, itemNames, itemType, isS
       <Box key={index}>
         <Box className="item" display="flex">
           <Box display="flex" justifyContent="space-between">
-            <Typography variant="body2">
+            <Typography style={{ marginRight: "10px" }} variant="body2">
               <span className="tooltip-bulletpoint" style={bulletpointColors[index]}></span>
               {`${itemNames[index]}`}
             </Typography>
