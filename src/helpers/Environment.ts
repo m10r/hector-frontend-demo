@@ -33,4 +33,4 @@ function hectorEnv(): "prod" | "qa" | "dev" {
 }
 export const HECTOR_ENV = hectorEnv();
 
-export const BASE_PATH = process.env.BASE_PATH?.toLowerCase() ?? undefined;
+export const BASE_PATH = process.env.REACT_APP_BASE_PATH?.toLowerCase() ?? undefined;
