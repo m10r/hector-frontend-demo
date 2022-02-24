@@ -1,19 +1,12 @@
 .investment-dash {
   display: grid;
-  grid: minmax(0, 1fr) minmax(0, 3fr) / minmax(0, 90%);
+  grid-template:
+    "stats graph" 0.3fr
+    "transactions investments" 1fr / 2.5fr 1fr;
   place-content: center;
   height: 100%;
+  max-width: 95%;
+  margin: auto;
   overflow: auto;
   row-gap: 20px;
-  .general-investments {
-    display: grid;
-    column-gap: 30px;
-    grid-template-columns: 3fr 1fr;
-    grid-template-rows: 1fr;
-  }
-
-  .detailed-investments {
-    display: grid;
-    padding: 10px;
-  }
 }

@@ -1,5 +1,6 @@
 .latest-transactions {
   display: grid;
+  grid-area: transactions;
   grid: "toolbar" max-content "transactions" 1fr / 1fr;
   row-gap: 30px;
 

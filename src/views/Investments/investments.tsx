@@ -38,19 +38,15 @@ export default function Investments() {
 
   return (
     <div className="investment-dash">
-      <div className="general-investments">
-        <GlobalInfo isLoading={isLoading} transactions={transactions} />
-        <InvestmentsPieChart />
-      </div>
-      <div className="detailed-investments">
-        {transactions && ftmScanTransactionData && (
-          <LatestTransactions
-            isLoading={isLoading}
-            ftmScanTransactionData={ftmScanTransactionData}
-            transactions={transactions}
-          />
-        )}
-      </div>
+      <GlobalInfo isLoading={isLoading} transactions={transactions} />
+      <InvestmentsPieChart />
+      {transactions && ftmScanTransactionData && (
+        <LatestTransactions
+          isLoading={isLoading}
+          ftmScanTransactionData={ftmScanTransactionData}
+          transactions={transactions}
+        />
+      )}
     </div>
   );
 }
