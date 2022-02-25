@@ -44,10 +44,6 @@ function ChooseBond() {
   const marketPrice = useSelector(state => {
     return state.app.marketPrice;
   });
-  const investments =
-    useSelector(state => {
-      return state.app.investments;
-    }) ?? 0;
 
   const treasuryBalance = useSelector(state => state.app.treasuryMarketValue) ?? 0;
 
@@ -81,7 +77,7 @@ function ChooseBond() {
                         currency: "USD",
                         maximumFractionDigits: 0,
                         minimumFractionDigits: 0,
-                      }).format(treasuryBalance + investments)
+                      }).format(treasuryBalance)
                     )}
                   </Typography>
                 </Box>
