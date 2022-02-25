@@ -20,7 +20,7 @@ import apollo from "../../lib/apolloClient";
 import InfoTooltip from "src/components/InfoTooltip/InfoTooltip.jsx";
 import { prettyDisplayNumber } from "src/helpers";
 import BigNumber from "bignumber.js";
-import { ETH_GRAPH_URL } from "src/constants.ts";
+import { ETH_GRAPH_URL, THE_ALT_GRAPH_URL } from "src/constants.ts";
 
 function TreasuryDashboard() {
   const [data, setData] = useState(null);
@@ -52,7 +52,8 @@ function TreasuryDashboard() {
     return state.app.stakingRebase;
   });
   const backingPerHec = useSelector(state => state.app.treasuryMarketValue / circSupply);
-
+  const treasuryMarketValue = useSelector(state => state.app.treasuryMarketValue);
+  const treasuryRiskFreeValue = useSelector(state => state.app.treasuryRiskFreeValue);
   const wsHecPrice = useSelector(state => {
     return state.app.marketPrice * state.app.currentIndex;
   });
@@ -70,12 +71,15 @@ function TreasuryDashboard() {
         let data = {
           ...obj,
           bankTotal,
-          torTVL: +obj.timestamp > torTimeStamp ? r?.data?.tors[i].torTVL : 0,
+          torTVL: +obj.timestamp > torTimeStamp ? r?.data?.tors[i]?.torTVL : 0,
+          treasuryBaseRewardPool: 0,
         };
         if (i < ethData?.length) {
+          const riskFreeValue = obj.treasuryRiskFreeValue + +ethData[i].treasuryBaseRewardPool;
           data = {
             ...data,
-            treasuryBaseRewardPool: +ethData[i].treasuryBaseRewardPool,
+            treasuryBaseRewardPool: +ethData[i].treasuryBaseRewardPool + +obj.treasuryInvestments,
+            runwayCurrent: getRunway(obj.sHecCirculatingSupply, riskFreeValue, obj.nextEpochRebase),
           };
         }
         return data;
@@ -101,6 +105,21 @@ function TreasuryDashboard() {
     });
   }
 
+  function getRunway(sHec, rfv, rebase) {
+    let runwayCurrent = 0;
+
+    if (sHec > 0 && rfv > 0 && rebase > 0) {
+      let treasury_runway = parseFloat((rfv / sHec).toString());
+
+      let nextEpochRebase_number = parseFloat(rebase.toString()) / 100;
+      let runwayCurrent_num = Math.log(treasury_runway) / Math.log(1 + nextEpochRebase_number) / 3;
+
+      runwayCurrent = runwayCurrent_num.toString();
+    }
+
+    return runwayCurrent;
+  }
+
   useEffect(() => {
     getGraphData();
 
@@ -115,7 +134,6 @@ function TreasuryDashboard() {
       }
     });
   }, []);
-
   return (
     <div id="treasury-dashboard-view" className={`${smallerScreen && "smaller"} ${verySmallScreen && "very-small"}`}>
       <Container
@@ -232,9 +250,7 @@ function TreasuryDashboard() {
                   dataKey={bulletpoints.coin.map(coin => coin.marketValue)}
                   stopColor={bulletpoints.coin.map(coin => coin.stopColor)}
                   headerText="Market Value of Treasury Assets"
-                  headerSubText={`${
-                    data && formatCurrency(+data[0].treasuryMarketValue + +convexPool[0].treasuryBaseRewardPool)
-                  }`}
+                  headerSubText={`${data && formatCurrency(treasuryMarketValue)}`}
                   bulletpointColors={bulletpoints.coin}
                   itemNames={bulletpoints.coin.map(coin => coin.name)}
                   itemType={itemType.dollar}
@@ -251,12 +267,10 @@ function TreasuryDashboard() {
                   data={data}
                   format="currency"
                   dataKey={bulletpoints.coin.filter(coin => coin.riskFree).map(coin => coin.riskFree)}
-                  stopColor={bulletpoints.coin.map(coin => coin.stopColor)}
+                  stopColor={bulletpoints.coin.filter(coin => coin.riskFree).map(coin => coin.stopColor)}
                   headerText="Risk Free Value of Treasury Assets"
-                  headerSubText={`${
-                    data && formatCurrency(+data[0].treasuryRiskFreeValue + +convexPool[0].treasuryBaseRewardPool)
-                  }`}
-                  bulletpointColors={bulletpoints.coin}
+                  headerSubText={`${data && formatCurrency(treasuryRiskFreeValue)}`}
+                  bulletpointColors={bulletpoints.coin.filter(coin => coin.riskFree)}
                   itemNames={bulletpoints.coin.filter(coin => coin.riskFree).map(coin => coin.name)}
                   itemType={itemType.dollar}
                   infoTooltipMessage={tooltipInfoMessages.rfv}

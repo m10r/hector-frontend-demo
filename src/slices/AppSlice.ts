@@ -1,5 +1,5 @@
 import { ethers } from "ethers";
-import { FANTOM } from "../constants";
+import { ETH_GRAPH_URL, FANTOM, THE_ALT_GRAPH_URL } from "../constants";
 import { abi as HectorStakingv2 } from "../abi/HectorStakingv2.json";
 import { abi as ierc20Abi } from "../abi/IERC20.json";
 import { abi as sHECv2 } from "../abi/sHecv2.json";
@@ -10,6 +10,7 @@ import { RootState } from "src/store";
 import { IBaseAsyncThunk } from "./interfaces";
 import axios from "axios";
 import { AllInvestments } from "src/types/investments.model";
+import { ethMetricsQuery } from 'src/views/TreasuryDashboard/treasuryData';
 
 const circulatingSupply = {
   name: "circulatingSupply",
@@ -36,6 +37,7 @@ export const loadAppDetails = createAsyncThunk(
       marketCap
       totalValueLocked
       treasuryMarketValue
+      treasuryRiskFreeValue
       nextEpochRebase
       nextDistributedHec
       treasuryInvestments
@@ -43,7 +45,16 @@ export const loadAppDetails = createAsyncThunk(
   }
   `;
 
-    const graphData = await apollo(protocolMetricsQuery);
+    const ethQuery = `query {
+    ethMetrics(first: 1, orderBy: timestamp, orderDirection: desc) {
+      id
+      timestamp
+      treasuryBaseRewardPool
+    }
+  }`;
+
+    const graphData = await apollo(protocolMetricsQuery, THE_ALT_GRAPH_URL);
+    const ethData = await apollo(ethQuery, ETH_GRAPH_URL).then((res: any) => res.data.ethMetrics);
     if (!graphData) {
       console.error("Returned a null response when querying TheGraph");
       return;
@@ -67,7 +78,8 @@ export const loadAppDetails = createAsyncThunk(
     const hecContract = new ethers.Contract(FANTOM.HEC_ADDRESS, ierc20Abi, provider);
     const oldsHecContract = new ethers.Contract(FANTOM.OLD_SHEC_ADDRESS as string, [circulatingSupply], provider);
     const old_circ = await oldsHecContract.circulatingSupply();
-    const treasuryMarketValue = graphData.data.protocolMetrics[0].treasuryMarketValue;
+    const treasuryMarketValue = +graphData.data.protocolMetrics[0].treasuryMarketValue + +ethData[0].treasuryBaseRewardPool;
+    const treasuryRiskFreeValue = +graphData.data.protocolMetrics[0].treasuryRiskFreeValue + +ethData[0].treasuryBaseRewardPool;
     const stakingTVL = parseFloat(graphData.data.protocolMetrics[0].totalValueLocked);
     const circ = await sHecMainContract.circulatingSupply();
     const circSupply = parseFloat(graphData.data.protocolMetrics[0].hecCirculatingSupply);
@@ -82,6 +94,7 @@ export const loadAppDetails = createAsyncThunk(
       return {
         stakingTVL,
         treasuryMarketValue,
+        treasuryRiskFreeValue,
         marketPrice,
         marketCap,
         circSupply,
@@ -113,6 +126,7 @@ export const loadAppDetails = createAsyncThunk(
       stakingAPY,
       stakingTVL,
       treasuryMarketValue,
+      treasuryRiskFreeValue,
       stakingRebase,
       old_stakingRebase,
       marketCap,
@@ -195,6 +209,7 @@ interface IAppData {
   readonly marketCap: number;
   readonly marketPrice: number;
   readonly treasuryMarketValue: number;
+  readonly treasuryRiskFreeValue: number;
   readonly allInvestments: AllInvestments;
   readonly stakingAPY?: number;
   readonly stakingRebase?: number;

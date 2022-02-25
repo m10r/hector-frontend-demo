@@ -17,8 +17,10 @@ query {
     nextEpochRebase
     nextDistributedHec
     treasuryDaiMarketValue
+    treasuryDaiLPMarketValue
     treasuryDaiRiskFreeValue
     treasuryUsdcMarketValue
+    treasuryUsdcLPMarketValue
     treasuryUsdcRiskFreeValue
     treasuryMIMMarketValue
     treasuryMIMRiskFreeValue
@@ -26,6 +28,7 @@ query {
     treasuryWFTMRiskFreeValue
     treasuryFRAXRiskFreeValue
     treasuryFRAXMarketValue
+    treasuryInvestments
     treasuryBOOMarketValue
     treasuryBOORiskFreeValue
     treasuryCRVRiskFreeValue
@@ -113,64 +116,14 @@ export const bulletpoints = {
   ],
   coin: [
     {
-      right: 15,
-      top: -12,
-      background: "linear-gradient(180deg, #ffd89b -10%, #fbbe5d 100%)",
-      name: "DAI",
-      stopColor: ["#ffd89b", "#fbbe5d"],
-      marketValue: "treasuryDaiMarketValue",
-      riskFree: "treasuryDaiRiskFreeValue",
+      background: "linear-gradient(180deg, #ef4444 -10%, #dc2626 100%)",
+      name: "CRV",
+      stopColor: ["#ef4444", "#dc2626"],
+      marketValue: "treasuryCRVMarketValue",
+      riskFree: "treasuryCRVRiskFreeValue",
     },
     {
-      right: 25,
-      top: -12,
-      background: "linear-gradient(180deg, #768299 -10%, #98B3E9 100%)",
-      name: "USDC",
-      stopColor: ["#768299", "#98B3E9"],
-      marketValue: "treasuryUsdcMarketValue",
-      riskFree: "treasuryUsdcRiskFreeValue",
-    },
-    {
-      right: 29,
-      top: -12,
-      background: "linear-gradient(180deg, #8351ff -10%, #b151ff 100%)",
-      name: "MIM",
-      stopColor: ["#8351ff", "#b151ff"],
-      marketValue: "treasuryMIMMarketValue",
-      riskFree: "treasuryMIMRiskFreeValue",
-    },
-    {
-      right: 29,
-      top: -12,
-      background: "linear-gradient(180deg, #c6c6c6 -10%, #545454 100%)",
-      name: "FRAX",
-      stopColor: ["#c6c6c6", "#545454"],
-      marketValue: "treasuryFRAXMarketValue",
-      riskFree: "treasuryFRAXRiskFreeValue",
-    },
-
-    {
-      right: 29,
-      top: -12,
-      background: "linear-gradient(180deg, #22d5e7 -10%, #18919d 100%)",
-      name: "wFTM",
-      stopColor: ["#22d5e7", "#18919d"],
-      marketValue: "treasuryWFTMMarketValue",
-      riskFree: "treasuryWFTMRiskFreeValue",
-    },
-    {
-      right: 20,
-      top: -12,
-      background: "linear-gradient(180deg, #ffd89b -10%, #00ff01 100%)",
-      stopColor: ["#ffd89b", "#00ff01"],
-      name: "Curve",
-      marketValue: "treasuryBaseRewardPool",
-      riskFree: "treasuryBaseRewardPool",
-    },
-    {
-      right: 29,
-      top: -12,
-      background: "linear-gradient(180deg, #E722D1 -10%, #9D1865 100%)",
+      background: "linear-gradient(180deg, #d946ef -10%, #c026d3 100%)",
       name: "wETH",
       stopColor: ["#E722D1", "#9D1865"],
       marketValue: "treasuryWETHMarketValue",
@@ -178,23 +131,65 @@ export const bulletpoints = {
     },
 
     {
-      right: 29,
-      top: -12,
-      background: "linear-gradient(180deg, #c7d2fe -10%, #a5b4fc 100%)",
+      background: "linear-gradient(180deg, #c084fc -10%, #a855f7 100%)",
       name: "BOO",
-      stopColor: ["#c7d2fe", "#a5b4fc"],
+      stopColor: ["#c084fc", "#a855f7"],
       marketValue: "treasuryBOOMarketValue",
       riskFree: "treasuryBOORiskFreeValue",
     },
-
     {
-      right: 20,
-      top: -12,
-      background: "linear-gradient(180deg, #E73722 -10%, #9D3018 100%)",
-      name: "CRV",
-      stopColor: ["#E73722", "#9D3018"],
-      marketValue: "treasuryCRVMarketValue",
-      riskFree: "treasuryCRVRiskFreeValue",
+      background: "linear-gradient(180deg, #3b82f6 -10%, #2563eb 100%)",
+      name: "wFTM",
+      stopColor: ["#3b82f6", "#2563eb"],
+      marketValue: "treasuryWFTMMarketValue",
+      riskFree: "treasuryWFTMRiskFreeValue",
+    },
+    {
+      background: "linear-gradient(180deg, #78716c -10%, #57534e 100%)",
+      name: "FRAX",
+      stopColor: ["#78716c", "#57534e"],
+      marketValue: "treasuryFRAXMarketValue",
+      riskFree: "treasuryFRAXRiskFreeValue",
+    },
+    {
+      background: "linear-gradient(180deg, #fef9c3 -10%, #fef08a 100%)",
+      name: "DAI LP",
+      stopColor: ["#fef9c3", "#fef08a"],
+      marketValue: "treasuryDaiLPMarketValue",
+    },
+    {
+      background: "linear-gradient(180deg, #cffafe -10%, #a5f3fc 100%)",
+      name: "USDC LP",
+      stopColor: ["#cffafe", "#a5f3fc"],
+      marketValue: "treasuryUsdcLPMarketValue",
+    },
+    {
+      background: "linear-gradient(180deg, #6366f1 -10%, #4f46e5 100%)",
+      name: "MIM",
+      stopColor: ["#6366f1", "#4f46e5"],
+      marketValue: "treasuryMIMMarketValue",
+      riskFree: "treasuryMIMRiskFreeValue",
+    },
+    {
+      background: "linear-gradient(180deg, #06b6d4 -10%, #0891b2 100%)",
+      name: "USDC",
+      stopColor: ["#768299", "#98B3E9"],
+      marketValue: "treasuryUsdcMarketValue",
+      riskFree: "treasuryUsdcMarketValue",
+    },
+    {
+      background: "linear-gradient(180deg, #ffd89b -10%, #fbbe5d 100%)",
+      name: "DAI",
+      stopColor: ["#ffd89b", "#fbbe5d"],
+      marketValue: "treasuryDaiMarketValue",
+      riskFree: "treasuryDaiMarketValue",
+    },
+    {
+      background: "linear-gradient(180deg, #f97316 -10%, #ea580c 100%)",
+      stopColor: ["#e2e8f0", "#cbd5e1"],
+      name: "Curve",
+      marketValue: "treasuryBaseRewardPool",
+      riskFree: "treasuryBaseRewardPool",
     },
   ],
   holder: [
