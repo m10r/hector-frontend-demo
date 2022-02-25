@@ -40,6 +40,7 @@ query {
     treasuryHecDaiPOL
     bankBorrowed
     bankSupplied
+    treasuryFantomValidatorValue
   }
   tors(first: 1000, orderBy: timestamp, orderDirection: desc) {
     id
@@ -121,6 +122,12 @@ export const bulletpoints = {
       stopColor: ["#ef4444", "#dc2626"],
       marketValue: "treasuryCRVMarketValue",
       riskFree: "treasuryCRVRiskFreeValue",
+    },
+    {
+      background: "linear-gradient(180deg, #10b981 -10%, #059669 100%)",
+      name: "FTM Validator",
+      stopColor: ["#10b981", "#059669"],
+      marketValue: "treasuryFantomValidatorValue",
     },
     {
       background: "linear-gradient(180deg, #d946ef -10%, #c026d3 100%)",
