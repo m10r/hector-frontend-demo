@@ -62,9 +62,9 @@ function ChooseBond() {
               <RebaseTimer />
             </Box>
             <Grid container item xs={12} style={{ margin: "10px 0px 20px" }} className="bond-hero">
-              <Grid item xs={12} sm={4} md={4} lg={4}>
-                <Box textAlign={`${isVerySmallScreen ? "left" : "center"}`}>
-                  <Typography variant="h5" color="textSecondary">
+              <Grid style={{ margin: "0px 0px 10px 0px" }} item xs={12} sm={6} md={6} lg={6}>
+                <Box textAlign={"center"}>
+                  <Typography textAlign={`${isVerySmallScreen ? "center" : "left"}`} variant="h5" color="textSecondary">
                     Treasury Balance
                     {/* <InfoTooltip
                     message={
@@ -86,29 +86,10 @@ function ChooseBond() {
                   </Typography>
                 </Box>
               </Grid>
-              <Grid item xs={12} sm={4} md={4} lg={4}>
-                <Box textAlign={`${isVerySmallScreen ? "left" : "center"}`}>
-                  <Typography variant="h5" color="textSecondary">
-                    Staked on CRV
-                  </Typography>
-                  <Typography variant="h4">
-                    {isAppLoading ? (
-                      <Skeleton width="180px" />
-                    ) : (
-                      new Intl.NumberFormat("en-US", {
-                        style: "currency",
-                        currency: "USD",
-                        maximumFractionDigits: 0,
-                        minimumFractionDigits: 0,
-                      }).format(investments)
-                    )}
-                  </Typography>
-                </Box>
-              </Grid>
 
-              <Grid item xs={12} sm={4} md={4} lg={4} className={`hec-price`}>
-                <Box textAlign={`${isVerySmallScreen ? "right" : "center"}`}>
-                  <Typography variant="h5" color="textSecondary">
+              <Grid item xs={12} sm={6} md={6} lg={6} className={`hec-price`}>
+                <Box textAlign={"center"}>
+                  <Typography textAlign={`${isVerySmallScreen ? "left" : "center"}`} variant="h5" color="textSecondary">
                     HEC Price
                   </Typography>
                   <Typography variant="h4">
