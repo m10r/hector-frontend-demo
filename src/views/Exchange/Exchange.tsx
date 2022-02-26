@@ -408,7 +408,7 @@ export default function Exchange() {
                 if (e instanceof InsufficientFundsError) {
                   setShowConfirmation("poor");
                 } else {
-                  console.error(e);
+                  console.error(trade, e);
                   setShowConfirmation("hide");
                 }
               }

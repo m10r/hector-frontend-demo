@@ -1,6 +1,7 @@
 import { EPOCH_INTERVAL, BLOCK_RATE_SECONDS, FANTOM } from "../constants";
 import { ethers } from "ethers";
 import BigNumber from "bignumber.js";
+import { BigNumber as EthersBigNumber } from "ethers";
 import axios from "axios";
 import { abi as PairContract } from "../abi/PairContract.json";
 import { abi as RedeemHelperAbi } from "../abi/RedeemHelper.json";
@@ -51,11 +52,41 @@ export function trim(number = 0, precision = 0) {
   return trimmedNumber;
 }
 
+export function trimDecimalsPast(max: number, float: string): string {
+  const decimal = float.indexOf(".");
+  if (decimal === -1) {
+    return float;
+  }
+  return float.slice(0, decimal + 1 + max);
+}
+
+export function decimalsFromDenomination(denom: Denomination): number {
+  switch (denom) {
+    case "wei":
+      return 0;
+    case "kwei":
+      return 3;
+    case "mwei":
+      return 6;
+    case "gwei":
+      return 9;
+    case "szabo":
+      return 12;
+    case "finney":
+      return 15;
+    case "ether":
+      return 18;
+  }
+}
+
+export type Denomination = "wei" | "kwei" | "mwei" | "gwei" | "szabo" | "finney" | "ether";
+export function prettyEthersNumber(number: EthersBigNumber, denomination: Denomination = "ether"): string {
+  return prettyDisplayNumber(new BigNumber(ethers.utils.formatUnits(number, denomination)));
+}
+
 export function prettyDisplayNumber(number: BigNumber): string {
-  if (number.gte(1000)) {
-    return number.toFormat(0);
-  } else if (number.gt(1)) {
-    return number.toFormat(2);
+  if (number.gt(1)) {
+    return trimDecimalsPast(2, number.toFormat());
   } else {
     return trimVerboseDecimals(number.toFormat());
   }
@@ -85,7 +116,7 @@ function trimVerboseDecimals(number: string): string {
       break;
     }
   }
-  const MEANINGFUL_DECIMAL_PLACES = 6;
+  const MEANINGFUL_DECIMAL_PLACES = 2;
   return number.substring(0, decimalIndex + zeroDecimals + 1 + MEANINGFUL_DECIMAL_PLACES);
 }
 

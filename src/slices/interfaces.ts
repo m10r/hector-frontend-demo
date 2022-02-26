@@ -1,4 +1,5 @@
 import { JsonRpcProvider, StaticJsonRpcProvider } from "@ethersproject/providers";
+import { BigNumber } from "ethers";
 import { Bond, NetworkID } from "src/lib/Bond";
 
 export interface IJsonRPCError {
@@ -23,6 +24,11 @@ export interface IActionAsyncThunk extends IBaseAsyncThunk {
 
 export interface IValueAsyncThunk extends IBaseAsyncThunk {
   readonly value?: string;
+  readonly address: string;
+}
+
+export interface INumberAsyncThunk extends IBaseAsyncThunk {
+  readonly value?: BigNumber;
   readonly address: string;
 }
 

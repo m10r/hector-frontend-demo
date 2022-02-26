@@ -1,6 +1,5 @@
 import "./farm.scss";
-import { useCallback, useEffect, useState, VFC } from "react";
-
+import { FC, ReactNode, useCallback, useEffect, useMemo, useState, VFC } from "react";
 import { BigNumber, ethers } from "ethers";
 import {
   Button,
@@ -23,7 +22,6 @@ import {
 } from "@material-ui/core";
 import { useWeb3Context } from "src/hooks/web3Context";
 import { useDispatch, useSelector } from "react-redux";
-
 import { RootState } from "src/store";
 import {
   torPoolApprove,
@@ -35,11 +33,9 @@ import {
   getStakingRewardsInfo,
   getTorBalanceAmounts,
   getTorBalance,
-  stake,
   withdrawCurveTokens,
   unstake,
   getDaiUsdcBalance,
-  DaiUsdcBalance,
   withdrawOneCurveTokens,
   getCurveAllowance,
   curveDaiApprove,
@@ -47,11 +43,22 @@ import {
   curveTorApprove,
   curveWithdrawApprove,
   stakingGateway,
+  getWftmBalance,
+  getTorWftmPool,
+  stake,
+  getTorWftmFarm,
+  torWftmPoolApprove,
+  stakeTorWftm,
+  unstakeTorWftm,
+  claimTorWftm,
+  genericStakingGateway,
 } from "src/slices/FarmSlice";
 import { ReactComponent as ArrowUp } from "../../assets/icons/arrow-up.svg";
-import { CurveProportions, StakingInfo, TorBalance, TorPoolInfo } from "src/types/farm.model";
+import { ReactComponent as SpookySwap } from "../../assets/icons/spookyswap.svg";
+import { ReactComponent as AddToWallet } from "../../assets/icons/add-to-wallet.svg";
 import { Skeleton } from "@material-ui/lab";
 import { ReactComponent as TorSVG } from "../../assets/tokens/TOR.svg";
+import { ReactComponent as WftmSvg } from "../../assets/tokens/wFTM.svg";
 import TabPanel from "src/components/TabPanel";
 import { error } from "src/slices/MessagesSlice";
 import DaiToken from "../../assets/tokens/DAI.svg";
@@ -62,8 +69,16 @@ import farmingInfoDark from "../../assets/Farming-info-dark.png";
 import farmingInfoLight from "../../assets/Farming-info-light.png";
 import HelpOutlineIcon from "@material-ui/icons/HelpOutline";
 import CancelIcon from "@material-ui/icons/Cancel";
-import { formatCurrency, trim } from "src/helpers";
+import {
+  decimalsFromDenomination,
+  Denomination,
+  formatCurrency,
+  prettyEthersNumber,
+  trimDecimalsPast,
+} from "src/helpers";
 import useTheme from "src/hooks/useTheme";
+import { FANTOM, MWEI_PER_ETHER } from "src/constants";
+import { HECTOR_ENV } from "src/helpers/Environment";
 
 type UserAction = "stake" | "unstake" | "approve" | "mint" | "deposit" | "withdraw";
 function a11yProps(index: any) {
@@ -81,20 +96,25 @@ function curveInputProps(index: any) {
 
 type PoolToken = "DAI" | "TOR" | "USDC";
 
-const getFormattedStakingInfo = (prop: keyof StakingInfo, stakingInfo: StakingInfo, units?: ethers.BigNumberish) =>
-  stakingInfo ? +ethers.utils.formatUnits(stakingInfo[prop], units) : 0;
+const Zero = ethers.constants.Zero;
 
-const QUANTITY = "10000";
+const QUANTITY = ethers.utils.parseEther("10000");
 
 export const PoolFarming: VFC = () => {
   const dispatch = useDispatch();
-  const { torPoolInfo, torBalance, stakingInfo, curveProportions, daiUsdcBalance } = useSelector(
-    (state: RootState) => state.farm,
-  );
+  const {
+    torPoolInfo,
+    torWftmPool,
+    torWftmFarm,
+    torBalance,
+    stakingInfo,
+    daiUsdcBalance,
+    wftmBalance,
+    stakingRewardsInfo,
+    assetPrice,
+  } = useSelector((state: RootState) => state.farm);
 
-  const [optimalCoin, setOptimalCoin] = useState<PoolToken>(undefined);
-  const [torStats, setTorStats] = useState({ apy: "", torTVL: "" });
-  const { provider, chainID, address, connected } = useWeb3Context();
+  const { provider, chainID, address } = useWeb3Context();
 
   async function getAllData() {
     await dispatch(getAssetPrice({ networkID: chainID, provider }));
@@ -104,22 +124,52 @@ export const PoolFarming: VFC = () => {
     await dispatch(getTorBalance({ networkID: chainID, provider, address }));
     await dispatch(getTorBalanceAmounts({ networkID: chainID, provider, address }));
     await dispatch(getDaiUsdcBalance({ networkID: chainID, provider, address }));
+    await dispatch(getWftmBalance({ networkID: chainID, provider, address }));
+    await dispatch(getTorWftmPool({ networkID: chainID, provider, address }));
+    await dispatch(getTorWftmFarm({ networkID: chainID, provider, address }));
   }
 
-  async function updateTorStats() {
-    if (chainID && provider) {
-      const data = await stakingGateway(chainID, provider).getStakingInfo(
-        "0x0000000000000000000000000000000000000000",
-        0,
-      );
-      if (data) {
-        setTorStats({ apy: ethers.utils.formatEther(data._apr), torTVL: ethers.utils.formatEther(data._tvl) });
-      }
+  const [torStats, setTorStats] = useState<Stats>();
+  const [wftmStats, setWftmStats] = useState<Stats>();
+  async function updateStats() {
+    if (!chainID || !provider || !address) {
+      return;
+    }
+    const [tor, wftm] = await Promise.all([
+      stakingGateway(chainID, provider).getStakingInfo("0x0000000000000000000000000000000000000000", 0),
+      genericStakingGateway(provider).getStakingInfo(
+        FANTOM.TOR_WFTM_FARM_REWARDS,
+        FANTOM.TOR_WFTM_POOL_PRICER,
+        FANTOM.TOR_WFTM_FARM_REWARD_PRICER,
+        address,
+      ),
+    ]);
+    if (tor) {
+      console.log("tor", tor);
+      setTorStats({
+        apy: tor._apr,
+        tvl: tor._tvl,
+        earnedTokens: undefined,
+        earnedUsd: undefined,
+        stakedTokens: undefined,
+        stakedUsd: undefined,
+      });
+    }
+    if (wftm) {
+      console.log("wftm", wftm);
+      setWftmStats({
+        apy: wftm._apr,
+        tvl: wftm._tvl,
+        earnedTokens: wftm._userEarnedAmount,
+        earnedUsd: wftm._userEarnedValue,
+        stakedTokens: wftm._userStakedAmount,
+        stakedUsd: wftm._userStakedValue,
+      });
     }
   }
 
   useEffect(() => {
-    updateTorStats();
+    updateStats();
     if (chainID && provider && address) {
       getAllData();
     }
@@ -137,182 +187,293 @@ export const PoolFarming: VFC = () => {
     };
   }, [address]);
 
+  enum Farm {
+    DaiTorUsdc = "dai-tor-usdc",
+    TorWftm = "tor-wftm",
+  }
+  const [farm, setFarm] = useState(Farm.DaiTorUsdc);
   useEffect(() => {
-    if (connected) {
-      const optimalAmounts = [
-        getFormattedStakingInfo("_optimalHugsAmount", stakingInfo, "ether"),
-        getFormattedStakingInfo("_optimalDaiAmount", stakingInfo, "ether"),
-        getFormattedStakingInfo("_optimalUsdcAmount", stakingInfo, "ether"),
-      ];
-      const index = optimalAmounts.indexOf(Math.max.apply(null, optimalAmounts));
-      if (index === 0) {
-        setOptimalCoin("TOR");
-      } else if (index === 1) {
-        setOptimalCoin("DAI");
-      } else {
-        setOptimalCoin("USDC");
-      }
+    const lastFarm = localStorage.getItem("farm");
+    if (lastFarm !== Farm.DaiTorUsdc && lastFarm !== Farm.TorWftm) {
+      return;
     }
-  }, [stakingInfo, connected]);
+    setFarm(lastFarm);
+  }, []);
+  useEffect(() => {
+    localStorage.setItem("farm", farm);
+  }, [farm]);
 
   return (
-    <div className="pool-farming">
-      <FarmStats torStats={torStats} stakingInfo={stakingInfo} />
-      <Wallet
-        optimalCoin={optimalCoin}
-        torBalance={torBalance}
-        torPoolInfo={torPoolInfo}
-        daiUsdcBalance={daiUsdcBalance}
-      />
-      <FarmStaking onAction={getAllData} />
-      <Curve
-        daiUsdcBalance={daiUsdcBalance}
-        torBalance={torBalance}
-        curveProportions={curveProportions}
-        torPoolInfo={torPoolInfo}
-      />
-    </div>
+    <>
+      {HECTOR_ENV !== "prod" && (
+        <div className="good-tabs">
+          <Button className={farm === Farm.DaiTorUsdc ? "selected" : ""} onClick={() => setFarm(Farm.DaiTorUsdc)}>
+            TOR LP
+          </Button>
+          <Button className={farm === Farm.TorWftm ? "selected" : ""} onClick={() => setFarm(Farm.TorWftm)}>
+            wFTM LP
+          </Button>
+        </div>
+      )}
+      {farm === Farm.DaiTorUsdc && (
+        <div className="pool-farming">
+          <TorFarmingInfo stats={torStats} />
+          <Wallet>
+            <TokenBalance
+              icon={<TorSVG style={{ height: "30px", width: "30px" }} />}
+              name="TOR"
+              address={FANTOM.TOR_ADDRESS}
+              balance={torBalance?.balance ?? Zero}
+              denomination="ether"
+            />
+            <TokenBalance
+              icon={<img src={DaiToken} />}
+              name="DAI"
+              address={FANTOM.DAI_ADDRESS}
+              balance={daiUsdcBalance?.dai ?? Zero}
+              denomination="ether"
+            />
+            <TokenBalance
+              icon={<img src={UsdcToken} />}
+              name="USDC"
+              address={FANTOM.USDC_ADDRESS}
+              balance={daiUsdcBalance?.usdc ?? Zero}
+              denomination="mwei"
+            />
+            <TokenBalance
+              icon={<img src={curveToken} />}
+              name="crvLP"
+              address={FANTOM.DAI_TOR_USDC_POOL}
+              balance={torPoolInfo?.balance ?? Zero}
+              denomination="ether"
+            />
+          </Wallet>
+          <Curve
+            daiBalance={daiUsdcBalance?.dai ?? Zero}
+            usdcBalance={daiUsdcBalance?.usdc ?? Zero}
+            torBalance={torBalance?.balance ?? Zero}
+            crvBalance={torPoolInfo?.balance ?? Zero}
+            crvAllowance={torPoolInfo?.allowance ?? Zero}
+          />
+          <FarmStaking
+            onAction={getAllData}
+            onPoolApprove={() => dispatch(torPoolApprove({ networkID: chainID, provider, address }))}
+            onStake={(value: BigNumber) => dispatch(stake({ networkID: chainID, provider, address, value }))}
+            onUnstake={(value: BigNumber) => dispatch(unstake({ networkID: chainID, provider, address, value }))}
+            onClaim={() => dispatch(claimRewards({ networkID: chainID, provider, address }))}
+            poolTokenIcon={<img src={curveToken} />}
+            poolTokenName="crvLP"
+            poolTokenBalance={torPoolInfo?.balance ?? Zero}
+            poolTokenAllowance={torPoolInfo?.allowance ?? Zero}
+            farmTokenStakeBalance={stakingRewardsInfo?.balance ?? Zero}
+            farmTokenRewardBalance={stakingInfo?._earnedRewardAmount ?? Zero}
+            farmUsdRewardBalance={stakingInfo?._earnedRewardAmount.mul(assetPrice).div(1e8) ?? Zero}
+            farmUsdStakeBalance={undefined}
+            farmTokenRewardName="wFTM"
+          />
+        </div>
+      )}
+      {farm === Farm.TorWftm && (
+        <div className="pool-farming">
+          <WftmFarmingInfo stats={wftmStats} />
+          <Wallet>
+            <TokenBalance
+              icon={<TorSVG style={{ height: "30px", width: "30px" }} />}
+              name="TOR"
+              address={FANTOM.TOR_ADDRESS}
+              balance={torBalance?.balance ?? Zero}
+              denomination="ether"
+            />
+            <TokenBalance
+              icon={<WftmSvg style={{ height: "30px", width: "30px" }} />}
+              name="wFTM"
+              address={FANTOM.WFTM_ADDRESS}
+              balance={wftmBalance?.balance ?? Zero}
+              denomination="ether"
+            />
+            <TokenBalance
+              icon={<SpookySwap style={{ height: "30px", width: "30px" }} />}
+              name="spLP"
+              address={FANTOM.TOR_WFTM_POOL}
+              balance={torWftmPool?.balance ?? Zero}
+              denomination="ether"
+            />
+          </Wallet>
+          <FarmStaking
+            onAction={getAllData}
+            onPoolApprove={() => dispatch(torWftmPoolApprove({ networkID: chainID, provider, address }))}
+            onStake={(value: BigNumber) => dispatch(stakeTorWftm({ networkID: chainID, provider, address, value }))}
+            onUnstake={(value: BigNumber) => dispatch(unstakeTorWftm({ networkID: chainID, provider, address, value }))}
+            onClaim={() => dispatch(claimTorWftm({ networkID: chainID, provider, address }))}
+            poolTokenIcon={<SpookySwap style={{ height: "30px", width: "30px" }} />}
+            poolTokenName="spLP"
+            poolTokenBalance={torWftmPool?.balance ?? Zero}
+            poolTokenAllowance={torWftmPool?.allowance ?? Zero}
+            farmTokenStakeBalance={wftmStats?.stakedTokens ?? Zero}
+            farmTokenRewardBalance={wftmStats?.earnedTokens ?? Zero}
+            farmUsdRewardBalance={wftmStats?.earnedUsd ?? Zero}
+            farmUsdStakeBalance={wftmStats?.stakedUsd ?? Zero}
+            farmTokenRewardName="HEC"
+          />
+
+          <div className="curve-pool">
+            <div
+              className="MuiPaper-root hec-card curve"
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "stretch",
+                height: "100%",
+                gap: "20px",
+                justifyContent: "center",
+              }}
+            >
+              <SpookySwap style={{ height: "128px", width: "128px", marginLeft: "auto", marginRight: "auto" }} />
+              <Button
+                style={{ flexGrow: 1 }}
+                variant="contained"
+                color="primary"
+                target="_blank"
+                href="https://spookyswap.finance/add/0x74E23dF9110Aa9eA0b6ff2fAEE01e740CA1c642e/0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83"
+              >
+                SpookySwap pool
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 };
 
-interface WalletProps {
-  optimalCoin: PoolToken;
-  torBalance: TorBalance;
-  daiUsdcBalance: DaiUsdcBalance;
-  torPoolInfo: TorPoolInfo;
-}
-
-const Wallet: VFC<WalletProps> = ({ optimalCoin, torPoolInfo, torBalance, daiUsdcBalance }) => (
+const Wallet: FC = ({ children }) => (
   <div className="MuiPaper-root hec-card wallet">
     <div className="header">
       <div className="header-title">Balances</div>
     </div>
-    <div className="token">
-      <TorSVG style={{ height: "30px", width: "30px" }} />
-      <div className="details">
-        <div className="coin">TOR Balance</div>
-        <div className="balance">{trim(torBalance?.balance, 2)}</div>
-        {optimalCoin === "TOR" && (
-          <>
-            <Tooltip title="Depositing TOR will get you the most LP">
-              <BestFarmIcon />
-            </Tooltip>
-          </>
-        )}
-      </div>
-    </div>
-    <hr />
-    <div className="token">
-      <img src={DaiToken} />
-      <div className="details">
-        <div className="coin">DAI Balance</div>
-        <div className="balance">{trim(daiUsdcBalance?.daiBalance, 2)}</div>
-        {optimalCoin === "DAI" && (
-          <>
-            <Tooltip title="Depositing DAI will get you the most LP">
-              <BestFarmIcon />
-            </Tooltip>
-          </>
-        )}
-      </div>
-    </div>
-    <hr />
-
-    <div className="token">
-      <img src={UsdcToken} />
-      <div className="details">
-        <div className="coin">USDC Balance</div>
-        <div className="balance">{trim(daiUsdcBalance?.usdcBalance, 2)}</div>
-        {optimalCoin === "USDC" && (
-          <>
-            <Tooltip title="Depositing USDC will get you the most LP">
-              <BestFarmIcon />
-            </Tooltip>
-          </>
-        )}
-      </div>
-    </div>
-    <hr />
-
-    <div className="token">
-      <img src={curveToken} />
-      <div className="details">
-        <div>LP Balance</div>
-        <div className="balance">{trim(torPoolInfo?.balance, 2)}</div>
-      </div>
-    </div>
+    {children}
   </div>
 );
 
-interface FarmStakingProps {
-  onAction: () => void;
+interface TokenBalanceProps {
+  icon: ReactNode;
+  name: string;
+  address: string;
+  balance: BigNumber;
+  denomination: Denomination;
 }
 
-const FarmStaking: VFC<FarmStakingProps> = ({ onAction }) => {
-  const dispatch = useDispatch();
-  const { provider, chainID, address } = useWeb3Context();
-  const { assetPrice, stakingRewardsInfo, torPoolInfo, stakingInfo, isLoading } = useSelector(
-    (state: RootState) => state.farm,
+const TokenBalance: VFC<TokenBalanceProps> = ({ icon, name, balance, address, denomination }) => {
+  const watchToken = useCallback(async () => {
+    try {
+      await window.ethereum.request({
+        method: "wallet_watchAsset",
+        params: {
+          type: "ERC20",
+          options: {
+            address,
+            symbol: name,
+            decimals: decimalsFromDenomination(denomination),
+          },
+        },
+      });
+    } catch (error) {
+      console.log(error);
+    }
+  }, [address, name, denomination]);
+  return (
+    <div className="token">
+      {icon}
+      <div className="details">
+        <div className="coin">{name} Balance</div>
+        <div className="balance">{prettyEthersNumber(balance, denomination)}</div>
+        <Tooltip title={`Track your ${name} balance in MetaMask`}>
+          <button onClick={watchToken}>
+            <AddToWallet />
+          </button>
+        </Tooltip>
+      </div>
+    </div>
   );
-  const hasAllowance = torPoolInfo?.allowance < torPoolInfo?.balance;
-  const hasLpBalance = torPoolInfo?.balance > 0 && torPoolInfo?.allowance > torPoolInfo?.balance;
+};
+
+interface FarmStakingProps {
+  onAction: () => void;
+  onPoolApprove: () => void;
+  onStake: (amount: BigNumber) => void;
+  onUnstake: (amount: BigNumber) => void;
+  onClaim: () => void;
+  poolTokenIcon: ReactNode;
+  poolTokenName: string;
+  poolTokenBalance: BigNumber;
+  poolTokenAllowance: BigNumber;
+  farmTokenStakeBalance: BigNumber;
+  farmUsdRewardBalance: BigNumber;
+  farmUsdStakeBalance: BigNumber;
+  farmTokenRewardBalance: BigNumber;
+  farmTokenRewardName: string;
+}
+
+const FarmStaking: VFC<FarmStakingProps> = ({
+  onAction,
+  onPoolApprove,
+  onStake,
+  onUnstake,
+  onClaim,
+  poolTokenIcon,
+  poolTokenName,
+  poolTokenBalance,
+  poolTokenAllowance,
+  farmTokenStakeBalance,
+  farmTokenRewardBalance,
+  farmTokenRewardName,
+  farmUsdRewardBalance,
+  farmUsdStakeBalance,
+}) => {
+  const dispatch = useDispatch();
+  const { isLoading } = useSelector((state: RootState) => state.farm);
+  const hasPoolAllowance = poolTokenAllowance.gt(poolTokenBalance);
+  const hasPoolBalance = poolTokenBalance.gt(0);
   const [view, setView] = useState(0);
-  const [stakeQuantity, setStakeQuantity] = useState("");
-  const [withdrawQuantity, setWithdrawQuantity] = useState("");
+  const [stakeInput, setStakeInput] = useState("");
+  const [withdrawInput, setWithdrawInput] = useState("");
+  const stakeAmount = ethers.utils.parseEther(stakeInput || "0");
+  const withdrawAmount = ethers.utils.parseEther(withdrawInput || "0");
 
   const setMax = () => {
     if (view === 0) {
-      setStakeQuantity(ethers.utils.formatEther(torPoolInfo.originalBalance));
+      setStakeInput(ethers.utils.formatEther(poolTokenBalance));
     } else {
-      setWithdrawQuantity(ethers.utils.formatEther(stakingRewardsInfo.originalBalance));
+      setWithdrawInput(ethers.utils.formatEther(farmTokenStakeBalance));
     }
   };
 
-  const getEarnedUsd = useCallback(() => {
-    if (stakingInfo && assetPrice) {
-      const earnedUSD = +ethers.utils.formatEther(stakingInfo?._earnedRewardAmount);
-      const assetPriceUSD = assetPrice.toNumber() / 1e8;
-      return earnedUSD * assetPriceUSD;
-    }
-  }, [stakingInfo, assetPrice]);
-
   const onUserAction = async (action: UserAction) => {
-    const value = view === 0 ? stakeQuantity : withdrawQuantity;
-
-    if (value === "0" || value === "0.0") {
+    const value = view === 0 ? stakeAmount : withdrawAmount;
+    if (!value.gt(0)) {
       return dispatch(error("Please enter a value greater than 0"));
     }
-
-    if (action === "stake" && +value > +ethers.utils.formatEther(torPoolInfo.originalBalance)) {
+    if (action === "stake" && value.gt(poolTokenBalance)) {
       return dispatch(error("You cannot stake more than your balance."));
     }
-    if (action === "unstake" && +value > +ethers.utils.formatEther(stakingRewardsInfo.originalBalance)) {
+    if (action === "unstake" && value.gt(farmTokenStakeBalance)) {
       return dispatch(error("You cannot withdraw more than your balance."));
     }
     switch (action) {
       case "stake":
-        await dispatch(stake({ networkID: chainID, provider, address, value: stakeQuantity }));
+        onStake(stakeAmount);
         break;
       case "unstake":
-        await dispatch(unstake({ networkID: chainID, provider, address, value: withdrawQuantity }));
-        break;
-      case "approve":
-        await dispatch(torPoolApprove({ networkID: chainID, provider, address }));
+        onUnstake(withdrawAmount);
         break;
     }
-    setStakeQuantity("");
-    setWithdrawQuantity("");
+    setStakeInput("");
+    setWithdrawInput("");
     onAction();
   };
 
-  async function dispatchStakingInfo(): Promise<void> {
-    await dispatch(getStakingInfo({ networkID: chainID, provider, address, value: QUANTITY }));
-  }
-
-  async function dispatchClaimEarned(): Promise<void> {
-    await dispatch(claimRewards({ networkID: chainID, provider, address }));
-    dispatchStakingInfo();
-  }
+  const canStake =
+    farmTokenStakeBalance.gt(Zero) || farmTokenRewardBalance.gt(Zero) || hasPoolBalance || hasPoolAllowance;
 
   return (
     <div className="MuiPaper-root hec-card farming">
@@ -322,10 +483,7 @@ const FarmStaking: VFC<FarmStakingProps> = ({ onAction }) => {
       </div>
 
       <div className="actions">
-        {+getFormattedStakingInfo("_earnedRewardAmount", stakingInfo, "ether") > 0 ||
-        hasLpBalance ||
-        hasAllowance ||
-        stakingRewardsInfo?.balance > 0 ? (
+        {canStake && (
           <>
             <div className="tab-group">
               <Tabs
@@ -341,19 +499,19 @@ const FarmStaking: VFC<FarmStakingProps> = ({ onAction }) => {
               </Tabs>
 
               <TabPanel value={view} index={0}>
-                <img src={curveToken} />
+                {poolTokenIcon}
 
                 <FormControl className="input-amount" fullWidth variant="outlined">
                   <InputLabel htmlFor="outlined-adornment-amount">Amount</InputLabel>
                   <OutlinedInput
                     id="outlined-adornment-amount"
                     type="number"
-                    value={stakeQuantity}
-                    onChange={e => setStakeQuantity(e.target.value)}
+                    value={stakeInput}
+                    onChange={e => setStakeInput(trimDecimalsPast(18, e.target.value))}
                     endAdornment={
                       <InputAdornment position="end">
                         {" "}
-                        {hasLpBalance && (
+                        {hasPoolBalance && (
                           <Button variant="text" onClick={setMax} color="inherit">
                             Max
                           </Button>
@@ -365,25 +523,25 @@ const FarmStaking: VFC<FarmStakingProps> = ({ onAction }) => {
                 </FormControl>
               </TabPanel>
               <TabPanel value={view} index={1}>
-                <img src={curveToken} />
+                {poolTokenIcon}
 
                 <FormControl className="input-amount" fullWidth variant="outlined">
                   <InputLabel htmlFor="outlined-adornment-amount">Amount</InputLabel>
                   <OutlinedInput
                     id="outlined-adornment-amount"
                     type="number"
-                    value={withdrawQuantity}
+                    value={withdrawInput}
                     endAdornment={
                       <InputAdornment position="end">
                         {" "}
-                        {stakingRewardsInfo?.balance > 0 && (
+                        {farmTokenRewardBalance.gt(0) && (
                           <Button variant="text" onClick={setMax} color="inherit">
                             Max
                           </Button>
                         )}
                       </InputAdornment>
                     }
-                    onChange={e => setWithdrawQuantity(e.target.value)}
+                    onChange={e => setWithdrawInput(trimDecimalsPast(18, e.target.value))}
                     labelWidth={60}
                   />
                 </FormControl>
@@ -391,67 +549,61 @@ const FarmStaking: VFC<FarmStakingProps> = ({ onAction }) => {
             </div>
             <div className="info">
               <div>
-                <div className="title">Staked LP Tokens: </div>
+                <div className="title">Staked {poolTokenName} Tokens:</div>
                 <div className="data">
-                  {stakingRewardsInfo?.balance || stakingRewardsInfo?.balance == 0 ? (
-                    stakingRewardsInfo?.balance.toFixed(2)
-                  ) : (
-                    <Skeleton width="40%" />
-                  )}
+                  <>
+                    {prettyEthersNumber(farmTokenStakeBalance)}{" "}
+                    {farmUsdStakeBalance && `(${prettyEthersNumber(farmUsdStakeBalance)})`}
+                  </>
                 </div>
               </div>
               <div>
-                <div className="title">wFTM Rewards: </div>
+                <div className="title">{farmTokenRewardName} Rewards:</div>
                 <div className="data">
-                  {trim(getFormattedStakingInfo("_earnedRewardAmount", stakingInfo, "ether"), 4)} (
-                  {formatCurrency(+getEarnedUsd(), 2)})
+                  {prettyEthersNumber(farmTokenRewardBalance)} (${prettyEthersNumber(farmUsdRewardBalance)})
                 </div>
               </div>
               <div className="buttons">
-                {+getFormattedStakingInfo("_earnedRewardAmount", stakingInfo, "ether") > 0 && (
-                  <>
-                    <Button
-                      className="stake-button"
-                      variant="contained"
-                      color="primary"
-                      disabled={isLoading}
-                      onClick={() => dispatchClaimEarned()}
-                    >
-                      Claim Rewards
-                    </Button>
-                  </>
-                )}
-                {view === 0 && (
+                {
                   <Button
                     className="stake-button"
                     variant="contained"
                     color="primary"
-                    disabled={!hasLpBalance || isLoading || +stakeQuantity === 0}
+                    disabled={farmTokenRewardBalance.lte(0) || isLoading}
+                    onClick={onClaim}
+                  >
+                    Claim Rewards
+                  </Button>
+                }
+                {hasPoolAllowance && view === 0 && (
+                  <Button
+                    className="stake-button"
+                    variant="contained"
+                    color="primary"
+                    disabled={!hasPoolBalance || isLoading || stakeAmount.lte(0)}
                     onClick={() => onUserAction("stake")}
                   >
                     Stake
                   </Button>
                 )}
-                {view === 1 && (
-                  <>
-                    <Button
-                      className="stake-button"
-                      variant="contained"
-                      color="primary"
-                      disabled={isLoading || !(stakingRewardsInfo?.balance > 0) || +withdrawQuantity === 0}
-                      onClick={() => onUserAction("unstake")}
-                    >
-                      Withdraw
-                    </Button>
-                  </>
+                {hasPoolAllowance && view === 1 && (
+                  <Button
+                    className="stake-button"
+                    variant="contained"
+                    color="primary"
+                    disabled={isLoading || farmTokenRewardBalance.lte(0) || withdrawAmount.lte(0)}
+                    onClick={() => onUserAction("unstake")}
+                  >
+                    Withdraw
+                  </Button>
                 )}
-                {hasAllowance && (
+                {!hasPoolAllowance && (
                   <Button
                     className="stake-button"
                     variant="contained"
                     color="primary"
                     disabled={isLoading}
-                    onClick={() => onUserAction("approve")}
+                    onClick={onPoolApprove}
                   >
                     Approve
                   </Button>
@@ -459,7 +611,9 @@ const FarmStaking: VFC<FarmStakingProps> = ({ onAction }) => {
               </div>
             </div>
           </>
-        ) : (
+        )}
+
+        {!canStake && (
           <>
             <div className="get-lp-text">
               <i>Deposit tokens into Curve in order to stake and earn rewards on your LP tokens.</i>
@@ -471,11 +625,10 @@ const FarmStaking: VFC<FarmStakingProps> = ({ onAction }) => {
   );
 };
 
-interface FarmStatsProps {
-  stakingInfo: StakingInfo;
-  torStats: { apy: string; torTVL: string };
+interface TorFarmingInfoProps {
+  stats: Stats;
 }
-const FarmStats: VFC<FarmStatsProps> = ({ torStats, stakingInfo }) => {
+const TorFarmingInfo: VFC<TorFarmingInfoProps> = ({ stats }) => {
   return (
     <div className="MuiPaper-root hec-card stats">
       <div className="header">
@@ -485,78 +638,89 @@ const FarmStats: VFC<FarmStatsProps> = ({ torStats, stakingInfo }) => {
       <div>
         <div className="title">APR</div>
         <div className="data">
-          {torStats.apy !== "" ? (+torStats.apy * 1e12).toFixed(2) : <Skeleton width="50%" />}%
+          {stats?.apy ? `${prettyEthersNumber(stats.apy, "mwei")}%` : <Skeleton width="50%" />}
         </div>
       </div>
       <div>
         <div className="title">TVL</div>
-        <div className="data">
-          {torStats.torTVL !== "" ? formatCurrency(+torStats.torTVL, 2) : <Skeleton width="50%" />}
-        </div>
+        <div className="data">{stats?.tvl ? `$${prettyEthersNumber(stats.tvl)}` : <Skeleton width="50%" />}</div>
       </div>
     </div>
   );
 };
 
-interface CurveProps {
-  daiUsdcBalance: DaiUsdcBalance;
-  torBalance: TorBalance;
-  curveProportions: CurveProportions;
-  torPoolInfo: TorPoolInfo;
+interface WftmPoolInfoProps {
+  stats: Stats;
+}
+const WftmFarmingInfo: VFC<WftmPoolInfoProps> = ({ stats }) => {
+  return (
+    <div className="MuiPaper-root hec-card stats">
+      <div className="header">
+        <WftmSvg style={{ height: "45px", width: "45px", marginRight: "10px" }} />
+        <div className="tor-title">wFTM LP</div>
+      </div>
+      <div>
+        <div className="title">APR</div>
+        <div className="data">
+          {stats?.apy ? `${prettyEthersNumber(stats.apy, "mwei")}%` : <Skeleton width="50%" />}
+        </div>
+      </div>
+      <div>
+        <div className="title">TVL</div>
+        <div className="data">{stats?.tvl ? `$${prettyEthersNumber(stats.tvl)}` : <Skeleton width="50%" />}</div>
+      </div>
+    </div>
+  );
+};
+
+interface Stats {
+  apy?: BigNumber;
+  tvl?: BigNumber;
+  stakedTokens: BigNumber;
+  stakedUsd: BigNumber;
+  earnedTokens: BigNumber;
+  earnedUsd: BigNumber;
 }
 
-const Curve: VFC<CurveProps> = ({ daiUsdcBalance, torBalance, curveProportions, torPoolInfo }) => {
+interface CurveProps {
+  torBalance: BigNumber;
+  daiBalance: BigNumber;
+  usdcBalance: BigNumber;
+  crvBalance: BigNumber;
+  crvAllowance: BigNumber;
+}
+
+const Curve: VFC<CurveProps> = ({ torBalance, daiBalance, usdcBalance, crvBalance, crvAllowance }) => {
   const dispatch = useDispatch();
-  const [view, setView] = useState(0);
-  const [daiAmount, setDAIAmount] = useState("");
-  const [usdcAmount, setUSDCAmount] = useState("");
-  const [torAmount, setTORAmount] = useState("");
-  const { provider, chainID, address } = useWeb3Context();
-  const [sliderState, setSliderState] = useState(true);
+  const [view, setView] = useState<0 | 1>(0);
+  const [daiInput, setDaiInput] = useState("");
+  const [usdcInput, setUsdcInput] = useState("");
+  const [torInput, setTorInput] = useState("");
+  const tor = ethers.utils.parseEther(torInput || "0");
+  const usdc = ethers.utils.parseUnits(usdcInput || "0", "mwei");
+  const dai = ethers.utils.parseEther(daiInput || "0");
+  const { provider, chainID, address, connected } = useWeb3Context();
+  const [keepProportion, setKeepProportion] = useState(false);
   const [radioValue, setRadioValue] = useState<PoolToken>("TOR");
-  const { curveAllowance, isLoading } = useSelector((state: RootState) => state.farm);
-
-  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const token = (event.target as HTMLInputElement).value as PoolToken;
-    setRadioValue(token);
-    setMax(token);
-  };
-
-  const changeTabs = (event: React.ChangeEvent<{}>, newValue: number) => {
-    setView(newValue);
-  };
-
-  const setMax = (token: PoolToken): void => {
-    if (view === 1 && !sliderState) {
-      if (token === "DAI") {
-        setDAIAmount(trim(torPoolInfo?.balance, 2));
-        setUSDCAmount("0");
-        setTORAmount("0");
-      } else if (token === "USDC") {
-        setUSDCAmount(trim(torPoolInfo?.balance, 2));
-        setDAIAmount("0");
-        setTORAmount("0");
-      } else {
-        setTORAmount(trim(torPoolInfo?.balance, 2));
-        setDAIAmount("0");
-        setUSDCAmount("0");
-      }
-    } else {
-      if (token === "DAI") {
-        setDAIAmount(trim(daiUsdcBalance?.daiBalance, 2));
-      } else if (token === "USDC") {
-        setUSDCAmount(trim(daiUsdcBalance?.usdcBalance, 2));
-      } else {
-        setTORAmount(trim(torBalance?.balance, 2));
-      }
+  const { curveAllowance, isLoading, curveProportions, stakingInfo } = useSelector((state: RootState) => state.farm);
+  const optimalCoin = useMemo<PoolToken>(() => {
+    if (!connected || !stakingInfo) {
+      return undefined;
     }
-  };
+    const tokens: { amount: BigNumber; symbol: PoolToken }[] = [
+      { amount: stakingInfo._optimalHugsAmount, symbol: "TOR" },
+      { amount: stakingInfo._optimalDaiAmount, symbol: "DAI" },
+      { amount: stakingInfo._optimalUsdcAmount, symbol: "USDC" },
+    ];
+    const optimalIndex = tokens.reduce((max, token, i) => (token.amount.gt(tokens[max].amount) ? i : max), 0);
+    return tokens[optimalIndex].symbol;
+  }, [stakingInfo, connected]);
 
-  const hasAnyBalance = +daiAmount > 0 || +usdcAmount > 0 || +torAmount > 0;
-  const hasDaiDepositAllowance = curveAllowance?.daiAllowance > BigNumber.from("0");
-  const hasUsdcDepositAllowance = curveAllowance?.usdcAllowance > BigNumber.from("0");
-  const hasTorDepositAllowance = curveAllowance?.torAllowance > BigNumber.from("0");
-  const hasPoolAllowance = curveAllowance?.torPoolAllowance > BigNumber.from("0");
+  const hasAnyBalance = dai.gt(0) || usdc.gt(0) || tor.gt(0);
+  const hasDaiDepositAllowance = curveAllowance?.daiAllowance.gt(0) ?? false;
+  const hasUsdcDepositAllowance = curveAllowance?.usdcAllowance.gt(0) ?? false;
+  const hasTorDepositAllowance = curveAllowance?.torAllowance.gt(0) ?? false;
+  const hasPoolAllowance = curveAllowance?.torPoolAllowance.gt(0) ?? false;
 
   const daiCurveApporve = () => {
     dispatch(
@@ -592,41 +756,52 @@ const Curve: VFC<CurveProps> = ({ daiUsdcBalance, torBalance, curveProportions, 
   };
 
   const isTorFormInvalid = () => {
-    if (view === 0 && +trim(torBalance?.balance, 2) < +torAmount) {
-      return true;
-    } else if (view === 0 && +trim(torBalance?.balance, 2) > +torAmount) {
-      return false;
-    } else if (view === 1 && torPoolInfo?.balance < +torAmount) {
-      return true;
-    } else {
-      return false;
+    switch (view) {
+      case 0:
+        return torBalance.lt(tor);
+      case 1:
+        return crvBalance.lt(tor);
     }
   };
   const isDaiFormInvalid = () => {
-    if (view === 0 && daiUsdcBalance?.daiBalance < +daiAmount) {
-      return true;
-    } else if (view === 0 && daiUsdcBalance?.daiBalance > +daiAmount) {
+    if (daiInput === "") {
       return false;
-    } else if (view === 1 && torPoolInfo?.balance < +daiAmount) {
-      return true;
-    } else {
-      return false;
+    }
+    switch (view) {
+      case 0:
+        return daiBalance.lt(dai);
+      case 1:
+        return crvBalance.lt(dai);
     }
   };
   const isUsdcFormInvalid = () => {
-    if (view === 0 && daiUsdcBalance?.usdcBalance < +usdcAmount) {
-      return true;
-    } else if (view === 0 && daiUsdcBalance?.usdcBalance > +usdcAmount) {
+    if (usdcInput === "") {
       return false;
-    } else if (view === 1 && torPoolInfo?.balance < +usdcAmount) {
-      return true;
-    } else {
-      return false;
+    }
+    switch (view) {
+      case 0:
+        return usdcBalance.lt(usdc);
+      case 1:
+        return crvBalance.lt(usdc);
     }
   };
 
   const onDeposit = () => {
-    dispatch(depositCurveTokens({ networkID: chainID, provider, address, torAmount, daiAmount, usdcAmount }));
+    dispatch(
+      depositCurveTokens({
+        networkID: chainID,
+        provider,
+        address,
+        torAmount: tor,
+        daiAmount: dai,
+        usdcAmount: usdc,
+        onComplete: () => {
+          setTorInput("");
+          setDaiInput("");
+          setUsdcInput("");
+        },
+      }),
+    );
   };
 
   const onWithdraw = () => {
@@ -635,13 +810,19 @@ const Curve: VFC<CurveProps> = ({ daiUsdcBalance, torBalance, curveProportions, 
         networkID: chainID,
         provider,
         address,
-        lpBalance: torPoolInfo.originalBalance,
-        torAmount,
-        daiAmount,
-        usdcAmount,
+        lpBalance: crvBalance,
+        torAmount: tor,
+        daiAmount: dai,
+        usdcAmount: usdc,
+        onComplete: () => {
+          setTorInput("");
+          setDaiInput("");
+          setUsdcInput("");
+        },
       }),
     );
   };
+
   const onWithdrawOneToken = () => {
     let coin: 0 | 1 | 2;
     if (radioValue === "TOR") {
@@ -656,60 +837,121 @@ const Curve: VFC<CurveProps> = ({ daiUsdcBalance, torBalance, curveProportions, 
         networkID: chainID,
         provider,
         address,
-        lpBalance: torPoolInfo.originalBalance,
+        lpBalance: crvBalance,
         coin,
       }),
     );
   };
 
-  const setTokenAmount = (token: "DAI" | "TOR" | "USDC", amount: string) => {
-    if (view === 0 && !sliderState) {
-      if (token === "DAI") {
-        setDAIAmount(trim(+amount, 2));
-        const usdcDaiRatio = (curveProportions.usdc / curveProportions.dai) * +amount;
-        const torDaiRatio = (curveProportions.tor / curveProportions.dai) * +amount;
-        setUSDCAmount(trim(usdcDaiRatio, 2));
-        setTORAmount(trim(torDaiRatio, 2));
-      } else if (token === "USDC") {
-        setUSDCAmount(trim(+amount, 2));
-        const daiUsdcRatio = (curveProportions.dai / curveProportions.usdc) * +amount;
-        const torUsdcRatio = (curveProportions.tor / curveProportions.usdc) * +amount;
-        setDAIAmount(trim(daiUsdcRatio, 2));
-        setTORAmount(trim(torUsdcRatio, 2));
-      } else if (token === "TOR") {
-        setTORAmount(trim(+amount, 2));
-        const daiTorRatio = (curveProportions.dai / curveProportions.tor) * +amount;
-        const usdcTorRatio = (curveProportions.usdc / curveProportions.tor) * +amount;
-        setDAIAmount(trim(daiTorRatio, 2));
-        setUSDCAmount(trim(usdcTorRatio, 2));
+  const proportionalToTor = (tor: BigNumber) => ({
+    usdc: tor.mul(curveProportions.usdc).div(curveProportions.tor),
+    dai: tor.mul(curveProportions.dai).div(curveProportions.tor),
+  });
+  const proportionalToDai = (dai: BigNumber) => ({
+    usdc: dai.mul(curveProportions.usdc).div(curveProportions.dai),
+    tor: dai.mul(curveProportions.tor).div(curveProportions.dai),
+  });
+  const proportionalToUsdc = (usdc: BigNumber) => ({
+    dai: usdc.mul(curveProportions.dai).div(curveProportions.usdc),
+    tor: usdc.mul(curveProportions.tor).div(curveProportions.usdc),
+  });
+
+  const maxProportionalTor = (): boolean => {
+    const { usdc, dai } = proportionalToTor(torBalance);
+    if (usdc.gt(usdcBalance.mul(MWEI_PER_ETHER)) || dai.gt(daiBalance)) {
+      return false;
+    }
+    setTorInput(ethers.utils.formatEther(torBalance));
+    setDaiInput(ethers.utils.formatEther(dai));
+    setUsdcInput(trimDecimalsPast(6, ethers.utils.formatEther(usdc)));
+    return true;
+  };
+
+  const maxProportionalDai = (): boolean => {
+    const { tor, usdc } = proportionalToDai(daiBalance);
+    if (tor.gt(torBalance) || usdc.gt(usdcBalance.mul(MWEI_PER_ETHER))) {
+      return false;
+    }
+    setTorInput(ethers.utils.formatEther(tor));
+    setDaiInput(ethers.utils.formatEther(daiBalance));
+    setUsdcInput(trimDecimalsPast(6, ethers.utils.formatEther(usdc)));
+    return true;
+  };
+
+  const maxProportionalUsdc = (): boolean => {
+    const { tor, dai } = proportionalToUsdc(usdcBalance.mul(MWEI_PER_ETHER));
+    if (tor.gt(torBalance) || dai.gt(daiBalance)) {
+      return false;
+    }
+    setTorInput(ethers.utils.formatEther(tor));
+    setDaiInput(ethers.utils.formatEther(dai));
+    setUsdcInput(ethers.utils.formatUnits(usdcBalance, "mwei"));
+    return true;
+  };
+
+  const max = (token: PoolToken) => {
+    if (keepProportion) {
+      const tokens: [BigNumber, () => boolean][] = [
+        [torBalance, maxProportionalTor],
+        [usdcBalance, maxProportionalUsdc],
+        [daiBalance, maxProportionalDai],
+      ];
+      tokens.sort(([a], [b]) => (a.gt(b) ? -1 : 1));
+      for (const [_, tryMax] of tokens) {
+        if (tryMax()) {
+          break;
+        }
       }
     } else {
-      if (token === "DAI") {
-        setDAIAmount(trim(+amount, 2));
-      } else if (token === "USDC") {
-        setUSDCAmount(trim(+amount, 2));
-      } else if (token === "TOR") {
-        setTORAmount(trim(+amount, 2));
+      switch (token) {
+        case "DAI":
+          setDaiInput(ethers.utils.formatEther(daiBalance));
+          break;
+        case "USDC":
+          setUsdcInput(ethers.utils.formatUnits(usdcBalance, "mwei"));
+          break;
+        case "TOR":
+          setTorInput(ethers.utils.formatEther(torBalance));
+          break;
       }
     }
   };
 
-  // initial load
   useEffect(() => {
-    if (view === 1 && sliderState) {
-      setTORAmount(trim(torPoolInfo?.balance * (curveProportions?.tor / 100), 2));
-      setDAIAmount(trim(torPoolInfo?.balance * (curveProportions?.dai / 100), 2));
-      setUSDCAmount(trim(torPoolInfo?.balance * (curveProportions?.usdc / 100), 2));
-    } else if (view === 1 && !sliderState) {
-      setTORAmount(trim(torPoolInfo?.balance, 2));
-      setUSDCAmount("0");
-      setDAIAmount("0");
-    } else if (view === 0) {
-      setMax("DAI");
-      setMax("USDC");
-      setMax("TOR");
+    if (view !== 1 || !curveProportions || !crvBalance) {
+      return;
     }
-  }, [view, daiUsdcBalance, torPoolInfo, curveProportions, sliderState]);
+    if (keepProportion) {
+      const ONE = ethers.utils.parseEther("1");
+      setTorInput(ethers.utils.formatEther(crvBalance.mul(curveProportions.tor).div(ONE)));
+      setDaiInput(ethers.utils.formatEther(crvBalance.mul(curveProportions.dai).div(ONE)));
+      setUsdcInput(trimDecimalsPast(6, ethers.utils.formatEther(crvBalance.mul(curveProportions.usdc).div(ONE))));
+    } else {
+      setDaiInput("0.0");
+      setUsdcInput("0.0");
+      setTorInput("0.0");
+      switch (radioValue) {
+        case "TOR":
+          setTorInput(ethers.utils.formatEther(crvBalance));
+          break;
+        case "USDC":
+          setUsdcInput(trimDecimalsPast(6, ethers.utils.formatEther(crvBalance)));
+          break;
+        case "DAI":
+          setDaiInput(ethers.utils.formatEther(crvBalance));
+          break;
+      }
+    }
+  }, [view, curveProportions, radioValue, crvBalance, keepProportion]);
+
+  useEffect(() => {
+    if (view !== 0) {
+      return;
+    }
+    setTorInput("");
+    setUsdcInput("");
+    setDaiInput("");
+  }, [view]);
 
   useEffect(() => {
     if (chainID && provider && address) {
@@ -733,17 +975,26 @@ const Curve: VFC<CurveProps> = ({ daiUsdcBalance, torBalance, curveProportions, 
               <SvgIcon component={ArrowUp} htmlColor="#A3A3A3" />
             </Link>
           </div>
+          {/* <Button
+            variant="text"
+            color="primary"
+            onClick={max}
+            style={{ display: view === 0 ? "" : "none" }}
+            className="max-amt"
+          >
+            Max
+          </Button> */}
           <FormControlLabel
-            className={!sliderState ? "slider-off slider" : "slider"}
+            className={!keepProportion ? "slider-off slider" : "slider"}
             control={
               <Switch
-                checked={sliderState}
-                onChange={() => setSliderState(!sliderState)}
+                checked={keepProportion}
+                onChange={() => setKeepProportion(!keepProportion)}
                 name="sliderState"
                 color="primary"
               />
             }
-            label={view === 0 ? "Max" : "Combination"}
+            label={"Combo"}
           />
         </div>
         <div className="tab-group">
@@ -752,7 +1003,7 @@ const Curve: VFC<CurveProps> = ({ daiUsdcBalance, torBalance, curveProportions, 
             textColor="primary"
             indicatorColor="primary"
             value={view}
-            onChange={changeTabs}
+            onChange={(_, value) => setView(value)}
             aria-label="simple tabs example"
           >
             <Tab label="Deposit" {...curveInputProps(0)} />
@@ -760,7 +1011,7 @@ const Curve: VFC<CurveProps> = ({ daiUsdcBalance, torBalance, curveProportions, 
           </Tabs>
           <div className="token-inputs">
             <div className="token">
-              <TorSVG style={{ height: "30px", width: "30px" }} />
+              <TorSVG className="token-logo" />
               {(hasTorDepositAllowance || view === 1) && (
                 <FormControl className="input-amount" fullWidth variant="outlined">
                   <InputLabel htmlFor="outlined-adornment-amount">TOR</InputLabel>
@@ -768,13 +1019,32 @@ const Curve: VFC<CurveProps> = ({ daiUsdcBalance, torBalance, curveProportions, 
                     error={isTorFormInvalid()}
                     type="number"
                     disabled={view === 1}
-                    value={torAmount}
-                    onChange={e => setTokenAmount("TOR", e.target.value)}
+                    value={torInput}
+                    onChange={e => {
+                      const input = trimDecimalsPast(18, e.target.value);
+                      setTorInput(input);
+                      if (keepProportion) {
+                        const { usdc, dai } = proportionalToTor(ethers.utils.parseEther(input || "0"));
+                        setUsdcInput(trimDecimalsPast(6, ethers.utils.formatEther(usdc)));
+                        setDaiInput(ethers.utils.formatEther(dai));
+                      }
+                    }}
+                    endAdornment={
+                      !keepProportion &&
+                      view === 0 && (
+                        <InputAdornment position="end">
+                          <Button variant="text" onClick={() => max("TOR")} color="inherit">
+                            Max
+                          </Button>
+                        </InputAdornment>
+                      )
+                    }
                     labelWidth={30}
                   />
                   {isTorFormInvalid() && <FormHelperText error>Must be less than or equal to balance!</FormHelperText>}
                 </FormControl>
               )}
+
               {!hasTorDepositAllowance && view !== 1 && (
                 <Button
                   className="stake-button"
@@ -786,9 +1056,15 @@ const Curve: VFC<CurveProps> = ({ daiUsdcBalance, torBalance, curveProportions, 
                   Approve
                 </Button>
               )}
+              <Tooltip
+                title={`Depositing TOR will get you the most LP`}
+                className={optimalCoin === "TOR" && view === 0 ? "optimal visible" : "optimal"}
+              >
+                <BestFarmIcon />
+              </Tooltip>
             </div>
             <div className="token">
-              <img src={DaiToken} />
+              <img src={DaiToken} className="token-logo" />
               {(hasDaiDepositAllowance || view === 1) && (
                 <FormControl className="input-amount" fullWidth variant="outlined">
                   <InputLabel htmlFor="outlined-dai-amount">DAI</InputLabel>
@@ -796,13 +1072,32 @@ const Curve: VFC<CurveProps> = ({ daiUsdcBalance, torBalance, curveProportions, 
                     error={isDaiFormInvalid()}
                     type="number"
                     disabled={view === 1}
-                    value={daiAmount}
-                    onChange={e => setTokenAmount("DAI", e.target.value)}
+                    value={daiInput}
+                    onChange={e => {
+                      const input = trimDecimalsPast(18, e.target.value);
+                      setDaiInput(input);
+                      if (keepProportion) {
+                        const { usdc, tor } = proportionalToDai(ethers.utils.parseEther(input || "0"));
+                        setUsdcInput(trimDecimalsPast(6, ethers.utils.formatEther(usdc)));
+                        setTorInput(ethers.utils.formatEther(tor));
+                      }
+                    }}
+                    endAdornment={
+                      !keepProportion &&
+                      view === 0 && (
+                        <InputAdornment position="end">
+                          <Button variant="text" onClick={() => max("DAI")} color="inherit">
+                            Max
+                          </Button>
+                        </InputAdornment>
+                      )
+                    }
                     labelWidth={27}
                   />
                   {isDaiFormInvalid() && <FormHelperText error>Must be less than or equal to balance!</FormHelperText>}
                 </FormControl>
               )}
+
               {!hasDaiDepositAllowance && view !== 1 && (
                 <Button
                   className="stake-button"
@@ -814,9 +1109,15 @@ const Curve: VFC<CurveProps> = ({ daiUsdcBalance, torBalance, curveProportions, 
                   Approve
                 </Button>
               )}
+              <Tooltip
+                title={`Depositing DAI will get you the most LP`}
+                className={optimalCoin === "DAI" && view === 0 ? "optimal visible" : "optimal"}
+              >
+                <BestFarmIcon />
+              </Tooltip>
             </div>
             <div className="token">
-              <img src={UsdcToken} />
+              <img src={UsdcToken} className="token-logo" />
               {(hasUsdcDepositAllowance || view === 1) && (
                 <FormControl className="input-amount" fullWidth variant="outlined">
                   <InputLabel htmlFor="outlined-adornment-amount">USDC</InputLabel>
@@ -824,13 +1125,32 @@ const Curve: VFC<CurveProps> = ({ daiUsdcBalance, torBalance, curveProportions, 
                     error={isUsdcFormInvalid()}
                     type="number"
                     disabled={view === 1}
-                    value={usdcAmount}
-                    onChange={e => setTokenAmount("USDC", e.target.value)}
+                    value={usdcInput}
+                    onChange={e => {
+                      const input = trimDecimalsPast(6, e.target.value);
+                      setUsdcInput(input);
+                      if (keepProportion) {
+                        const { dai, tor } = proportionalToUsdc(ethers.utils.parseEther(input || "0"));
+                        setDaiInput(ethers.utils.formatEther(dai));
+                        setTorInput(ethers.utils.formatEther(tor));
+                      }
+                    }}
+                    endAdornment={
+                      !keepProportion &&
+                      view === 0 && (
+                        <InputAdornment position="end">
+                          <Button variant="text" onClick={() => max("USDC")} color="inherit">
+                            Max
+                          </Button>
+                        </InputAdornment>
+                      )
+                    }
                     labelWidth={40}
                   />
                   {isUsdcFormInvalid() && <FormHelperText error>Must be less than or equal to balance!</FormHelperText>}
                 </FormControl>
               )}
+
               {!hasUsdcDepositAllowance && view !== 1 && (
                 <Button
                   className="stake-button"
@@ -842,6 +1162,12 @@ const Curve: VFC<CurveProps> = ({ daiUsdcBalance, torBalance, curveProportions, 
                   Approve
                 </Button>
               )}
+              <Tooltip
+                title={`Depositing USDC will get you the most LP`}
+                className={optimalCoin === "USDC" && view === 0 ? "optimal visible" : "optimal"}
+              >
+                <BestFarmIcon />
+              </Tooltip>
             </div>
           </div>
           <TabPanel value={view} index={0}>
@@ -874,23 +1200,44 @@ const Curve: VFC<CurveProps> = ({ daiUsdcBalance, torBalance, curveProportions, 
               </span>
             </Tooltip>
           </TabPanel>
-          {view === 1 && !sliderState && (
-            <RadioGroup
-              className="radio-group"
-              aria-label="tokens"
-              name="tokens"
-              value={radioValue}
-              onChange={handleChange}
-            >
-              <FormControlLabel value="TOR" control={<Radio />} label="TOR" />
-              <FormControlLabel value="DAI" control={<Radio />} label="DAI" />
-              <FormControlLabel value="USDC" control={<Radio />} label="USDC" />
+          {view === 1 && !keepProportion && (
+            <RadioGroup className="radio-group" aria-label="tokens" name="tokens" value={radioValue}>
+              <FormControlLabel
+                value="TOR"
+                control={<Radio />}
+                label="TOR"
+                onChange={(e, checked) => {
+                  if (checked) {
+                    setRadioValue("TOR");
+                  }
+                }}
+              />
+              <FormControlLabel
+                value="DAI"
+                control={<Radio />}
+                label="DAI"
+                onChange={(e, checked) => {
+                  if (checked) {
+                    setRadioValue("DAI");
+                  }
+                }}
+              />
+              <FormControlLabel
+                value="USDC"
+                control={<Radio />}
+                label="USDC"
+                onChange={(e, checked) => {
+                  if (checked) {
+                    setRadioValue("USDC");
+                  }
+                }}
+              />
             </RadioGroup>
           )}
           <TabPanel value={view} index={1}>
             {hasPoolAllowance && (
               <Button
-                onClick={() => (sliderState ? onWithdraw() : onWithdrawOneToken())}
+                onClick={() => (keepProportion ? onWithdraw() : onWithdrawOneToken())}
                 className="stake-button"
                 disabled={!hasAnyBalance || isLoading}
                 variant="contained"

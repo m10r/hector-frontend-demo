@@ -27,8 +27,9 @@ import { TorSupplyChart } from "../TreasuryDashboard/TreasuryDashboard";
 import "./Mint.scss";
 import { FormControlLabel, FormHelperText, Radio, RadioGroup, Tab, Tabs, Tooltip } from "@material-ui/core";
 import TabPanel from "src/components/TabPanel";
-import { trim } from "src/helpers";
+import { prettyEthersNumber, trimDecimalsPast } from "src/helpers";
 import InfoTooltip from "src/components/InfoTooltip/InfoTooltip";
+import { MWEI_PER_ETHER } from "src/constants";
 
 function InputProps(index: any) {
   return {
@@ -44,9 +45,12 @@ export default function Mint() {
   const { torBalance, redeemInfo, mintAllowance, daiUsdcBalance, mintInfo, isLoading } = useSelector(
     (state: RootState) => state.farm,
   );
-  const [daiQuantity, setDAIQuantity] = useState("");
-  const [usdcQuantity, setUSDCQuantity] = useState("");
-  const [redeemAmount, setRedeemAmount] = useState("0");
+  const [daiInput, setDaiInput] = useState("");
+  const [usdcInput, setUsdcInput] = useState("");
+  const [redeemInput, setRedeemInput] = useState("");
+  const daiAmount = ethers.utils.parseEther(daiInput || "0");
+  const usdcAmount = ethers.utils.parseUnits(usdcInput || "0", "mwei");
+  const redeemAmount = ethers.utils.parseEther(redeemInput || "0");
   const [radioValue, setRadioValue] = useState<Tokens>("dai");
   const { provider, chainID, address } = useWeb3Context();
   const [view, setView] = useState(0);
@@ -83,41 +87,33 @@ export default function Mint() {
   };
 
   const isDaiFormInvalid = () => {
-    if (view === 0 && daiUsdcBalance?.daiBalance < +daiQuantity) {
-      return true;
-    } else if (view === 0 && daiUsdcBalance?.daiBalance > +daiQuantity) {
-      return false;
-    }
+    return daiAmount.gt(daiUsdcBalance?.dai ?? 0);
   };
   const isUsdcFormInvalid = () => {
-    if (view === 0 && daiUsdcBalance?.usdcBalance < +usdcQuantity) {
-      return true;
-    } else if (view === 0 && daiUsdcBalance?.usdcBalance > +usdcQuantity) {
-      return false;
-    }
+    return usdcAmount.gt(daiUsdcBalance?.usdc ?? 0);
   };
 
   const mintTokens = async () => {
-    if (+usdcQuantity > 0) {
-      await dispatch(mint({ networkID: chainID, provider, address, value: usdcQuantity, mint: "usdc" }));
+    if (usdcAmount.gt(0)) {
+      await dispatch(mint({ networkID: chainID, provider, address, value: usdcAmount, mint: "usdc" }));
     }
-    if (+daiQuantity > 0) {
-      await dispatch(mint({ networkID: chainID, provider, address, value: daiQuantity, mint: "dai" }));
+    if (daiAmount.gt(0)) {
+      await dispatch(mint({ networkID: chainID, provider, address, value: daiAmount, mint: "dai" }));
     }
-    setDAIQuantity("");
-    setUSDCQuantity("");
+    setDaiInput("");
+    setUsdcInput("");
   };
 
   const redeemTokens = async () => {
     await dispatch(redeem({ networkID: chainID, provider, address, value: redeemAmount, mint: radioValue }));
-    setRedeemAmount("");
+    setRedeemInput("");
   };
 
   async function getMintData() {
     await dispatch(getTorBalance({ networkID: chainID, provider, address }));
     await dispatch(getMintAllowance({ networkID: chainID, provider, address }));
     await dispatch(
-      getMintInfo({ networkID: chainID, provider, address, value: (+usdcQuantity + +daiQuantity).toString() }),
+      getMintInfo({ networkID: chainID, provider, address, value: usdcAmount.mul(MWEI_PER_ETHER).add(daiAmount) }),
     );
     await dispatch(getRedeemInfo({ networkID: chainID, provider, address, value: redeemAmount }));
     await dispatch(getDaiUsdcBalance({ networkID: chainID, provider, address }));
@@ -132,11 +128,16 @@ export default function Mint() {
   useEffect(() => {
     if (address && provider) {
       dispatch(
-        getMintInfo({ networkID: chainID, provider, address, value: (+usdcQuantity + +daiQuantity).toString() }),
+        getMintInfo({
+          networkID: chainID,
+          provider,
+          address,
+          value: usdcAmount.mul(MWEI_PER_ETHER).add(daiAmount),
+        }),
       );
       dispatch(getRedeemInfo({ networkID: chainID, provider, address, value: redeemAmount }));
     }
-  }, [usdcQuantity, daiQuantity, provider, address]);
+  }, [usdcAmount, daiAmount, provider, address]);
 
   const tooltipDepositText = (): string => {
     if (!mintInfo.isCurvePercentageBelowCeiling) {
@@ -152,11 +153,11 @@ export default function Mint() {
     }
   };
   const tooltipRedeemText = (): string => {
-    if (+redeemAmount > +trim(torBalance?.balance, 2)) {
+    if (redeemAmount.gt(torBalance?.balance ?? 0)) {
       return "Must have redeem quantity below TOR balance.";
     } else if (!hasRedeemAllowance()) {
       return "Please approve to redeem.";
-    } else if (+redeemAmount === 0) {
+    } else if (redeemAmount.isZero()) {
       return "Must have a redeem amount above 0";
     } else if (!redeemInfo.isCurvePercentageAboveFloor) {
       return "Redeeming is not availabe because curve offers a better price";
@@ -176,7 +177,7 @@ export default function Mint() {
           <div>Balance</div>
           <div className="details">
             <TorSVG style={{ height: "35px", width: "35px" }} />
-            <div className="balance">{trim(torBalance?.balance, 2)}</div>
+            <div className="balance">{prettyEthersNumber(torBalance?.balance ?? ethers.constants.Zero)}</div>
           </div>
         </div>
         <hr />
@@ -184,8 +185,7 @@ export default function Mint() {
           <div>Balance</div>
           <div className="details">
             <img src={DaiToken} />
-
-            <div className="balance">{trim(daiUsdcBalance?.daiBalance, 2)}</div>
+            <div className="balance">{prettyEthersNumber(daiUsdcBalance?.dai ?? ethers.constants.Zero)}</div>
           </div>
         </div>
         <hr />
@@ -193,8 +193,7 @@ export default function Mint() {
           <div>Balance</div>
           <div className="details">
             <img src={UsdcToken} />
-
-            <div className="balance">{trim(daiUsdcBalance?.usdcBalance, 2)}</div>
+            <div className="balance">{prettyEthersNumber(daiUsdcBalance?.usdc ?? ethers.constants.Zero, "mwei")}</div>
           </div>
         </div>
       </div>
@@ -239,8 +238,8 @@ export default function Mint() {
                       id="outlined-adornment-amount"
                       type="number"
                       error={isDaiFormInvalid()}
-                      value={daiQuantity}
-                      onChange={e => setDAIQuantity(trim(+e.target.value, 2))}
+                      value={daiInput}
+                      onChange={e => setDaiInput(trimDecimalsPast(18, e.target.value))}
                       endAdornment={
                         <InputAdornment position="end">
                           {" "}
@@ -248,8 +247,8 @@ export default function Mint() {
                             variant="text"
                             onClick={() =>
                               view === 0
-                                ? setDAIQuantity(trim(daiUsdcBalance?.daiBalance, 2))
-                                : setDAIQuantity(trim(torBalance?.balance, 2))
+                                ? setDaiInput(ethers.utils.formatEther(daiUsdcBalance?.dai ?? ethers.constants.Zero))
+                                : setDaiInput(ethers.utils.formatEther(torBalance?.balance ?? ethers.constants.Zero))
                             }
                             color="inherit"
                           >
@@ -288,7 +287,7 @@ export default function Mint() {
                       id="outlined-adornment-amount"
                       type="number"
                       error={isUsdcFormInvalid()}
-                      value={usdcQuantity}
+                      value={usdcInput}
                       endAdornment={
                         <InputAdornment position="end">
                           {" "}
@@ -296,8 +295,10 @@ export default function Mint() {
                             variant="text"
                             onClick={() =>
                               view === 0
-                                ? setUSDCQuantity(trim(+daiUsdcBalance?.usdcBalance, 2))
-                                : setUSDCQuantity(trim(torBalance?.balance, 2))
+                                ? setUsdcInput(
+                                    ethers.utils.formatUnits(daiUsdcBalance?.usdc ?? ethers.constants.Zero, "mwei"),
+                                  )
+                                : setUsdcInput(ethers.utils.formatEther(torBalance?.balance ?? ethers.constants.Zero))
                             }
                             color="inherit"
                           >
@@ -305,7 +306,7 @@ export default function Mint() {
                           </Button>
                         </InputAdornment>
                       }
-                      onChange={e => setUSDCQuantity(trim(+e.target.value, 2))}
+                      onChange={e => setUsdcInput(trimDecimalsPast(6, e.target.value))}
                       labelWidth={40}
                     />
                     {isUsdcFormInvalid() && (
@@ -342,7 +343,7 @@ export default function Mint() {
                       (hasDaiMintAllowance() || hasUsdcMintAllowance() ? false : true) ||
                       isUsdcFormInvalid() ||
                       isDaiFormInvalid() ||
-                      +daiQuantity + +usdcQuantity === 0
+                      daiAmount.add(usdcAmount).isZero()
                     }
                     onClick={() => mintTokens()}
                   >
@@ -361,14 +362,16 @@ export default function Mint() {
                   <OutlinedInput
                     id="outlined-adornment-amount"
                     type="number"
-                    value={redeemAmount}
-                    onChange={e => setRedeemAmount(trim(+e.target.value, 2))}
+                    value={redeemInput}
+                    onChange={e => setRedeemInput(trimDecimalsPast(18, e.target.value))}
                     endAdornment={
                       <InputAdornment position="end">
                         {" "}
                         <Button
                           variant="text"
-                          onClick={() => setRedeemAmount(trim(torBalance?.balance, 2))}
+                          onClick={() =>
+                            setRedeemInput(ethers.utils.formatEther(torBalance?.balance ?? ethers.constants.Zero))
+                          }
                           color="inherit"
                         >
                           Max
@@ -404,8 +407,8 @@ export default function Mint() {
                       !redeemInfo.isCurvePercentageAboveFloor ||
                       !redeemInfo.ishigherThanReserveFloor ||
                       !hasRedeemAllowance() ||
-                      +redeemAmount > +trim(torBalance?.balance, 2) ||
-                      +redeemAmount === 0
+                      redeemAmount.gt(torBalance?.balance ?? ethers.constants.Zero) ||
+                      redeemAmount.isZero()
                     }
                     onClick={() => redeemTokens()}
                   >

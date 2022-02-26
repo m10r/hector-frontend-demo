@@ -1,0 +1,55 @@
+[
+  {
+    "inputs": [
+      { "internalType": "contract IStakingRewards", "name": "stakingRewards", "type": "address" },
+      { "internalType": "contract IPricer", "name": "rewardTokenPricer", "type": "address" },
+      { "internalType": "uint256", "name": "_tvl", "type": "uint256" }
+    ],
+    "name": "apr",
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "contract IStakingRewards", "name": "stakingRewards", "type": "address" },
+      { "internalType": "contract IPricer", "name": "stakingTokenPricer", "type": "address" },
+      { "internalType": "contract IPricer", "name": "rewardTokenPricer", "type": "address" },
+      { "internalType": "address", "name": "wallet", "type": "address" }
+    ],
+    "name": "getStakingInfo",
+    "outputs": [
+      { "internalType": "uint256", "name": "_tvl", "type": "uint256" },
+      { "internalType": "uint256", "name": "_apr", "type": "uint256" },
+      { "internalType": "uint256", "name": "_begin", "type": "uint256" },
+      { "internalType": "uint256", "name": "_finish", "type": "uint256" },
+      { "internalType": "uint256", "name": "_userStakedAmount", "type": "uint256" },
+      { "internalType": "uint256", "name": "_userStakedValue", "type": "uint256" },
+      { "internalType": "uint256", "name": "_userEarnedAmount", "type": "uint256" },
+      { "internalType": "uint256", "name": "_userEarnedValue", "type": "uint256" }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "contract IStakingRewards", "name": "stakingRewards", "type": "address" },
+      { "internalType": "contract IPricer", "name": "stakingTokenPricer", "type": "address" }
+    ],
+    "name": "tvl",
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "contract IERC20", "name": "token", "type": "address" },
+      { "internalType": "contract IPricer", "name": "pricer", "type": "address" },
+      { "internalType": "uint256", "name": "amount", "type": "uint256" }
+    ],
+    "name": "value",
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "stateMutability": "view",
+    "type": "function"
+  }
+]

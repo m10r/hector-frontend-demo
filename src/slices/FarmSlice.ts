@@ -1,84 +1,94 @@
 import { JsonRpcProvider } from "@ethersproject/providers";
 import { createAsyncThunk, createSelector, createSlice } from "@reduxjs/toolkit";
 import { BigNumber, ethers } from "ethers";
-import { FANTOM, messages } from "src/constants";
+import { FANTOM, messages, MWEI_PER_ETHER } from "src/constants";
 import { setAll } from "src/helpers";
 import { sleep } from "src/helpers/Sleep";
 import { RootState } from "src/store";
 import {
   CurveProportions,
-  TorPoolContract,
+  IERC20,
+  Curve,
   TorPoolInfo,
   StakingInfo,
-  StakingRewardsContract,
+  IStakingRewards,
   StakingRewardsInfo,
-  TorContract,
   TorBalance,
   CurveAllowance,
   MintInfo,
   RedeemInfo,
   MintAllowance,
+  WftmBalance,
+  TorWftmPool,
+  TorWftmFarm,
 } from "src/types/farm.model";
 import { abi as farmingAggregatorAbi } from "../abi/farmingAggregatorContract.json";
-import { abi as torPoolAbi } from "../abi/farmingTorPoolContract.json";
-import { abi as stakingRewardsAbi } from "../abi/farmingStakingRewardsContract.json";
+import stakingGatewayAbi from "../abi/stakingGateway.json";
+import abiDaiTorUsdcPool from "../abi/pools/dai-tor-usdc.json";
+import abiDaiTorUsdcFarm from "../abi/farms/dai-tor-usdc.json";
+import abiTorWftmPool from "src/abi/pools/tor-wftm.json";
+import abiTorWftmFarm from "src/abi/farms/tor-wftm.json";
 import { abi as curveFiAbi } from "../abi/CurveFiContract.json";
 import { abi as torAbi } from "../abi/bonds/torContract.json";
-import { abi as IERC20 } from "../abi/IERC20.json";
+import { abi as abiIERC20 } from "../abi/IERC20.json";
 import { abi as torMinterAbi } from "../abi/TorMinterContract.json";
 import { abi as torRedeemAbi } from "../abi/TorRedeemContract.json";
 import { abi as torPoolAmountAbi } from "../abi/TorPoolAmountContract.json";
-import { IBaseAddressAsyncThunk, IBaseAsyncThunk, IValueAsyncThunk } from "./interfaces";
+import { IBaseAddressAsyncThunk, IBaseAsyncThunk, INumberAsyncThunk, IValueAsyncThunk } from "./interfaces";
 import { error, info, success } from "./MessagesSlice";
 
-interface MintThunk extends IValueAsyncThunk {
+interface MintThunk extends INumberAsyncThunk {
   mint: "dai" | "usdc";
 }
 
 interface ICurveTokensThunk extends IBaseAddressAsyncThunk {
-  daiAmount?: string;
-  usdcAmount?: string;
-  torAmount?: string;
+  daiAmount?: BigNumber;
+  usdcAmount?: BigNumber;
+  torAmount?: BigNumber;
   lpBalance?: BigNumber;
+  onComplete?: () => void;
   coin?: 0 | 1 | 2;
 }
 
 export interface DaiUsdcBalance {
-  usdcHexBalance: BigNumber;
-  usdcBalance: number;
-  daiHexBalance: BigNumber;
-  daiBalance: number;
+  usdc: BigNumber;
+  dai: BigNumber;
 }
 
 export const stakingGateway = (chainID: number, provider: JsonRpcProvider) =>
   new ethers.Contract(FANTOM.FARMING_AGGREGATOR_ADDRESS, farmingAggregatorAbi, provider);
 
-const stakingRewardsContract = (chainID: number, provider: JsonRpcProvider, address: string) =>
-  (new ethers.Contract(
-    FANTOM.FARMINNG_STAKING_REWARDS_ADDRESS,
-    stakingRewardsAbi,
-    provider.getSigner(address),
-  ) as unknown) as StakingRewardsContract;
+export const genericStakingGateway = (provider: JsonRpcProvider) =>
+  new ethers.Contract(FANTOM.STAKING_GATEWAY, stakingGatewayAbi, provider);
 
-const torPoolContract = (chainID: number, provider: JsonRpcProvider, address: string) =>
+const contractDaiTorUsdcFarm = (chainID: number, provider: JsonRpcProvider, address: string) =>
   (new ethers.Contract(
-    FANTOM.TOR_LP_POOL_ADDRESS,
-    torPoolAbi,
+    FANTOM.DAI_TOR_USDC_FARM,
+    abiDaiTorUsdcFarm,
     provider.getSigner(address),
-  ) as unknown) as TorPoolContract;
+  ) as unknown) as IStakingRewards;
+const contractDaiTorUsdcPool = (chainID: number, provider: JsonRpcProvider, address: string) =>
+  (new ethers.Contract(FANTOM.DAI_TOR_USDC_POOL, abiDaiTorUsdcPool, provider.getSigner(address)) as unknown) as IERC20 &
+    Curve;
+const contractTorWftmFarm = (chainID: number, provider: JsonRpcProvider, address: string) =>
+  (new ethers.Contract(
+    FANTOM.TOR_WFTM_FARM,
+    abiTorWftmFarm,
+    provider.getSigner(address),
+  ) as unknown) as IStakingRewards;
+const contractTorWftmPool = (chainID: number, provider: JsonRpcProvider, address: string) =>
+  (new ethers.Contract(FANTOM.TOR_WFTM_POOL, abiTorWftmPool, provider.getSigner(address)) as unknown) as IERC20;
 
 const torContract = (chainID: number, provider: JsonRpcProvider, address: string) =>
-  (new ethers.Contract(FANTOM.TOR_ADDRESS, torAbi, provider.getSigner(address)) as unknown) as TorContract;
+  (new ethers.Contract(FANTOM.TOR_ADDRESS, torAbi, provider.getSigner(address)) as unknown) as IERC20;
 const usdcContract = (chainID: number, provider: JsonRpcProvider, address: string) =>
-  new ethers.Contract(FANTOM.USDC_ADDRESS, IERC20, provider.getSigner(address));
+  (new ethers.Contract(FANTOM.USDC_ADDRESS, abiIERC20, provider.getSigner(address)) as unknown) as IERC20;
 const daiContract = (chainID: number, provider: JsonRpcProvider, address: string) =>
-  new ethers.Contract(FANTOM.DAI_ADDRESS, IERC20, provider.getSigner(address));
+  (new ethers.Contract(FANTOM.DAI_ADDRESS, abiIERC20, provider.getSigner(address)) as unknown) as IERC20;
 const wftmContract = (chainID: number, provider: JsonRpcProvider, address: string) =>
-  new ethers.Contract(FANTOM.WFTM_ADDRESS, IERC20, provider.getSigner(address));
-
+  (new ethers.Contract(FANTOM.WFTM_ADDRESS, abiIERC20, provider.getSigner(address)) as unknown) as IERC20;
 const torMinterContract = (chainID: number, provider: JsonRpcProvider, address: string) =>
   new ethers.Contract(FANTOM.TOR_MINTER_ADDRESS, torMinterAbi, provider.getSigner(address));
-
 const curveFiContract = (chainID: number, provider: JsonRpcProvider, address: string) =>
   new ethers.Contract(FANTOM.CURVE_FI_ADDRESS, curveFiAbi, provider.getSigner(address));
 
@@ -91,9 +101,8 @@ export const getAssetPrice = createAsyncThunk(
 export const getStakingRewardsInfo = createAsyncThunk(
   "farm/getStakingRewardsInfo",
   async ({ networkID, provider, address }: IBaseAddressAsyncThunk) => {
-    const originalBalance = await stakingRewardsContract(networkID, provider, address).balanceOf(address);
-    const balance = +ethers.utils.formatEther(originalBalance);
-    return { balance, originalBalance };
+    const balance = await contractDaiTorUsdcFarm(networkID, provider, address).balanceOf(address);
+    return { balance };
   },
 );
 
@@ -101,13 +110,9 @@ export const getTorBalance = createAsyncThunk(
   "farm/getTorBalance",
   async ({ networkID, provider, address }: IBaseAddressAsyncThunk) => {
     try {
-      const originalBalance = await torContract(networkID, provider, address).balanceOf(address);
-      const balance = +ethers.utils.formatEther(originalBalance);
-      const allowance = +(await torContract(networkID, provider, address).allowance(
-        address,
-        FANTOM.TOR_MINTER_ADDRESS,
-      ));
-      return { balance, originalBalance, allowance };
+      const balance = await torContract(networkID, provider, address).balanceOf(address);
+      const allowance = await torContract(networkID, provider, address).allowance(address, FANTOM.TOR_MINTER_ADDRESS);
+      return { balance, allowance };
     } catch (e) {
       console.error(e);
     }
@@ -119,10 +124,9 @@ export const getWftmBalance = createAsyncThunk(
   async ({ networkID, provider, address }: IBaseAddressAsyncThunk) => {
     try {
       const wftm = wftmContract(networkID, provider, address);
-      const originalBalance = wftm.balanceOf(address);
-      const balance = +ethers.utils.formatEther(originalBalance);
-      const allowance = +wftm.allowance(address, FANTOM.TOR_MINTER_ADDRESS);
-      return { balance, originalBalance, allowance };
+      const balance = await wftm.balanceOf(address);
+      const allowance = await wftm.allowance(address, FANTOM.WFTM_ADDRESS);
+      return { balance, allowance };
     } catch (e) {
       console.error(e);
     }
@@ -131,16 +135,19 @@ export const getWftmBalance = createAsyncThunk(
 
 export const getTorBalanceAmounts = createAsyncThunk(
   "farm/getTorBalanceAmounts",
-  async ({ networkID, provider, address, value = "100" }: IValueAsyncThunk) => {
+  async ({ networkID, provider, address, value = ethers.utils.parseEther("1") }: INumberAsyncThunk) => {
     try {
       const torBalanceAmountsContract = new ethers.Contract(FANTOM.TOR_LP_AMOUNTS_ADDRESS, torPoolAmountAbi, provider);
-      const getBalancedPercentages = await torBalanceAmountsContract.getAmounts(
-        ethers.utils.parseUnits(value, "ether"),
-      );
+      const getBalancedPercentages = await torBalanceAmountsContract.getAmounts(value);
+
+      const total = getBalancedPercentages._daiAmount
+        .add(getBalancedPercentages._usdcAmount.mul(MWEI_PER_ETHER))
+        .add(getBalancedPercentages._torAmount);
+
       return {
-        dai: +ethers.utils.formatEther(getBalancedPercentages._daiAmount),
-        usdc: +ethers.utils.formatUnits(getBalancedPercentages._usdcAmount, "mwei"),
-        tor: +ethers.utils.formatEther(getBalancedPercentages._torAmount),
+        dai: getBalancedPercentages._daiAmount.mul(value).div(total),
+        usdc: getBalancedPercentages._usdcAmount.mul(MWEI_PER_ETHER).mul(value).div(total),
+        tor: getBalancedPercentages._torAmount.mul(value).div(total),
       } as CurveProportions;
     } catch (e) {
       console.error(e);
@@ -148,30 +155,43 @@ export const getTorBalanceAmounts = createAsyncThunk(
   },
 );
 
-export const getTorPoolInfo = createAsyncThunk(
-  "farm/getHugsPoolInfo",
+export const getTorWftmPool = createAsyncThunk(
+  "farm/getTorWftmPool",
   async ({ networkID, provider, address }: IBaseAddressAsyncThunk) => {
-    const originalBalance = await torPoolContract(networkID, provider, address).balanceOf(address);
-    let balance = +ethers.utils.formatEther(originalBalance);
+    const poolContract = contractTorWftmPool(networkID, provider, address);
+    const [balance, allowance] = await Promise.all([
+      poolContract.balanceOf(address),
+      poolContract.allowance(address, FANTOM.TOR_WFTM_FARM),
+    ]);
+    return { balance, allowance };
+  },
+);
 
-    let allowance = +(await torPoolContract(networkID, provider, address).allowance(
-      address,
-      FANTOM.FARMINNG_STAKING_REWARDS_ADDRESS,
-    ));
-    let virtualPrice = +ethers.utils.formatEther(
-      await torPoolContract(networkID, provider, address).get_virtual_price(),
-    );
+export const getTorWftmFarm = createAsyncThunk(
+  "farm/getTorWftmFarm",
+  async ({ networkID, provider, address }: IBaseAddressAsyncThunk) => {
+    const contract = contractTorWftmFarm(networkID, provider, address);
+    const [staked, earned] = await Promise.all([contract.balanceOf(address), contract.earned(address)]);
+    return { staked, earned };
+  },
+);
 
-    return { balance, allowance, virtualPrice, originalBalance };
+export const getTorPoolInfo = createAsyncThunk(
+  "farm/getTorPoolInfo",
+  async ({ networkID, provider, address }: IBaseAddressAsyncThunk) => {
+    const poolContract = contractDaiTorUsdcPool(networkID, provider, address);
+    const balance = await poolContract.balanceOf(address);
+    const allowance = await poolContract.allowance(address, FANTOM.DAI_TOR_USDC_FARM);
+    const virtualPrice = await poolContract.get_virtual_price();
+    return { balance, allowance, virtualPrice };
   },
 );
 
 export const getStakingInfo = createAsyncThunk(
   "farm/getStakingInfo",
-  async ({ networkID, provider, address, value }: IValueAsyncThunk) => {
+  async ({ networkID, provider, address, value }: INumberAsyncThunk) => {
     try {
-      const amt = BigInt(value === "" ? 0 : +value) * BigInt(1e18);
-      return await stakingGateway(networkID, provider).getStakingInfo(address, amt);
+      return await stakingGateway(networkID, provider).getStakingInfo(address, value);
     } catch (e) {
       console.error(e);
     }
@@ -180,12 +200,10 @@ export const getStakingInfo = createAsyncThunk(
 
 export const unstake = createAsyncThunk(
   "farm/unstake",
-  async ({ networkID, provider, address, value }: IValueAsyncThunk, { dispatch }) => {
+  async ({ networkID, provider, address, value }: INumberAsyncThunk, { dispatch }) => {
     let unstakeTx;
     try {
-      unstakeTx = await stakingRewardsContract(networkID, provider, address).withdraw(
-        ethers.utils.parseUnits(value, "ether"),
-      );
+      unstakeTx = await contractDaiTorUsdcFarm(networkID, provider, address).withdraw(value);
       await unstakeTx.wait();
       dispatch(success(messages.tx_successfully_send));
       await sleep(7);
@@ -204,12 +222,10 @@ export const unstake = createAsyncThunk(
 
 export const stake = createAsyncThunk(
   "farm/stake",
-  async ({ networkID, provider, address, value }: IValueAsyncThunk, { dispatch }) => {
+  async ({ networkID, provider, address, value }: INumberAsyncThunk, { dispatch }) => {
     let stakeTx;
     try {
-      stakeTx = await stakingRewardsContract(networkID, provider, address).stake(
-        ethers.utils.parseUnits(value, "ether"),
-      );
+      stakeTx = await contractDaiTorUsdcFarm(networkID, provider, address).stake(value);
       await stakeTx.wait();
       dispatch(success(messages.tx_successfully_send));
       await sleep(7);
@@ -227,13 +243,79 @@ export const stake = createAsyncThunk(
   },
 );
 
+export const stakeTorWftm = createAsyncThunk(
+  "farm/stakeTorWftm",
+  async ({ networkID, provider, address, value }: INumberAsyncThunk, { dispatch }) => {
+    let stakeTx;
+    try {
+      stakeTx = await contractTorWftmFarm(networkID, provider, address).stake(value);
+      await stakeTx.wait();
+      dispatch(success(messages.tx_successfully_send));
+      await sleep(7);
+      dispatch(info(messages.your_balance_update_soon));
+      await sleep(9);
+      dispatch(info(messages.your_balance_updated));
+    } catch (e) {
+      dispatch(error("Failed to stake"));
+    } finally {
+      if (stakeTx) {
+        await dispatch(getTorWftmFarm({ networkID, provider, address }));
+        await dispatch(getTorWftmPool({ networkID, provider, address }));
+      }
+    }
+  },
+);
+
+export const unstakeTorWftm = createAsyncThunk(
+  "farm/unstakeTorWftm",
+  async ({ networkID, provider, address, value }: INumberAsyncThunk, { dispatch }) => {
+    let unstakeTx;
+    try {
+      unstakeTx = await contractTorWftmFarm(networkID, provider, address).withdraw(value);
+      await unstakeTx.wait();
+      dispatch(success(messages.tx_successfully_send));
+      await sleep(7);
+      dispatch(info(messages.your_balance_update_soon));
+      await sleep(9);
+      dispatch(info(messages.your_balance_updated));
+    } catch (e) {
+      console.error(e);
+      dispatch(error("Failed to withdraw"));
+    } finally {
+      await dispatch(getTorWftmFarm({ networkID, provider, address }));
+      await dispatch(getTorWftmPool({ networkID, provider, address }));
+    }
+  },
+);
+
+export const torWftmPoolApprove = createAsyncThunk(
+  "farm/torWftmPoolApprove",
+  async ({ networkID, provider, address }: IBaseAddressAsyncThunk, { dispatch }) => {
+    try {
+      const approveTrans = await contractTorWftmPool(networkID, provider, address).approve(
+        FANTOM.TOR_WFTM_FARM,
+        ethers.utils.parseUnits("1000000", "ether"),
+      );
+      await approveTrans.wait();
+      dispatch(success(messages.tx_successfully_send));
+      await sleep(7);
+      dispatch(info(messages.your_balance_update_soon));
+      await sleep(9);
+      dispatch(info(messages.your_balance_updated));
+    } catch (e) {
+      console.error(e);
+      dispatch(error("Failed to approve"));
+    }
+  },
+);
+
 export const torPoolApprove = createAsyncThunk(
   "farm/torPoolApprove",
   async ({ networkID, provider, address }: IBaseAddressAsyncThunk, { dispatch }) => {
     try {
-      const approveTrans = await torPoolContract(networkID, provider, address).approve(
-        FANTOM.FARMINNG_STAKING_REWARDS_ADDRESS,
-        ethers.utils.parseUnits("1000000", "ether").toString(),
+      const approveTrans = await contractDaiTorUsdcPool(networkID, provider, address).approve(
+        FANTOM.DAI_TOR_USDC_FARM,
+        ethers.utils.parseUnits("1000000", "ether"),
       );
       await approveTrans.wait();
       dispatch(success(messages.tx_successfully_send));
@@ -252,12 +334,9 @@ export const getDaiUsdcBalance = createAsyncThunk(
   "farm/getDaiUsdcBalance",
   async ({ networkID, provider, address }: IBaseAddressAsyncThunk, { dispatch }) => {
     try {
-      const usdcHexBalance = await usdcContract(networkID, provider, address).balanceOf(address);
-      const daiHexBalance = await daiContract(networkID, provider, address).balanceOf(address);
-      const usdcBalance = +ethers.utils.formatUnits(usdcHexBalance, "mwei");
-      const daiBalance = +ethers.utils.formatEther(daiHexBalance);
-
-      return { usdcHexBalance, daiHexBalance, usdcBalance, daiBalance } as DaiUsdcBalance;
+      const usdc = await usdcContract(networkID, provider, address).balanceOf(address);
+      const dai = await daiContract(networkID, provider, address).balanceOf(address);
+      return { dai, usdc };
     } catch (e) {
       console.error(e);
       dispatch(error("Failed to get balances for dai and usdc"));
@@ -269,7 +348,7 @@ export const claimRewards = createAsyncThunk(
   "farm/claimRewards",
   async ({ networkID, provider, address }: IBaseAddressAsyncThunk, { dispatch }) => {
     try {
-      const stakeTrans = await stakingRewardsContract(networkID, provider, address).getReward();
+      const stakeTrans = await contractDaiTorUsdcFarm(networkID, provider, address).getReward();
       await stakeTrans.wait();
       dispatch(success(messages.tx_successfully_send));
       await sleep(7);
@@ -278,6 +357,27 @@ export const claimRewards = createAsyncThunk(
       dispatch(info(messages.your_balance_updated));
     } catch (e) {
       dispatch(error("Failed to claim rewards"));
+    } finally {
+      await dispatch(getStakingInfo({ networkID, provider, address, value: ethers.utils.parseEther("10000") }));
+    }
+  },
+);
+
+export const claimTorWftm = createAsyncThunk(
+  "farm/claimTorWftm",
+  async ({ networkID, provider, address }: IBaseAddressAsyncThunk, { dispatch }) => {
+    try {
+      const stakeTrans = await contractTorWftmFarm(networkID, provider, address).getReward();
+      await stakeTrans.wait();
+      dispatch(success(messages.tx_successfully_send));
+      await sleep(7);
+      dispatch(info(messages.your_balance_update_soon));
+      await sleep(9);
+      dispatch(info(messages.your_balance_updated));
+    } catch (e) {
+      dispatch(error("Failed to claim rewards"));
+    } finally {
+      await dispatch(getTorWftmFarm({ networkID, provider, address }));
     }
   },
 );
@@ -292,7 +392,7 @@ export const getCurveAllowance = createAsyncThunk(
       );
       const daiAllowance = await daiContract(networkID, provider, address).allowance(address, FANTOM.CURVE_FI_ADDRESS);
       const torAllowance = await torContract(networkID, provider, address).allowance(address, FANTOM.CURVE_FI_ADDRESS);
-      const torPoolAllowance = await torPoolContract(networkID, provider, address).allowance(
+      const torPoolAllowance = await contractDaiTorUsdcPool(networkID, provider, address).allowance(
         address,
         FANTOM.CURVE_FI_ADDRESS,
       );
@@ -362,7 +462,7 @@ export const curveTorApprove = createAsyncThunk(
     try {
       approveTx = await torContract(networkID, provider, address).approve(
         FANTOM.CURVE_FI_ADDRESS,
-        ethers.utils.parseUnits("1000000", "ether").toString(),
+        ethers.utils.parseUnits("1000000", "ether"),
       );
       await approveTx.wait();
       dispatch(success(messages.tx_successfully_send));
@@ -386,9 +486,9 @@ export const curveWithdrawApprove = createAsyncThunk(
   async ({ networkID, provider, address }: IBaseAddressAsyncThunk, { dispatch }) => {
     let approveTx;
     try {
-      approveTx = await torPoolContract(networkID, provider, address).approve(
+      approveTx = await contractDaiTorUsdcPool(networkID, provider, address).approve(
         FANTOM.CURVE_FI_ADDRESS,
-        ethers.utils.parseUnits("1000000", "ether").toString(),
+        ethers.utils.parseUnits("1000000", "ether"),
       );
       await approveTx.wait();
       dispatch(success(messages.tx_successfully_send));
@@ -409,20 +509,20 @@ export const curveWithdrawApprove = createAsyncThunk(
 
 export const depositCurveTokens = createAsyncThunk(
   "farm/depositCurveTokens",
-  async ({ networkID, provider, address, torAmount, daiAmount, usdcAmount }: ICurveTokensThunk, { dispatch }) => {
+  async (
+    { networkID, provider, address, torAmount, daiAmount, usdcAmount, onComplete }: ICurveTokensThunk,
+    { dispatch },
+  ) => {
     let depositTx;
     try {
       depositTx = await curveFiContract(networkID, provider, address)["add_liquidity(address,uint256[3],uint256)"](
-        FANTOM.TOR_LP_POOL_ADDRESS,
-        [
-          ethers.utils.parseUnits(torAmount),
-          ethers.utils.parseUnits(daiAmount),
-          ethers.utils.parseUnits(usdcAmount, "mwei"),
-        ],
+        FANTOM.DAI_TOR_USDC_POOL,
+        [torAmount, daiAmount, usdcAmount],
         1,
       );
       await depositTx.wait();
       dispatch(success(messages.tx_successfully_send));
+      onComplete?.();
       await sleep(7);
       dispatch(info(messages.your_balance_update_soon));
     } catch (e) {
@@ -443,20 +543,17 @@ export const depositCurveTokens = createAsyncThunk(
 export const withdrawCurveTokens = createAsyncThunk(
   "farm/withdrawCurveTokens",
   async (
-    { networkID, provider, address, lpBalance, torAmount, daiAmount, usdcAmount }: ICurveTokensThunk,
+    { networkID, provider, address, lpBalance, torAmount, daiAmount, usdcAmount, onComplete }: ICurveTokensThunk,
     { dispatch },
   ) => {
     let withdrawTx;
     try {
       withdrawTx = await curveFiContract(networkID, provider, address)[
         "remove_liquidity(address,uint256,uint256[3])"
-      ](FANTOM.TOR_LP_POOL_ADDRESS, lpBalance, [
-        ethers.utils.parseUnits(torAmount),
-        ethers.utils.parseUnits(daiAmount),
-        ethers.utils.parseUnits(usdcAmount, "mwei"),
-      ]);
+      ](FANTOM.DAI_TOR_USDC_POOL, lpBalance, [torAmount, daiAmount, usdcAmount]);
       await withdrawTx.wait();
       dispatch(success(messages.tx_successfully_send));
+      onComplete?.();
       await sleep(7);
       dispatch(info(messages.your_balance_update_soon));
     } catch (e) {
@@ -480,7 +577,7 @@ export const withdrawOneCurveTokens = createAsyncThunk(
     try {
       withdrawTx = await curveFiContract(networkID, provider, address)[
         "remove_liquidity_one_coin(address,uint256,int128,uint256)"
-      ](FANTOM.TOR_LP_POOL_ADDRESS, lpBalance, coin, 1);
+      ](FANTOM.DAI_TOR_USDC_POOL, lpBalance, coin, 1);
       await withdrawTx.wait();
       dispatch(success(messages.tx_successfully_send));
       await sleep(7);
@@ -505,15 +602,11 @@ const torRedeemContract = (provider: JsonRpcProvider, address: string) =>
 
 export const getMintInfo = createAsyncThunk(
   "farm/getMintInfo",
-  async ({ networkID, provider, address, value }: IValueAsyncThunk, { dispatch }) => {
+  async ({ networkID, provider, address, value }: INumberAsyncThunk, { dispatch }) => {
     try {
       const redeemContract = torRedeemContract(provider, address);
-      const isLowerThanReserveCeiling = await redeemContract.lowerThanReserveCeilingAfterMint(
-        ethers.utils.parseEther(value),
-      );
-      const isCurvePercentageBelowCeiling = await redeemContract.curvePercentageBelowCeiling(
-        ethers.utils.parseEther(value),
-      );
+      const isLowerThanReserveCeiling = await redeemContract.lowerThanReserveCeilingAfterMint(value);
+      const isCurvePercentageBelowCeiling = await redeemContract.curvePercentageBelowCeiling(value);
       const mintLimit = await redeemContract.getCurrentMintBuffer();
       return { isLowerThanReserveCeiling, isCurvePercentageBelowCeiling, mintLimit };
     } catch (e) {
@@ -525,15 +618,11 @@ export const getMintInfo = createAsyncThunk(
 
 export const getRedeemInfo = createAsyncThunk(
   "farm/getRedeemInfo",
-  async ({ networkID, provider, address, value }: IValueAsyncThunk, { dispatch }) => {
+  async ({ networkID, provider, address, value }: INumberAsyncThunk, { dispatch }) => {
     try {
       const redeemContract = torRedeemContract(provider, address);
-      const ishigherThanReserveFloor = await redeemContract.higherThanReserveFloorAfterRedeem(
-        ethers.utils.parseEther(value),
-      );
-      const isCurvePercentageAboveFloor = await redeemContract.curvePercentageAboveFloor(
-        ethers.utils.parseEther(value),
-      );
+      const ishigherThanReserveFloor = await redeemContract.higherThanReserveFloorAfterRedeem(value);
+      const isCurvePercentageAboveFloor = await redeemContract.curvePercentageAboveFloor(value);
       const redeemLimit = await redeemContract.getCurrentRedeemBuffer();
       return { ishigherThanReserveFloor, isCurvePercentageAboveFloor, redeemLimit };
     } catch (e) {
@@ -549,13 +638,9 @@ export const mint = createAsyncThunk(
     let mintTx;
     try {
       if (mint === "dai") {
-        mintTx = await torMinterContract(networkID, provider, address).mintWithDai(
-          ethers.utils.parseUnits(value, "ether"),
-        );
+        mintTx = await torMinterContract(networkID, provider, address).mintWithDai(value);
       } else {
-        mintTx = await torMinterContract(networkID, provider, address).mintWithUsdc(
-          ethers.utils.parseUnits(value, "mwei"),
-        );
+        mintTx = await torMinterContract(networkID, provider, address).mintWithUsdc(value);
       }
       await mintTx.wait();
       dispatch(success(messages.tx_successfully_send));
@@ -581,13 +666,9 @@ export const redeem = createAsyncThunk(
     let redeemTx;
     try {
       if (mint === "dai") {
-        redeemTx = await torMinterContract(networkID, provider, address).redeemToDai(
-          ethers.utils.parseUnits(value, "ether"),
-        );
+        redeemTx = await torMinterContract(networkID, provider, address).redeemToDai(value);
       } else {
-        redeemTx = await torMinterContract(networkID, provider, address).redeemToUsdc(
-          ethers.utils.parseUnits(value, "ether"),
-        );
+        redeemTx = await torMinterContract(networkID, provider, address).redeemToUsdc(value);
       }
       await redeemTx.wait();
       dispatch(success(messages.tx_successfully_send));
@@ -690,7 +771,7 @@ export const redeemApprove = createAsyncThunk(
     try {
       redeemTx = await torContract(networkID, provider, address).approve(
         FANTOM.TOR_MINTER_ADDRESS,
-        ethers.utils.parseUnits("1000000", "ether").toString(),
+        ethers.utils.parseUnits("1000000", "ether"),
       );
       await redeemTx.wait();
       dispatch(success(messages.tx_successfully_send));
@@ -714,10 +795,13 @@ const initialState: IFarmSlice = {
   assetPrice: undefined,
   stakingRewardsInfo: undefined,
   torPoolInfo: undefined,
+  torWftmPool: undefined,
+  torWftmFarm: undefined,
   stakingInfo: undefined,
   curveProportions: undefined,
   daiUsdcBalance: undefined,
   torBalance: undefined,
+  wftmBalance: undefined,
   mintAllowance: undefined,
   mintInfo: undefined,
   redeemInfo: undefined,
@@ -729,10 +813,13 @@ interface IFarmSlice {
   assetPrice: BigNumber;
   stakingRewardsInfo: StakingRewardsInfo;
   torPoolInfo: TorPoolInfo;
+  torWftmPool: TorWftmPool;
+  torWftmFarm: TorWftmFarm;
   stakingInfo: StakingInfo;
   curveProportions: CurveProportions;
   daiUsdcBalance: DaiUsdcBalance;
   torBalance: TorBalance;
+  wftmBalance: WftmBalance;
   mintAllowance: MintAllowance;
   mintInfo: MintInfo;
   redeemInfo: RedeemInfo;
@@ -779,6 +866,28 @@ const farmSlice = createSlice({
         state.isLoading = false;
       })
       .addCase(getTorPoolInfo.rejected, (state, { error }) => {
+        state.isLoading = false;
+        console.error(error.name, error.message, error.stack);
+      })
+      .addCase(getTorWftmPool.pending, state => {
+        state.isLoading = true;
+      })
+      .addCase(getTorWftmPool.fulfilled, (state, action) => {
+        state.torWftmPool = action.payload;
+        state.isLoading = false;
+      })
+      .addCase(getTorWftmPool.rejected, (state, { error }) => {
+        state.isLoading = false;
+        console.error(error.name, error.message, error.stack);
+      })
+      .addCase(getTorWftmFarm.pending, state => {
+        state.isLoading = true;
+      })
+      .addCase(getTorWftmFarm.fulfilled, (state, action) => {
+        state.torWftmFarm = action.payload;
+        state.isLoading = false;
+      })
+      .addCase(getTorWftmFarm.rejected, (state, { error }) => {
         state.isLoading = false;
         console.error(error.name, error.message, error.stack);
       })
@@ -944,6 +1053,17 @@ const farmSlice = createSlice({
         state.torBalance = action.payload;
       })
       .addCase(getTorBalance.rejected, (state, { error }) => {
+        state.isLoading = false;
+        console.error(error.name, error.message, error.stack);
+      })
+      .addCase(getWftmBalance.pending, state => {
+        state.isLoading = true;
+      })
+      .addCase(getWftmBalance.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.wftmBalance = action.payload;
+      })
+      .addCase(getWftmBalance.rejected, (state, { error }) => {
         state.isLoading = false;
         console.error(error.name, error.message, error.stack);
       })
