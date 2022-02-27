@@ -106,6 +106,7 @@ export const usdclp = new LPBond({
   bondIconSvg: HecUsdcImg,
   bondContractABI: HecUsdcContract,
   reserveContract: ReserveHecUsdcContract,
+  isOld: true,
   networkAddrs: {
     [NetworkID.Mainnet]: {
       bondAddress: "0x3C57481f373Be0196A26A7d0a8E29E8CedC63ba1",
@@ -152,6 +153,7 @@ export const usdclp4_v2 = new LPBond({
   decimals: 6,
   isFour: true,
   isTotal: true,
+  isOld: true,
   bondIconSvg: HecUsdcImg,
   bondContractABI: Dai4V3BondContract,
   reserveContract: ReserveHecUsdcContract,
