@@ -117,6 +117,9 @@ export const PoolFarming: VFC = () => {
   const { provider, chainID, address } = useWeb3Context();
 
   async function getAllData() {
+    if (!address || !chainID || !provider) {
+      return;
+    }
     await dispatch(getAssetPrice({ networkID: chainID, provider }));
     await dispatch(getStakingInfo({ networkID: chainID, provider, address, value: QUANTITY }));
     await dispatch(getStakingRewardsInfo({ networkID: chainID, provider, address }));
@@ -131,7 +134,10 @@ export const PoolFarming: VFC = () => {
 
   const [torStats, setTorStats] = useState<Stats>();
   const [wftmStats, setWftmStats] = useState<Stats>();
-  async function updateStats() {
+  async function updateDaiTorUsdcStats() {
+    if (!chainID || !provider) {
+      return;
+    }
     const torStats = await stakingGateway(chainID, provider).getStakingInfo(
       "0x0000000000000000000000000000000000000000",
       0,
@@ -146,14 +152,17 @@ export const PoolFarming: VFC = () => {
         stakedUsd: undefined,
       });
     }
-    if (!chainID || !provider || !address) {
+  }
+
+  async function updateTorWftmStats() {
+    if (!chainID || !provider) {
       return;
     }
     const wftm = await genericStakingGateway(provider).getStakingInfo(
       FANTOM.TOR_WFTM_FARM_REWARDS,
       FANTOM.TOR_WFTM_POOL_PRICER,
       FANTOM.TOR_WFTM_FARM_REWARD_PRICER,
-      address,
+      address || "0x0000000000000000000000000000000000000000",
     );
 
     if (wftm) {
@@ -169,10 +178,9 @@ export const PoolFarming: VFC = () => {
   }
 
   useEffect(() => {
-    updateStats();
-    if (chainID && provider && address) {
-      getAllData();
-    }
+    updateDaiTorUsdcStats();
+    updateTorWftmStats();
+    getAllData();
   }, [chainID, provider, address]);
 
   useEffect(() => {
@@ -553,7 +561,7 @@ const FarmStaking: VFC<FarmStakingProps> = ({
                 <div className="data">
                   <>
                     {prettyEthersNumber(farmTokenStakeBalance)}{" "}
-                    {farmUsdStakeBalance && `(${prettyEthersNumber(farmUsdStakeBalance)})`}
+                    {farmUsdStakeBalance && `($${prettyEthersNumber(farmUsdStakeBalance)})`}
                   </>
                 </div>
               </div>
