@@ -41,6 +41,7 @@ query {
     bankBorrowed
     bankSupplied
     treasuryFantomValidatorValue
+    treasuryTORLPValue
   }
   tors(first: 1000, orderBy: timestamp, orderDirection: desc) {
     id
@@ -87,6 +88,15 @@ query {
 }
 `;
 
+export const maticUsdtPoolQuery = timestamp => `poolDayDatas(first: 1, orderBy: date, orderDirection: desc, where: {
+  pool: "0x68f73e2180024db5b54e0e119d4f5128953f9417",
+  date_gte: ${timestamp}
+} ) {
+  date
+  token0Price
+  token1Price
+}`;
+
 // export default treasuryData;
 export const bulletpoints = {
   tvl: [
@@ -122,6 +132,12 @@ export const bulletpoints = {
       stopColor: ["#ef4444", "#dc2626"],
       marketValue: "treasuryCRVMarketValue",
       riskFree: "treasuryCRVRiskFreeValue",
+    },
+    {
+      background: "linear-gradient(180deg, #e89e5a -10%, #be7c40 100%)",
+      name: "Tor LP",
+      stopColor: ["#e89e5a", "#be7c40"],
+      marketValue: "treasuryTORLPValue",
     },
     {
       background: "linear-gradient(180deg, #10b981 -10%, #059669 100%)",
@@ -192,7 +208,7 @@ export const bulletpoints = {
       riskFree: "treasuryDaiMarketValue",
     },
     {
-      background: "linear-gradient(180deg, #f97316 -10%, #ea580c 100%)",
+      background: "linear-gradient(180deg, #e2e8f0 -10%, #cbd5e1 100%)",
       stopColor: ["#e2e8f0", "#cbd5e1"],
       name: "Curve",
       marketValue: "treasuryBaseRewardPool",
