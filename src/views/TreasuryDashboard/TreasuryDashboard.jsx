@@ -242,8 +242,8 @@ function TreasuryDashboard() {
               </Paper>
             </Grid>
 
-            <Grid item lg={6} md={6} sm={12} xs={12}>
-              <Paper className="hec-card hec-chart-card">
+            <Grid className="tooltip-overflow" item lg={6} md={6} sm={12} xs={12}>
+              <Paper className="hec-card hec-chart-card tooltip-overflow">
                 <Chart
                   type="stack"
                   data={data}

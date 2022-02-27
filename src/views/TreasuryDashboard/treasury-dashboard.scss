@@ -15,10 +15,19 @@
     display: none !important;
   }
 
+  .tooltip-overflow {
+    z-index: 2 !important;
+    overflow: visible !important;
+  }
+
   .hec-card {
     max-width: unset !important;
     width: 100%;
     margin: auto;
+    * {
+      overflow: visible !important;
+      z-index: 1;
+    }
     .card-header {
       margin-bottom: 1rem;
     }
