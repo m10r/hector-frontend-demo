@@ -132,31 +132,31 @@ export const PoolFarming: VFC = () => {
   const [torStats, setTorStats] = useState<Stats>();
   const [wftmStats, setWftmStats] = useState<Stats>();
   async function updateStats() {
-    if (!chainID || !provider || !address) {
-      return;
-    }
-    const [tor, wftm] = await Promise.all([
-      stakingGateway(chainID, provider).getStakingInfo("0x0000000000000000000000000000000000000000", 0),
-      genericStakingGateway(provider).getStakingInfo(
-        FANTOM.TOR_WFTM_FARM_REWARDS,
-        FANTOM.TOR_WFTM_POOL_PRICER,
-        FANTOM.TOR_WFTM_FARM_REWARD_PRICER,
-        address,
-      ),
-    ]);
-    if (tor) {
-      console.log("tor", tor);
+    const torStats = await stakingGateway(chainID, provider).getStakingInfo(
+      "0x0000000000000000000000000000000000000000",
+      0,
+    );
+    if (torStats) {
       setTorStats({
-        apy: tor._apr,
-        tvl: tor._tvl,
+        apy: torStats._apr,
+        tvl: torStats._tvl,
         earnedTokens: undefined,
         earnedUsd: undefined,
         stakedTokens: undefined,
         stakedUsd: undefined,
       });
     }
+    if (!chainID || !provider || !address) {
+      return;
+    }
+    const wftm = await genericStakingGateway(provider).getStakingInfo(
+      FANTOM.TOR_WFTM_FARM_REWARDS,
+      FANTOM.TOR_WFTM_POOL_PRICER,
+      FANTOM.TOR_WFTM_FARM_REWARD_PRICER,
+      address,
+    );
+
     if (wftm) {
-      console.log("wftm", wftm);
       setWftmStats({
         apy: wftm._apr,
         tvl: wftm._tvl,
