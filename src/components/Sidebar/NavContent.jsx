@@ -98,6 +98,21 @@ function NavContent() {
 
               <Link
                 component={NavLink}
+                id="dash2-nav"
+                to="/dashboard2"
+                isActive={(match, location) => {
+                  return checkPage(match, location, "dashboard");
+                }}
+                className={`button-dapp-menu ${isActive ? "active" : ""}`}
+              >
+                <Typography variant="h6">
+                  <SvgIcon color="primary" component={DashboardIcon} />
+                  Dashboard V2
+                </Typography>
+              </Link>
+
+              <Link
+                component={NavLink}
                 id="stake-nav"
                 to="/"
                 isActive={(match, location) => {

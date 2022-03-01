@@ -39,6 +39,7 @@ import Investments from "./views/Investments/investments";
 import { HECTOR_ENV } from "./helpers/Environment";
 import Mint from "./views/Mint/Mint";
 import { FANTOM } from "./helpers/Chains";
+import TreasuryDashboardV2 from "./views/TreasuryDashboardV2/TreasuryDashboardV2";
 
 const drawerWidth = 300;
 const transitionDuration = 969;
@@ -265,6 +266,10 @@ function App() {
           <Switch>
             <Route exact path="/dashboard">
               <TreasuryDashboard />
+            </Route>
+
+            <Route exact path="/dashboard2">
+              <TreasuryDashboardV2 />
             </Route>
 
             <Route exact path="/">
