@@ -269,7 +269,7 @@ function App() {
             </Route>
 
             <Route exact path="/dashboard2">
-              <TreasuryDashboardV2 />
+              <TreasuryDashboardV2 theme={theme} />
             </Route>
 
             <Route exact path="/">

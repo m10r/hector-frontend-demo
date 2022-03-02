@@ -2466,10 +2466,10 @@
   resolved "https://registry.yarnpkg.com/@metamask/safe-event-emitter/-/safe-event-emitter-2.0.0.tgz#af577b477c683fad17c619a78208cede06f9605c"
   integrity sha512-/kSXhY692qiV1MXu6EeOZvg5nECLclxNXcKCxJ3cXQgYuRymRHpdx/t7JXfsK+JLjwA1e1c1/SBrlQYpusC29Q==
 
-"@multifarm/widget-demo@^0.0.39":
-  version "0.0.39"
-  resolved "https://registry.yarnpkg.com/@multifarm/widget-demo/-/widget-demo-0.0.39.tgz#dd283f0ff61b8dc8ac2ac0103c31964003c99b12"
-  integrity sha512-5KI2uKFELy7/MC9rn1OUr8GCCQCM9UjNe99IF/Qzd3V2axI2hIS2bT6SaEaAExBcgQ9II86oK6XSRa+GUMMnOA==
+"@multifarm/widget-demo@^0.0.4":
+  version "0.0.4"
+  resolved "https://registry.yarnpkg.com/@multifarm/widget-demo/-/widget-demo-0.0.4.tgz#332f2d81ccd11e5cd146ce4069ac3463a673ca74"
+  integrity sha512-1aLvPEGann823FL26XAE5KzQ8wySsX/YtxN+pqZ35rvdo15FG2Kh8ibG/NTy65T2ct22kK3K8Uu+blFEptg3fQ==
   dependencies:
     "@babel/preset-env" "^7.16.11"
     "@tippyjs/react" "^4.2.6"
